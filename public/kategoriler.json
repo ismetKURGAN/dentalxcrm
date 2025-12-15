@@ -1,0 +1,594 @@
+{
+  "Meta": [
+    {
+      "id": "1764961443378",
+      "type": "folder",
+      "name": "Xirtiz Reklamlar",
+      "children": [
+        {
+          "id": "1765002371367",
+          "type": "folder",
+          "name": "Xirtiz Farsça",
+          "children": [
+            {
+              "id": "1765002479703",
+              "type": "folder",
+              "name": "Avrupa Farsça",
+              "children": [
+                {
+                  "id": "1765002803617",
+                  "type": "category",
+                  "name": "Farsça - Avrupa - Filtreli - 1",
+                  "children": [],
+                  "leadFormId": "1393951516086797"
+                },
+                {
+                  "id": "1765002833289",
+                  "type": "category",
+                  "name": "Farsça - Avrupa - Filtreli - 2\t",
+                  "children": [],
+                  "leadFormId": "842327928337981"
+                },
+                {
+                  "id": "1765002848432",
+                  "type": "category",
+                  "name": "Farsça - Avrupa - Filtreli - 3",
+                  "children": [],
+                  "leadFormId": "714961224406347"
+                },
+                {
+                  "id": "1765002864289",
+                  "type": "category",
+                  "name": "Farsça - Avrupa - Filtreli - 4\t",
+                  "children": [],
+                  "leadFormId": "1572579744062916"
+                }
+              ],
+              "leadFormId": "0"
+            },
+            {
+              "id": "1765002461827",
+              "type": "folder",
+              "name": "İngiltere Farsça",
+              "children": [
+                {
+                  "id": "1765002599063",
+                  "type": "category",
+                  "name": "Farsça - İngiltere - Filtreli - 1\t",
+                  "children": [],
+                  "leadFormId": "1993563688089192"
+                },
+                {
+                  "id": "1765002712470",
+                  "type": "category",
+                  "name": "Farsça - İngiltere - Filtreli - 2",
+                  "children": [],
+                  "leadFormId": "838045705300562"
+                },
+                {
+                  "id": "1765002732694",
+                  "type": "category",
+                  "name": "Farsça - İngiltere - Filtreli - 3",
+                  "children": [],
+                  "leadFormId": "1132201412397771"
+                },
+                {
+                  "id": "1765002752188",
+                  "type": "category",
+                  "name": "Farsça - İngiltere - Filtreli - 5",
+                  "children": [],
+                  "leadFormId": "2051066015628900"
+                },
+                {
+                  "id": "1765002769691",
+                  "type": "category",
+                  "name": "Farsça - İngiltere - Filtreli - 6",
+                  "children": [],
+                  "leadFormId": "1781545762532581"
+                }
+              ],
+              "leadFormId": "0"
+            }
+          ],
+          "leadFormId": "0"
+        },
+        {
+          "id": "1765607554124",
+          "type": "folder",
+          "name": "Xirtiz İngilizce",
+          "children": [
+            {
+              "id": "1765607619370",
+              "type": "folder",
+              "name": "İngiltere İngilizce",
+              "children": [
+                {
+                  "id": "1765607749441",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 1",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607875079",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 10",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608011381",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 11",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608021174",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 12",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608046316",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 13",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608056333",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 14",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608066796",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 15",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608078389",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 16",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607761667",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 2",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607784407",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 3",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607796779",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 4",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607811000",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 5",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607826874",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 6",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607838481",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 7",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607851435",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 8",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765607862538",
+                  "type": "category",
+                  "name": "İngiltere - Filtreli - 9",
+                  "children": [],
+                  "leadFormId": "0"
+                }
+              ],
+              "leadFormId": "0"
+            }
+          ],
+          "leadFormId": "0"
+        },
+        {
+          "id": "1765018921152",
+          "type": "folder",
+          "name": "Xirtiz Lehçe",
+          "children": [
+            {
+              "id": "1765019088207",
+              "type": "folder",
+              "name": " Avrupa Lehçe",
+              "children": [
+                {
+                  "id": "1765019121117",
+                  "type": "category",
+                  "name": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+                  "children": [],
+                  "leadFormId": "2072907240189767"
+                },
+                {
+                  "id": "1765019134536",
+                  "type": "category",
+                  "name": " Lehçe Avrupalı Polonyalı - Filtreli - 3",
+                  "children": [],
+                  "leadFormId": "803197639376949"
+                },
+                {
+                  "id": "1765019147205",
+                  "type": "category",
+                  "name": " Lehçe Avrupalı Polonyalı - Filtreli - 4",
+                  "children": [],
+                  "leadFormId": "679063541665373"
+                },
+                {
+                  "id": "1765019157042",
+                  "type": "category",
+                  "name": " Lehçe Avrupalı Polonyalı - Filtreli - 5",
+                  "children": [],
+                  "leadFormId": "25501938366076476"
+                },
+                {
+                  "id": "1765019107462",
+                  "type": "category",
+                  "name": "Lehçe Avrupalı Polonyalı - Filtreli - 1",
+                  "children": [],
+                  "leadFormId": "839577895129772"
+                },
+                {
+                  "id": "1765351594276",
+                  "type": "category",
+                  "name": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+                  "children": [],
+                  "leadFormId": "2166758567188170"
+                }
+              ],
+              "leadFormId": "0"
+            },
+            {
+              "id": "1765018990189",
+              "type": "folder",
+              "name": "Polonya Lehçe",
+              "children": [
+                {
+                  "id": "1765019009906",
+                  "type": "category",
+                  "name": "Lehçe Polonya - Filtreli - 1",
+                  "children": [],
+                  "leadFormId": "720354423789418"
+                },
+                {
+                  "id": "1765019023376",
+                  "type": "category",
+                  "name": "Lehçe Polonya - Filtreli - 2",
+                  "children": [],
+                  "leadFormId": "833724029027660"
+                },
+                {
+                  "id": "1765019043872",
+                  "type": "category",
+                  "name": "Lehçe Polonya - Filtreli - 3",
+                  "children": [],
+                  "leadFormId": "9801591413299023"
+                },
+                {
+                  "id": "1765019053624",
+                  "type": "category",
+                  "name": "Lehçe Polonya - Filtreli - 4",
+                  "children": [],
+                  "leadFormId": "808419545450986"
+                },
+                {
+                  "id": "1765019065802",
+                  "type": "category",
+                  "name": "Lehçe Polonya - Filtreli - 5",
+                  "children": [],
+                  "leadFormId": "32125673963748032"
+                }
+              ],
+              "leadFormId": "0"
+            }
+          ],
+          "leadFormId": "0"
+        },
+        {
+          "id": "1765608159806",
+          "type": "folder",
+          "name": "Xirtiz Rusça",
+          "children": [
+            {
+              "id": "1765608289582",
+              "type": "folder",
+              "name": "Almanya Rusça",
+              "children": [
+                {
+                  "id": "1765611109182",
+                  "type": "category",
+                  "name": "AlmRus - 1",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611221660",
+                  "type": "category",
+                  "name": "AlmRus - 10",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611233067",
+                  "type": "category",
+                  "name": "AlmRus - 11",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611242951",
+                  "type": "category",
+                  "name": "AlmRus - 12",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611118554",
+                  "type": "category",
+                  "name": "AlmRus - 2",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611134207",
+                  "type": "category",
+                  "name": "AlmRus - 3",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611149711",
+                  "type": "category",
+                  "name": "AlmRus - 4",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611159555",
+                  "type": "category",
+                  "name": "AlmRus - 5",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611168886",
+                  "type": "category",
+                  "name": "AlmRus - 6",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611188047",
+                  "type": "category",
+                  "name": "AlmRus - 7",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611199132",
+                  "type": "category",
+                  "name": "AlmRus - 8",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611209785",
+                  "type": "category",
+                  "name": "AlmRus - 9",
+                  "children": [],
+                  "leadFormId": "0"
+                }
+              ]
+            },
+            {
+              "id": "1765608310992",
+              "type": "folder",
+              "name": "Avrupa Rusça",
+              "children": [
+                {
+                  "id": "1765611539849",
+                  "type": "category",
+                  "name": "AvrupaRus - 1",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611551121",
+                  "type": "category",
+                  "name": "AvrupaRus - 2",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611561565",
+                  "type": "category",
+                  "name": "AvrupaRus - 3",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611571080",
+                  "type": "category",
+                  "name": "AvrupaRus - 4",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611589370",
+                  "type": "category",
+                  "name": "AvrupaRus - 5",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611600393",
+                  "type": "category",
+                  "name": "AvrupaRus - 6",
+                  "children": [],
+                  "leadFormId": "0"
+                }
+              ]
+            },
+            {
+              "id": "1765608340989",
+              "type": "folder",
+              "name": "İngiltere Rusça",
+              "children": [
+                {
+                  "id": "1765611623313",
+                  "type": "category",
+                  "name": "İngiltere Rus - 1",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611635532",
+                  "type": "category",
+                  "name": "İngiltere Rus - 2",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611648736",
+                  "type": "category",
+                  "name": "İngiltere Rus - 3",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611659014",
+                  "type": "category",
+                  "name": "İngiltere Rus - 4",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611672761",
+                  "type": "category",
+                  "name": "İngiltere Rus - 5",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611684357",
+                  "type": "category",
+                  "name": "İngiltere Rus - 6",
+                  "children": [],
+                  "leadFormId": "0"
+                }
+              ]
+            },
+            {
+              "id": "1765608192138",
+              "type": "folder",
+              "name": "UK Rusça",
+              "children": [
+                {
+                  "id": "1765608364655",
+                  "type": "category",
+                  "name": "UkRus - 1",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608387606",
+                  "type": "category",
+                  "name": "UkRus - 2",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765608400173",
+                  "type": "category",
+                  "name": "UkRus - 3",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611001736",
+                  "type": "category",
+                  "name": "UkRus - 4",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611029144",
+                  "type": "category",
+                  "name": "UkRus - 5",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611045149",
+                  "type": "category",
+                  "name": "UkRus - 6",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611063464",
+                  "type": "category",
+                  "name": "UkRus - 7",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611073607",
+                  "type": "category",
+                  "name": "UkRus - 8",
+                  "children": [],
+                  "leadFormId": "0"
+                },
+                {
+                  "id": "1765611084164",
+                  "type": "category",
+                  "name": "UkRus - 9",
+                  "children": [],
+                  "leadFormId": "0"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "leadFormId": "0"
+    }
+  ]
+}

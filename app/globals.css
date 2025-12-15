@@ -1,0 +1,7 @@
+/* Genel layout: sayfa genelinde yatay kaydırmayı engelle */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+

@@ -1,0 +1,16 @@
+services:
+  moon-ui:
+    image: node:20
+    container_name: moon-ui
+    working_dir: /app
+    volumes:
+      - ./:/app
+    env_file:
+      - .env.local
+    ports:
+      - "4001:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: npm run dev
+    restart: always
+

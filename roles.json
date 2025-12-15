@@ -1,0 +1,78 @@
+[
+  {
+    "id": 1,
+    "name": "Admin",
+    "description": "Tüm modüllerde tam yetki",
+    "permissions": {
+      "viewCustomers": true,
+      "editCustomers": true,
+      "viewAppointments": true,
+      "editAppointments": true,
+      "viewStats": true,
+      "viewReports": true,
+      "manageSegments": true,
+      "sendCampaigns": true,
+      "manageDoctors": true,
+      "manageUsers": true,
+      "manageSettings": true,
+      "viewChats": true
+    }
+  },
+  {
+    "id": 2,
+    "name": "Yönetici",
+    "description": "Operasyon ve raporlama odaklı yetki",
+    "permissions": {
+      "viewCustomers": true,
+      "editCustomers": true,
+      "viewAppointments": true,
+      "editAppointments": true,
+      "viewStats": true,
+      "viewReports": true,
+      "manageSegments": true,
+      "sendCampaigns": true,
+      "manageDoctors": true,
+      "manageUsers": false,
+      "manageSettings": false,
+      "viewChats": true
+    }
+  },
+  {
+    "id": 3,
+    "name": "Danışman",
+    "description": "Kendi müşterileri ve randevularıyla çalışma",
+    "permissions": {
+      "viewCustomers": true,
+      "editCustomers": true,
+      "viewAppointments": true,
+      "editAppointments": true,
+      "viewStats": false,
+      "viewReports": false,
+      "manageSegments": false,
+      "sendCampaigns": false,
+      "manageDoctors": false,
+      "manageUsers": false,
+      "manageSettings": false,
+      "viewChats": true
+    }
+  },
+  {
+    "id": 4,
+    "name": "Personel",
+    "description": "Sadece görüntüleme ve temel işlemler",
+    "permissions": {
+      "viewCustomers": true,
+      "editCustomers": false,
+      "viewAppointments": true,
+      "editAppointments": false,
+      "viewStats": false,
+      "viewReports": false,
+      "manageSegments": false,
+      "sendCampaigns": false,
+      "manageDoctors": false,
+      "manageUsers": false,
+      "manageSettings": false,
+      "viewChats": false
+    }
+  }
+]

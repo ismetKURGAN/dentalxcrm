@@ -1,0 +1,218 @@
+[
+  {
+    "id": 1,
+    "name": "reklam",
+    "email": "reklam@xirtiz.com",
+    "roles": ["Admin"],
+    "languages": [],
+    "session": "reklam_wp",
+    "password": "Xirtiz!reklam123"
+  },
+  {
+    "id": 2,
+    "name": "Kylie",
+    "email": "kylie@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English", "German", "Finnish"],
+    "session": "kylie",
+    "password": "Xirtiz!kylie123"
+  },
+  {
+    "id": 3,
+    "name": "Nusin",
+    "email": "nusin@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English", "Finnish", "German"],
+    "session": "nusin",
+    "password": "Xirtiz!nusin123"
+  },
+  {
+    "id": 4,
+    "name": "Berk",
+    "email": "berk@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English"],
+    "session": "berk",
+    "password": "Xirtiz!berk123"
+  },
+  {
+    "id": 5,
+    "name": "firuza",
+    "email": "firuza@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["Russian"],
+    "session": "firuza_wp",
+    "password": "Xirtiz!firuza123"
+  },
+  {
+    "id": 6,
+    "name": "Adiya",
+    "email": "adiya@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["Russian"],
+    "session": "adiya_wp",
+    "password": "Xirtiz!adiya123"
+  },
+  {
+    "id": 7,
+    "name": "Connor",
+    "email": "connor@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English", "German", "Finnish"],
+    "session": "connor",
+    "password": "Xirtiz!connor123"
+  },
+  {
+    "id": 8,
+    "name": "Buse",
+    "email": "buse@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English", "German", "Finnish"],
+    "session": "buse",
+    "password": "Xirtiz!buse123"
+  },
+  {
+    "id": 9,
+    "name": "Soner",
+    "email": "soner@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English"],
+    "session": "soner_wp",
+    "password": "Xirtiz!soner123"
+  },
+  {
+    "id": 10,
+    "name": "Talha",
+    "email": "talha@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English", "German", "Finnish"],
+    "session": "talha",
+    "password": "Xirtiz!talha123"
+  },
+  {
+    "id": 11,
+    "name": "Hasan",
+    "email": "hasan@xirtiz.com",
+    "roles": ["Hasta Koordinatörü"],
+    "languages": [],
+    "session": "hasan_wp",
+    "password": "Xirtiz!hasan123"
+  },
+  {
+    "id": 12,
+    "name": "Muhasebe",
+    "email": "muhasebe@xirtiz.com",
+    "roles": ["Admin"],
+    "languages": [],
+    "session": "muhasebe_wp",
+    "password": "Xirtiz!muhasebe123"
+  },
+  {
+    "id": 13,
+    "name": "Leila",
+    "email": "leyla@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["Russian", "English"],
+    "session": "leyla",
+    "password": "Xirtiz!leila123"
+  },
+  {
+    "id": 14,
+    "name": "Büşra",
+    "email": "busra@xirtiz.com",
+    "roles": ["Hasta Koordinatörü"],
+    "languages": [],
+    "session": "busra_wp",
+    "password": "Xirtiz!busra123"
+  },
+  {
+    "id": 15,
+    "name": "Seref",
+    "email": "seref@xirtiz.com",
+    "roles": ["Admin"],
+    "languages": [],
+    "session": "seref_wp",
+    "password": "Xirtiz!seref123"
+  },
+  {
+    "id": 16,
+    "name": "Operasyon",
+    "email": "operation@xirtiz.com",
+    "roles": ["Operasyon"],
+    "languages": [],
+    "session": "operation_wp",
+    "password": "Xirtiz!operasyon123"
+  },
+  {
+    "id": 17,
+    "name": "Selçuk Tayfur",
+    "email": "selcuk@xirtiz.com",
+    "roles": ["Admin"],
+    "languages": [],
+    "session": "selcuk_wp",
+    "password": "Xirtiz!selcuk123"
+  },
+  {
+    "id": 18,
+    "name": "Diora",
+    "email": "diyora@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["Russian", "English"],
+    "session": "diyora",
+    "password": "Xirtiz!diora123"
+  },
+  {
+    "id": 19,
+    "name": "Lejla",
+    "email": "lejla@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["Bulgarian", "Romanian", "Polish", "Croatian", "English"],
+    "session": "lejla",
+    "password": "Xirtiz!lejla123"
+  },
+  {
+    "id": 20,
+    "name": "Sonege",
+    "email": "sonege@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["French", "English", "Finnish"],
+    "session": "sonege",
+    "password": "Xirtiz!sonege123"
+  },
+  {
+    "id": 21,
+    "name": "Hakim",
+    "email": "hakim@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["French", "Arabic"],
+    "session": "hakim_wp",
+    "password": "Xirtiz!hakim123"
+  },
+  {
+    "id": 22,
+    "name": "Sadık",
+    "email": "sadik@xirtiz.com",
+    "roles": ["Danışman"],
+    "languages": ["English", "Persian"],
+    "session": "sadik",
+    "password": "Xirtiz!sadik123"
+  },
+  {
+    "id": 23,
+    "name": "Emre",
+    "email": "emre@xirtiz.com",
+    "roles": ["Admin"],
+    "languages": [],
+    "session": "emre_wp",
+    "password": "Xirtiz!emre123"
+  },
+  {
+    "id": 24,
+    "name": "Super Admin",
+    "email": "admin@bytno.com",
+    "roles": ["SuperAdmin"],
+    "languages": [],
+    "session": "admin_wp",
+    "password": "Bytno1956a"
+  }
+]
