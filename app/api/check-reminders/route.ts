@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+// Uygulama içi API çağrıları için temel URL
+const INTERNAL_BASE_URL =
+  process.env.NEXT_INTERNAL_BASE_URL ||
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  "http://localhost:3000";
+
 // --- AYARLAR ---
 
 // 1. Waha (WhatsApp API) için istekleri, mevcut Next.js proxy'si üzerinden geçiyoruz
@@ -182,7 +188,7 @@ async function sendWhatsApp(session: string, phone: string, text: string) {
       from_me: true,
     };
 
-    const response = await fetch("http://localhost:3000/api/wp/messages", {
+    const response = await fetch(`${INTERNAL_BASE_URL.replace(/\/$/, "")}/api/wp/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

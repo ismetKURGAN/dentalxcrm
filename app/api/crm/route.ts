@@ -412,7 +412,7 @@ async function sendAutoWelcomeByLabelIfPossible(
       from_me: true,
     };
 
-    const response = await fetch("http://localhost:3000/api/wp/messages", {
+    const response = await fetch(`${INTERNAL_BASE_URL.replace(/\/$/, "")}/api/wp/messages`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -482,7 +482,7 @@ async function sendAdvisorLeadNotificationIfPossible(customer: any) {
       from_me: true,
     };
 
-    const response = await fetch("http://localhost:3000/api/wp/messages", {
+    const response = await fetch(`${INTERNAL_BASE_URL.replace(/\/$/, "")}/api/wp/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

@@ -36,6 +36,19 @@ yarn-error.log*
 # settings with API keys
 settings.json
 
+# data files (müşteri verileri - GitHub'a gitmemeli)
+db.json
+campaigns.json
+labels.json
+users.json
+roles.json
+calendar.json
+doctors.json
+segments.json
+
+# backups
+backups/
+
 # vercel
 .vercel
 
