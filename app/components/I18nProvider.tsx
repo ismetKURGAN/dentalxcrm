@@ -27,11 +27,13 @@ const dictTr: Record<string, string> = {
   "sidebar.appointments": "Randevular",
   "sidebar.doctors": "Doktorlar",
   "sidebar.chats": "Sohbetler",
+  "sidebar.wazzup": "Wazzup",
   "sidebar.stats": "İstatistikler",
   "sidebar.reports": "Raporlar",
   "sidebar.segments": "Segmentler",
   "sidebar.campaignStatuses": "Kampanya Durumları",
   "sidebar.users": "Kullanıcılar",
+  "sidebar.hotels": "Oteller",
   "sidebar.timesheets": "Mesai Takip",
   "sidebar.settings": "Ayarlar",
 
@@ -247,6 +249,54 @@ const dictTr: Record<string, string> = {
   "reports.advisor.table.cancelPct": "Satış İptal %",
   "reports.advisor.actions.export": "Excel'e Aktar",
   "reports.advisor.defaultAdvisor": "Diğer",
+
+  // Appointments page
+  "appointments.page.title": "Randevular",
+  "appointments.columns.name": "Müşteri Adı",
+  "appointments.columns.appointmentDate": "Randevu Tarihi",
+  "appointments.columns.tripName": "Seyahat",
+  "appointments.columns.doctor": "Doktor",
+  "appointments.columns.service": "Hizmetler",
+  "appointments.columns.status": "Durum",
+  "appointments.columns.arrivalDate": "Geliş",
+  "appointments.columns.departureDate": "Gidiş",
+  "appointments.columns.returnPickupTime": "Dönüş Alınma (3 saat öncesi)",
+  "appointments.columns.hotel": "Otel",
+  "appointments.filters.status": "Durum",
+  "appointments.filters.all": "Tümü",
+
+  // Doctors page
+  "doctors.page.title": "Doktorlar",
+  "doctors.actions.new": "Yeni Doktor",
+  "doctors.columns.name": "Ad Soyad",
+  "doctors.columns.specialty": "Uzmanlık",
+  "doctors.columns.phone": "Telefon",
+  "doctors.columns.email": "E-Posta",
+  "doctors.columns.actions": "İşlemler",
+  "doctors.actions.edit": "Düzenle",
+  "doctors.actions.delete": "Sil",
+  "doctors.modal.newTitle": "Yeni Doktor Ekle",
+  "doctors.modal.editTitle": "Doktor Düzenle",
+  "doctors.modal.name": "Ad Soyad",
+  "doctors.modal.specialty": "Uzmanlık",
+  "doctors.modal.phone": "Telefon",
+  "doctors.modal.email": "E-Posta",
+  "doctors.modal.cancel": "İptal",
+  "doctors.modal.save": "Kaydet",
+  "doctors.snackbar.created": "Doktor eklendi",
+  "doctors.snackbar.updated": "Doktor güncellendi",
+  "doctors.snackbar.deleted": "Doktor silindi",
+  "common.select": "Seçiniz",
+
+  // Service translations (display only, DB values stay in Turkish)
+  "service.Randevu": "Randevu",
+  "service.Diğer": "Diğer",
+  "service.TüpBebekIVF": "Tüp Bebek IVF",
+  "service.SaçEkimi": "Saç Ekimi",
+  "service.Estetik": "Estetik",
+  "service.GözAmeliyatı": "Göz Ameliyatı",
+  "service.Diş": "Diş",
+  "service.Obezite": "Obezite",
 };
 
 const dictEn: Record<string, string> = {
@@ -262,11 +312,13 @@ const dictEn: Record<string, string> = {
   "sidebar.appointments": "Appointments",
   "sidebar.doctors": "Doctors",
   "sidebar.chats": "Chats",
+  "sidebar.wazzup": "Wazzup",
   "sidebar.stats": "Statistics",
   "sidebar.reports": "Reports",
   "sidebar.segments": "Segments",
   "sidebar.campaignStatuses": "Campaign Statuses",
   "sidebar.users": "Users",
+  "sidebar.hotels": "Hotels",
   "sidebar.timesheets": "Time Tracking",
   "sidebar.settings": "Settings",
 
@@ -482,6 +534,54 @@ const dictEn: Record<string, string> = {
   "reports.advisor.table.cancelPct": "Cancelled Sales %",
   "reports.advisor.actions.export": "Export to Excel",
   "reports.advisor.defaultAdvisor": "Other",
+
+  // Appointments page
+  "appointments.page.title": "Appointments",
+  "appointments.columns.name": "Customer Name",
+  "appointments.columns.appointmentDate": "Appointment Date",
+  "appointments.columns.tripName": "Trip",
+  "appointments.columns.doctor": "Doctor",
+  "appointments.columns.service": "Services",
+  "appointments.columns.status": "Status",
+  "appointments.columns.arrivalDate": "Arrival",
+  "appointments.columns.departureDate": "Departure",
+  "appointments.columns.returnPickupTime": "Return Pickup (3h before)",
+  "appointments.columns.hotel": "Hotel",
+  "appointments.filters.status": "Status",
+  "appointments.filters.all": "All",
+
+  // Doctors page
+  "doctors.page.title": "Doctors",
+  "doctors.actions.new": "New Doctor",
+  "doctors.columns.name": "Name",
+  "doctors.columns.specialty": "Specialty",
+  "doctors.columns.phone": "Phone",
+  "doctors.columns.email": "Email",
+  "doctors.columns.actions": "Actions",
+  "doctors.actions.edit": "Edit",
+  "doctors.actions.delete": "Delete",
+  "doctors.modal.newTitle": "Add New Doctor",
+  "doctors.modal.editTitle": "Edit Doctor",
+  "doctors.modal.name": "Name",
+  "doctors.modal.specialty": "Specialty",
+  "doctors.modal.phone": "Phone",
+  "doctors.modal.email": "Email",
+  "doctors.modal.cancel": "Cancel",
+  "doctors.modal.save": "Save",
+  "doctors.snackbar.created": "Doctor added",
+  "doctors.snackbar.updated": "Doctor updated",
+  "doctors.snackbar.deleted": "Doctor deleted",
+  "common.select": "Select",
+
+  // Service translations (display only, DB values stay in Turkish)
+  "service.Randevu": "Appointment",
+  "service.Diğer": "Other",
+  "service.TüpBebekIVF": "IVF Treatment",
+  "service.SaçEkimi": "Hair Transplant",
+  "service.Estetik": "Aesthetic Surgery",
+  "service.GözAmeliyatı": "Eye Surgery",
+  "service.Diş": "Dental",
+  "service.Obezite": "Obesity Treatment",
 };
 
 function getDict(lang: Language): Record<string, string> {
@@ -522,4 +622,16 @@ export function useI18n() {
     throw new Error("useI18n must be used within I18nProvider");
   }
   return ctx;
+}
+
+// Helper function to translate status/service values for display
+export function translateValue(value: string, type: 'status' | 'service', language: Language): string {
+  if (!value) return value;
+  if (!language) return value;
+  
+  // Remove spaces and special chars for key lookup
+  const key = `${type}.${value.replace(/\s+/g, '')}`;
+  const dict = getDict(language);
+  
+  return dict[key] || value;
 }

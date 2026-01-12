@@ -42,12 +42,28 @@ export default function ReportsPage() {
       const byAdvisor: Record<string, { total: number; offer: number; sale: number; cancel: number }> = {};
 
       data.forEach((c: any) => {
-        const adv = c.advisor || t("reports.advisor.defaultAdvisor");
+        // Danışman bilgisini al (status objesinden veya direkt advisor alanından)
+        let adv = "";
+        if (typeof c.status === 'object' && c.status !== null) {
+          adv = c.status.consultant || c.advisor || t("reports.advisor.defaultAdvisor");
+        } else {
+          adv = c.advisor || t("reports.advisor.defaultAdvisor");
+        }
+        
         if (!byAdvisor[adv]) {
           byAdvisor[adv] = { total: 0, offer: 0, sale: 0, cancel: 0 };
         }
         byAdvisor[adv].total += 1;
-        const g = groupStatus(c.status);
+        
+        // Status değerini al
+        let statusValue = "";
+        if (typeof c.status === 'object' && c.status !== null) {
+          statusValue = c.status.status || "";
+        } else if (typeof c.status === 'string') {
+          statusValue = c.status;
+        }
+        
+        const g = groupStatus(statusValue);
         if (g === "offer") byAdvisor[adv].offer += 1;
         if (g === "sale") byAdvisor[adv].sale += 1;
         if (g === "cancel") byAdvisor[adv].cancel += 1;

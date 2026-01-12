@@ -1,0 +1,628 @@
+[
+  {
+    "email": "Travismills30@hotmail.com",
+    "name": "Sarahssraj Mills",
+    "personal.facebook.leadFormId": "form07484827437",
+    "phone": "+447484827437",
+    "status": {
+      "0": "Y",
+      "1": "e",
+      "2": "n",
+      "3": "i",
+      "4": " ",
+      "5": "F",
+      "6": "o",
+      "7": "r",
+      "8": "m",
+      "notes": "WhatsApp: Whatsapp 07484827437",
+      "status": "Yeni Form",
+      "consultant": "Buse",
+      "category": "İngiltere - Filtreli - 14",
+      "services": ""
+    },
+    "whatsappNumber": "Whatsapp 07484827437",
+    "advisor": "Danışment",
+    "id": 1766074397036,
+    "createdAt": "2025-12-18T16:13:17.036Z",
+    "personal": {
+      "name": "Sarahssraj Mills",
+      "email": "Travismills30@hotmail.com",
+      "phone": "+447484827437",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "18.12.2025 19:13:17",
+      "facebook": {
+        "leadFormId": "form07484827437"
+      }
+    },
+    "noAutoWelcome": true,
+    "markedAt": "2025-12-22T07:41:59.376Z",
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "prePayments": [
+        {
+          "id": 1766409242898,
+          "tripName": "1. Seyahat",
+          "description": "",
+          "amount": "",
+          "currency": ""
+        }
+      ],
+      "prePaymentNotes": "",
+      "finalPayments": {
+        "costs": [
+          {
+            "id": 1766409242898,
+            "category": "1. Seyahat",
+            "amount": "",
+            "currency": ""
+          }
+        ],
+        "sales": [
+          {
+            "id": 1766409242899,
+            "category": "1. Seyahat",
+            "amount": "",
+            "currency": ""
+          }
+        ],
+        "notes": ""
+      }
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": []
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "deletedAt": "2025-12-22T13:29:38.654Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "denem",
+    "phone": "+905070814738",
+    "email": "denem@denem",
+    "status": {
+      "consultant": "Lejla",
+      "category": "",
+      "services": "Diğer",
+      "status": "Teklif Yollandı 4"
+    },
+    "country": "Türkiye",
+    "registerDate": "",
+    "advisor": "Danış-2",
+    "category": "",
+    "id": 1766431479609,
+    "createdAt": "2025-12-22T19:24:39.609Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "email": "denem@denem",
+      "name": "denem",
+      "phone": "+905070814738"
+    },
+    "deletedAt": "2025-12-23T06:22:11.235Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "emre",
+    "phone": "+905456348851",
+    "email": "",
+    "status": {
+      "consultant": "Buse",
+      "category": "",
+      "services": "Dental Implants&Crowns",
+      "status": "İlgisiz"
+    },
+    "country": "Türkiye",
+    "createdAt": "2025-12-22T07:00:00.000Z",
+    "advisor": "Buse",
+    "category": "",
+    "id": 1766488800485,
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "emre",
+      "phone": "+905456348851"
+    },
+    "service": "Dental Implants&Crowns",
+    "deletedAt": "2025-12-23T11:21:13.517Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "güncelme test",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danış-2",
+      "category": "",
+      "services": "Beyin ve Sinir Cerrahisi (Nöroşirürji)",
+      "status": "Teklif Yollandı"
+    },
+    "country": "Germany",
+    "advisor": "Danış-2",
+    "category": "",
+    "id": 1766520659744,
+    "createdAt": "2025-12-23T20:10:59.744Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "güncelme test"
+    },
+    "service": "Göğüs (Akciğer) Hastalıkları",
+    "deletedAt": "2025-12-23T20:11:30.031Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "güncellem",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danışment",
+      "category": "",
+      "services": "Beyin ve Sinir Cerrahisi (Nöroşirürji)",
+      "status": "Teklif Yollandı"
+    },
+    "country": "",
+    "advisor": "Danışment",
+    "category": "",
+    "id": 1766523238450,
+    "createdAt": "2025-12-23T20:53:58.450Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "güncellem"
+    },
+    "service": "",
+    "deletedAt": "2025-12-23T20:54:12.765Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "fe",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danış-4",
+      "category": "",
+      "services": "Onkoloji",
+      "status": "Teklif Yollandı"
+    },
+    "country": "",
+    "advisor": "Danış-4",
+    "category": "",
+    "id": 1766526115068,
+    "createdAt": "2025-12-23T21:41:55.069Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "fe"
+    },
+    "service": "",
+    "deletedAt": "2025-12-23T21:42:05.575Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "dede",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danış-1",
+      "category": "",
+      "services": "Diğer",
+      "status": "Teklif Yollandı"
+    },
+    "country": "",
+    "advisor": "Danış-1",
+    "category": "",
+    "id": 1766526697423,
+    "createdAt": "2025-12-24T18:51:00.000Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "dede"
+    },
+    "service": "Diğer",
+    "deletedAt": "2025-12-23T21:57:23.626Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "deneme",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danış-2",
+      "category": "",
+      "services": "Beyin ve Sinir Cerrahisi (Nöroşirürji)",
+      "status": "Teklif Yollandı"
+    },
+    "country": "",
+    "createdAt": "2025-12-25T11:14:00.000Z",
+    "advisor": "Danış-2",
+    "category": "",
+    "id": 1766527063676,
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "deneme"
+    },
+    "service": "",
+    "deletedAt": "2025-12-23T21:57:54.440Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "deneme",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danışment",
+      "category": "",
+      "services": "Tüp Bebek IVF",
+      "status": "Teklif Yollandı"
+    },
+    "country": "",
+    "advisor": "Danışment",
+    "category": "",
+    "id": 1766528461074,
+    "createdAt": "2025-12-23T22:21:01.074Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "deneme"
+    },
+    "service": "Tüp Bebek IVF",
+    "deletedAt": "2025-12-23T22:25:29.798Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "Maciej Rachuba",
+    "phone": "+48 694 596 406",
+    "email": "",
+    "status": {
+      "consultant": "Danış-4",
+      "category": "",
+      "services": "",
+      "status": "Satış"
+    },
+    "country": "Poland",
+    "advisor": "Danış-4",
+    "category": "",
+    "id": 1766650968441,
+    "createdAt": "2025-12-25T08:22:48.441Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "Maciej Rachuba",
+      "phone": "+48 694 596 406"
+    },
+    "deletedAt": "2025-12-25T08:25:30.675Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "email": "",
+    "name": "Slawomir Kawa",
+    "personal.facebook.leadFormId": "2072907240189767",
+    "phone": "+48731332581",
+    "status": {
+      "consultant": "Lejla",
+      "category": "Polonya Lehçe",
+      "services": "Dental Implants&Crowns",
+      "status": "Satış"
+    },
+    "advisor": "Lejla",
+    "category": "Polonya Lehçe",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "id": 1765142054328,
+    "createdAt": "2025-12-07T21:14:14.328Z",
+    "personal": {
+      "name": "Slawomir Kawa",
+      "email": "",
+      "phone": "+48731332581",
+      "country": "Poland",
+      "notes": "",
+      "registerDate": "08.12.2025 00:14:14",
+      "facebook": {
+        "leadFormId": "2072907240189767",
+        "campaignName": " Lehçe Avrupalı Polonyalı - Filtreli - 2"
+      }
+    },
+    "noAutoWelcome": true,
+    "markedAt": "2025-12-22T07:41:59.375Z",
+    "service": "Dental Implants&Crowns",
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "prePayments": [
+        {
+          "id": 1766652953925,
+          "tripName": "1. Seyahat",
+          "description": "",
+          "amount": "",
+          "currency": ""
+        }
+      ],
+      "prePaymentNotes": "",
+      "finalPayments": {
+        "costs": [
+          {
+            "id": 1766652953925,
+            "category": "1. Seyahat",
+            "amount": "",
+            "currency": ""
+          }
+        ],
+        "sales": [
+          {
+            "id": 1766652953926,
+            "category": "1. Seyahat",
+            "amount": "",
+            "currency": ""
+          }
+        ],
+        "notes": ""
+      }
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "id": 1766653840420,
+          "name": "1. Seyahat",
+          "dateUndetermined": false,
+          "appointmentDate": "2026-01-19",
+          "appointmentTime": "10:00",
+          "doctor": "Luwi Dental Clinic Antalya",
+          "service": "",
+          "hotel": "Rodinn Park Hotel Antalya",
+          "transferCompany": "",
+          "roomType": "Single",
+          "peopleCount": "1",
+          "travelNotes": "",
+          "arrivalDate": "2026-01-18",
+          "arrivalTime": "13:50",
+          "arrivalFlightCode": "PC 1503",
+          "departureDate": "2026-01-22",
+          "departureTime": "07:40",
+          "departureFlightCode": "XQ 432"
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1766653903125,
+        "name": "1K7PFY-bilet-elektroniczny.pdf",
+        "size": "105.31 KB",
+        "uploadedAt": "25.12.2025 12:11:43"
+      },
+      {
+        "id": 1766653903126,
+        "name": "385b7b7c-b6d1-4742-9c0b-bb8b2cd15f56.jpg",
+        "size": "377.95 KB",
+        "uploadedAt": "25.12.2025 12:11:43"
+      },
+      {
+        "id": 1766653903127,
+        "name": "c6d6a4b6-be19-4f8b-93e3-ee444a86c7b4.jpg",
+        "size": "257.50 KB",
+        "uploadedAt": "25.12.2025 12:11:43"
+      },
+      {
+        "id": 1766653903128,
+        "name": "Q46FV2-bilet-elektroniczny.pdf",
+        "size": "105.67 KB",
+        "uploadedAt": "25.12.2025 12:11:43"
+      },
+      {
+        "id": 1766653903129,
+        "name": "Slawomir Kawa   - Your treatment plan - 2025-12-15 (1).pdf",
+        "size": "2234.66 KB",
+        "uploadedAt": "25.12.2025 12:11:43"
+      }
+    ],
+    "history": [],
+    "deletedAt": "2025-12-25T09:25:30.548Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Danışment",
+      "category": "",
+      "services": "",
+      "status": "Yeni Form"
+    },
+    "country": "",
+    "advisor": "Danışment",
+    "category": "",
+    "id": 1766664827742,
+    "createdAt": "2025-12-25T12:13:47.742Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {}
+    },
+    "deletedAt": "2025-12-26T06:28:17.969Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "testtest",
+    "phone": "+905070814738",
+    "email": "testtes@test",
+    "status": {
+      "consultant": "Lejla",
+      "category": "",
+      "services": "",
+      "status": "Yeni Form"
+    },
+    "country": "Türkiye",
+    "advisor": "Anastasia",
+    "category": "",
+    "id": 1767905087644,
+    "createdAt": "2026-01-08T20:44:47.644Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "email": "testtes@test",
+      "name": "testtest",
+      "phone": "+905070814738"
+    },
+    "service": "",
+    "deletedAt": "2026-01-08T20:50:05.189Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "test",
+    "phone": "+905070814738",
+    "email": "testsq@tewsat",
+    "status": {
+      "consultant": "Lejla",
+      "category": "",
+      "services": "",
+      "status": "Yeni Form"
+    },
+    "country": "Türkiye",
+    "advisor": "Diora",
+    "category": "",
+    "id": 1767905429956,
+    "createdAt": "2026-01-08T20:50:29.956Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "email": "testsq@tewsat",
+      "name": "test",
+      "phone": "+905070814738"
+    },
+    "service": "",
+    "deletedAt": "2026-01-08T21:04:05.918Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "deneme",
+    "phone": "+905070814738",
+    "email": "deneme@denek",
+    "status": {
+      "consultant": "Lejla",
+      "category": "",
+      "services": "",
+      "status": "Yeni Form"
+    },
+    "country": "",
+    "advisor": "Michal",
+    "category": "",
+    "id": 1767906942389,
+    "createdAt": "2026-01-08T21:15:42.389Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "email": "deneme@denek",
+      "name": "deneme",
+      "phone": "+905070814738"
+    },
+    "service": "",
+    "deletedAt": "2026-01-08T21:50:28.463Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "Test Lejla Console",
+    "phone": "+905070814738",
+    "email": "testlejla@console.test",
+    "advisor": "Lejla",
+    "category": "Dental Lehçe",
+    "service": "Dental Treatment",
+    "country": "Polska",
+    "id": 1767909041509,
+    "createdAt": "2026-01-08T21:50:41.509Z",
+    "status": {
+      "consultant": "Lejla",
+      "category": "Dental Lehçe",
+      "services": "Dental Treatment",
+      "status": "Yeni Form"
+    },
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "email": "testlejla@console.test",
+      "name": "Test Lejla Console",
+      "phone": "+905070814738"
+    },
+    "deletedAt": "2026-01-09T08:28:11.404Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "email": "test@fb.com",
+    "name": "test lead: dummy data for full_name",
+    "personal.facebook.leadFormId": "1229886092357856",
+    "phone": "test lead: dummy data for phone_number",
+    "status": {
+      "consultant": "Buse",
+      "category": "",
+      "services": "",
+      "status": "Yeni Form"
+    },
+    "advisor": "Buse",
+    "category": "",
+    "id": 1767997113838,
+    "createdAt": "2026-01-09T22:18:33.838Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1229886092357856"
+      },
+      "email": "test@fb.com",
+      "name": "test lead: dummy data for full_name",
+      "phone": "test lead: dummy data for phone_number"
+    },
+    "deletedAt": "2026-01-10T09:06:46.944Z",
+    "deletedBy": "unknown"
+  },
+  {
+    "name": "deneme",
+    "phone": "",
+    "email": "",
+    "status": {
+      "consultant": "Acenta 1",
+      "category": "",
+      "services": "",
+      "status": "Yeni Form"
+    },
+    "country": "Türkiye",
+    "advisor": "Acenta 1",
+    "category": "",
+    "id": 1768210477596,
+    "createdAt": "2026-01-12T09:34:37.596Z",
+    "statusNotes": "",
+    "personal": {
+      "facebook": {},
+      "name": "deneme"
+    },
+    "deletedAt": "2026-01-12T09:34:58.173Z",
+    "deletedBy": "unknown"
+  }
+]

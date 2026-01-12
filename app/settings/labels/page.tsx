@@ -86,7 +86,7 @@ export default function LabelsSettingsPage() {
         }
         if (usersRes.ok) {
           const data = await usersRes.json();
-          setUsers((data || []).filter((u: any) => (u.roles || []).includes("Danışman")));
+          setUsers((data || []).filter((u: any) => (u.roles || []).includes("Danışman") || (u.roles || []).includes("Acenta")));
         }
       } catch (e) {
         console.error("Etiketler veya kampanyalar yüklenemedi", e);

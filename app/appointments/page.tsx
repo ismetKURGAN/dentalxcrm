@@ -29,6 +29,7 @@ import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import FlightLandIcon from "@mui/icons-material/FlightLand";
 import HotelIcon from "@mui/icons-material/Hotel";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import { useI18n } from "../components/I18nProvider";
 
 // Basit yıl ve ay listeleri
 const YEARS = [2024, 2025, 2026];
@@ -45,6 +46,54 @@ const MONTHS = [
   { value: 9, label: "Ekim" },
   { value: 10, label: "Kasım" },
   { value: 11, label: "Aralık" },
+];
+
+const CRM_SERVICES = [
+  "Dental İmplant",
+  "Dental İmplant&Crowns",
+  "Hollywood Smile",
+  "Zirconium Crowns",
+  "Laminate Veneer",
+  "Teeth Whitening",
+  "Gum Aesthetics",
+  "Orthodontics",
+  "Root Canal Treatment",
+  "Dental Cleaning",
+  "Tooth Extraction",
+  "Dental Filling",
+  "Dental Bridge",
+  "Dental Bonding",
+  "Dental Inlay/Onlay",
+  "Dental Surgery",
+  "Pediatric Dentistry",
+  "Geriatric Dentistry",
+  "Cosmetic Dentistry",
+  "Restorative Dentistry",
+  "Preventive Dentistry",
+  "Emergency Dentistry",
+  "Sedation Dentistry",
+  "Laser Dentistry",
+  "Digital Dentistry",
+  "3D Dentistry",
+  "CAD/CAM Dentistry",
+  "Implantology",
+  "Periodontology",
+  "Endodontics",
+  "Prosthodontics",
+  "Oral Surgery",
+  "Maxillofacial Surgery",
+  "Oral Pathology",
+  "Oral Radiology",
+  "Oral Medicine",
+  "Oral Biology",
+  "Oral Anatomy",
+  "Oral Histology",
+  "Oral Physiology",
+  "Oral Biochemistry",
+  "Oral Microbiology",
+  "Oral Immunology",
+  "Oral Pharmacology",
+  "Oral Pathology",
 ];
 
 function formatDate(dateStr: string): string {
@@ -71,6 +120,7 @@ function formatDateTime(dateStr: string, timeStr: string): string {
 }
 
 export default function AppointmentsPage() {
+  const { t } = useI18n();
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [year, setYear] = useState<number | "all">(2025);
@@ -86,9 +136,9 @@ export default function AppointmentsPage() {
     "tripName",
     "doctor",
     "service",
+    "status",
     "arrivalDate",
     "departureDate",
-    "returnPickupTime",
     "hotel",
   ]);
 
@@ -125,8 +175,26 @@ export default function AppointmentsPage() {
       const mapped: any[] = [];
       
       data.forEach((c: any) => {
+        // Status bilgisini düzelt - hem eski (string) hem yeni (object) formatı destekle
+        let statusValue = '';
+        let advisorValue = '';
+        let categoryValue = '';
+        let serviceValue = '';
+        
+        if (typeof c.status === 'object' && c.status !== null) {
+          statusValue = c.status.status || '';
+          advisorValue = c.status.consultant || '';
+          categoryValue = c.status.category || '';
+          serviceValue = c.status.services || c.service || '';
+        } else if (typeof c.status === 'string') {
+          statusValue = c.status;
+          advisorValue = c.advisor || '';
+          categoryValue = c.category || '';
+          serviceValue = c.service || '';
+        }
+        
         // Sadece "Satış" veya "Satış Kapalı" durumundaki müşterileri al
-        if (c.status === "Satış" || c.status === "Satış Kapalı") {
+        if (statusValue === "Satış" || statusValue === "Satış Kapalı") {
           const trips = c.sales?.trips || [];
           
           trips.forEach((trip: any, tripIndex: number) => {
@@ -135,14 +203,14 @@ export default function AppointmentsPage() {
                 id: `${c.id}-trip-${tripIndex}`,
                 customerId: c.id,
                 name: c.name || c.personal?.name || "-",
-                advisor: c.advisor || "-",
-                status: c.status || "-",
-                category: c.category || "-",
+                advisor: advisorValue || "-",
+                status: statusValue || "-",
+                category: categoryValue || "-",
                 tripName: trip.name || `${tripIndex + 1}. Seyahat`,
                 appointmentDate: trip.appointmentDate,
                 appointmentTime: trip.appointmentTime || "",
                 doctor: trip.doctor || "",
-                service: trip.service || "",
+                service: serviceValue || trip.service || "",
                 arrivalDate: trip.arrivalDate || "",
                 arrivalTime: trip.arrivalTime || "",
                 departureDate: trip.departureDate || "",
@@ -181,18 +249,63 @@ export default function AppointmentsPage() {
   useEffect(() => {
     fetchAppointments();
     fetchDoctors();
+
+    // Otomatik yenileme - her 30 saniyede bir
+    const interval = setInterval(() => {
+      fetchAppointments();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
-  const handleInlineUpdate = async (id: number, field: string, value: any) => {
+  const handleInlineUpdate = async (id: string, field: string, value: any) => {
     // Önce UI'da güncelle
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
 
     try {
+      // id formatı: "${customerId}-trip-${tripIndex}"
+      const parts = String(id).split('-trip-');
+      if (parts.length !== 2) {
+        console.error("Geçersiz randevu ID formatı:", id);
+        return;
+      }
+      
+      const customerId = parseInt(parts[0]);
+      const tripIndex = parseInt(parts[1]);
+      
+      // İlgili müşteriyi bul
+      const customer = allCustomers.find((c: any) => c.id === customerId);
+      if (!customer) {
+        console.error("Müşteri bulunamadı:", customerId);
+        return;
+      }
+      
+      // Trip'i güncelle
+      const updatedCustomer = { ...customer };
+      if (!updatedCustomer.sales) updatedCustomer.sales = {};
+      if (!updatedCustomer.sales.trips) updatedCustomer.sales.trips = [];
+      
+      if (updatedCustomer.sales.trips[tripIndex]) {
+        updatedCustomer.sales.trips[tripIndex] = {
+          ...updatedCustomer.sales.trips[tripIndex],
+          [field]: value
+        };
+      }
+      
+      // API'ye gönder
       await fetch("/api/crm", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, [field]: value }),
+        body: JSON.stringify({ 
+          id: customerId,
+          sales: updatedCustomer.sales
+        }),
       });
+      
+      // allCustomers state'ini güncelle
+      setAllCustomers((prev: any[]) => 
+        prev.map((c: any) => c.id === customerId ? updatedCustomer : c)
+      );
     } catch (e) {
       console.error("Randevu alanı güncellenirken hata", e);
     }
@@ -308,7 +421,7 @@ export default function AppointmentsPage() {
   const columns: GridColDef[] = [
     { 
       field: "name", 
-      headerName: "Müşteri Adı", 
+      headerName: t("appointments.columns.name"), 
       flex: 1, 
       minWidth: 180,
       renderCell: (params) => (
@@ -330,7 +443,7 @@ export default function AppointmentsPage() {
     },
     { 
       field: "appointmentDate", 
-      headerName: "Randevu Tarihi", 
+      headerName: t("appointments.columns.appointmentDate"), 
       width: 150,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -348,7 +461,7 @@ export default function AppointmentsPage() {
     },
     { 
       field: "tripName", 
-      headerName: "Seyahat", 
+      headerName: t("appointments.columns.tripName"), 
       width: 120,
       renderCell: (params) => {
         const tripNumber = params.value?.match(/\d+/)?.[0] || "1";
@@ -379,7 +492,7 @@ export default function AppointmentsPage() {
     },
     { 
       field: "doctor", 
-      headerName: "Doktor", 
+      headerName: t("appointments.columns.doctor"), 
       width: 200,
       renderCell: (params) => (
         <Typography variant="body2" sx={{ color: "#000", fontSize: "0.875rem" }}>
@@ -389,17 +502,17 @@ export default function AppointmentsPage() {
     },
     { 
       field: "service", 
-      headerName: "Hizmetler", 
+      headerName: t("appointments.columns.service"), 
       width: 200,
       renderCell: (params) => (
-        <Typography variant="body2" sx={{ color: "#000", fontSize: "0.875rem" }}>
-          {params.value}
+        <Typography sx={{ fontSize: "0.875rem", color: "#111827" }}>
+          {params.value || "-"}
         </Typography>
       ),
     },
     { 
       field: "arrivalDate", 
-      headerName: "Geliş", 
+      headerName: t("appointments.columns.arrivalDate"), 
       width: 140,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -417,7 +530,7 @@ export default function AppointmentsPage() {
     },
     { 
       field: "departureDate", 
-      headerName: "Gidiş", 
+      headerName: t("appointments.columns.departureDate"), 
       width: 140,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -435,7 +548,7 @@ export default function AppointmentsPage() {
     },
     { 
       field: "returnPickupTime", 
-      headerName: "Dönüş Alınma (3 saat öncesi)", 
+      headerName: t("appointments.columns.returnPickupTime"), 
       width: 180,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
@@ -448,7 +561,7 @@ export default function AppointmentsPage() {
     },
     { 
       field: "hotel", 
-      headerName: "Otel", 
+      headerName: t("appointments.columns.hotel"), 
       flex: 1, 
       minWidth: 220,
       renderCell: (params) => (
@@ -459,6 +572,34 @@ export default function AppointmentsPage() {
           </Typography>
         </Stack>
       ),
+    },
+    { 
+      field: "status", 
+      headerName: t("appointments.columns.status"), 
+      width: 150,
+      renderCell: (params) => {
+        const statusColors: Record<string, { bg: string; color: string }> = {
+          "Satış": { bg: "#dcfce7", color: "#16a34a" },
+          "Satış Kapalı": { bg: "#fee2e2", color: "#dc2626" },
+        };
+        const style = statusColors[params.value] || { bg: "#f3f4f6", color: "#6b7280" };
+        
+        return (
+          <Box sx={{ 
+            display: "inline-block",
+            bgcolor: style.bg, 
+            color: style.color, 
+            px: 1.5, 
+            py: 0.5, 
+            borderRadius: 1,
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            whiteSpace: "nowrap"
+          }}>
+            {params.value || "-"}
+          </Box>
+        );
+      },
     },
   ];
 
@@ -482,10 +623,10 @@ export default function AppointmentsPage() {
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
             <Typography variant="h5" fontWeight={700} color="#000">
-              Randevu Yönetimi
+              {t("appointments.page.title")}
             </Typography>
             <Typography variant="body2" color="#6c757d" sx={{ mt: 0.5 }}>
-              Müşteri randevularını buradan görüntüleyebilirsiniz.
+              {t("appointments.page.title")}
             </Typography>
           </Box>
           <Stack direction="row" spacing={1.5}>

@@ -1,0 +1,60 @@
+[
+  {
+    "id": 1765012451055,
+    "title": "Dental Farsça",
+    "categoryId": "1765002371367",
+    "advisors": [
+      "Sadık"
+    ],
+    "language": "Persian",
+    "message": "*سلام {name} !*\nنام من صادق است و خوشحال هستم که خودم و کلینیک *Dental X Turkey* را معرفی کنم.\nمن اینجا هستم تا در مسیر درمان‌تان با راهنمایی دقیق، برنامه‌ریزی درست و تجربه‌ای حرفه‌ای و دوستانه همراهتان باشم.\n*Dental X Turkey* یکی از معتبرترین برندهای دندانپزشکی بین‌المللی ترکیه است با بیش از ۳۰ سال تجربه و دقت ۹۹٪.\nما مورد اعتماد هزاران بیمار از اروپا، بریتانیا، خاورمیانه و آسیای مرکزی هستیم؛ از جمله چهره‌های مشهوری مانند نیکولاس آنلکا* و درک کویت.\nبرای این که بهترین راهنمایی را ارائه دهم، می‌توانید بگویید چه هدفی برای لبخند یا درمان خود دارید؟\nبرای آسودگی خاطر شما، ما بیش از ده ها بیمار فارسی زبان از کشورهای مختلف را با موفقیت درمان کرده‌ایم و آنها توسط هماهنگ‌کنندگان مسلط به زبان مادری‌شان همراهی شده‌اند.\nبرای تهیه پلن درمانی شخصی‌سازی شده، لطفاً ارسال کنید:\n• عکس‌های دندان (روبرو + دو طرف)\n• یا عکس پانورامیک\nبا کمال میل در خدمت‌تان هستم.\n*چطور می‌توانم کمکتان کنم؟*\nDental X Turkey",
+    "active": true
+  },
+  {
+    "id": 1765122886282,
+    "title": "Dental Lehçe",
+    "categoryId": "1765018921152",
+    "advisors": [
+      "Anastasia",
+      "Anna",
+      "Michal"
+    ],
+    "language": "Polish",
+    "message": "Cześć {name} , Nazywam się {user} i z przyjemnością przedstawiam siebie i naszą firmę, *Dental X Turkey.*\n\nJestem tutaj, aby wspierać Cię w całym procesie leczenia, zapewniając jasne wskazówki, precyzyjne planowanie i przyjazną, profesjonalną obsługę.\n\n*Dental X Turkey* to jedna z wiodących międzynarodowych marek stomatologicznych w Turcji, mogąca pochwalić się ponad 30-letnim łącznym doświadczeniem klinicznym i wyjątkowym wskaźnikiem *dokładności na poziomie 99%*, dzięki czemu odchylenia w naszych metodach leczenia utrzymują się na poziomie zaledwie *1%.*\n\nZaufało nam tysiące pacjentów z Europy, Wielkiej Brytanii, Bliskiego Wschodu i Azji Środkowej, w tym światowej sławy osobistości publiczne, takie jak Nicolas Anelka i Dirk Kuyt, a także wiele międzynarodowych influencerów, którzy wybrali nas, aby dokonać metamorfozy swojego uśmiechu.\n\nAbyśmy mogli udzielić Ci najlepszych wskazówek, *czy mógłbyś podzielić się swoimi planami odnośnie swojego uśmiechu i celami leczenia?*\n\nDla Twojego spokoju, wyleczyliśmy już ponad 100 pacjentów z Polski, a koordynatorzy posługujący się językiem ojczystym naszych pacjentów będą Cię prowadzić przez całą podróż.\n \nAby przygotować spersonalizowany plan leczenia, prosimy o przesłanie:\n• zdjęć zębów (przód + obie strony) lub\n• zdjęcia panoramicznego, jeśli jest dostępne.\nChętnie udzielę dalszej pomocy.\n\n*W czym mogę Ci dziś pomóc?*",
+    "active": true
+  },
+  {
+    "id": 1765973009856,
+    "title": "Dental İngilizce",
+    "categoryId": "1765607554124",
+    "advisors": [
+      "Buse"
+    ],
+    "language": "English",
+    "message": "Hello {name}! My name is {user}, and it’s a pleasure to introduce myself and our company, Dental X Turkey.\n\nI’m here to support you throughout your treatment journey with clear guidance, accurate planning, and a friendly, professional experience.\n\nDental X Turkey is one of Türkiye’s leading international dental brands with 30+ years of combined clinical expertise and an exceptional *99% accuracy rate*, keeping our treatment deviation at just *1%*.\n\nWe are trusted by thousands of patients from Europe, the UK, the Middle East, and Central Asia including world-renowned public figures such as Nicolas Anelka and Dirk Kuyt, as well as many international influencers who have chosen us for their smile transformations.\n\nTo make sure I guide you in the best way, could you share *what you have in mind regarding your smile or treatment goals?*\n\nFor your peace of mind, we’ve successfully treated over 100 patients from United Kingdom, supported by native-speaking coordinators who guide you throughout your entire journey.\n\nTo prepare your personalized treatment plan, could you please send:\n • Photos of your teeth (front + both sides), or\n • A panoramic X-ray, if available? \nI’d be glad to assist you further.\n*How can I help you today?*",
+    "active": true
+  },
+  {
+    "id": 1765973043353,
+    "title": "Dental Rusça",
+    "categoryId": "1765608159806",
+    "advisors": [
+      "Leila"
+    ],
+    "language": "Russian",
+    "message": "Здравствуйте {name}! Меня зовут {user}, очень приятно представить себя и компанию *Dental X Turkey.*\nЯ буду сопровождать вас на всём протяжении лечения, с чётким планированием, понятными объяснениями и дружелюбным, профессиональным подходом.\n\n*Dental X Turkey*, один из ведущих международных стоматологических брендов Турции, с более чем 30-летним совокупным клиническим опытом и впечатляющей *точностью 99%*, когда отклонение между запланированным и финальным результатом составляет всего *1%.*\n\nНам доверяют тысячи пациентов из Европы, Великобритании, Ближнего Востока и Центральной Азии, включая всемирно известных публичных личностей, таких как Николя Анелька и Дирк Кёйт, а также множество международных инфлюенсеров, выбравших нас для своей трансформации улыбки.\n\nЧтобы направить вас максимально правильно, расскажите, пожалуйста, что именно вы хотите улучшить, *ваши ожидания или цели по лечению?*\n\nЧтобы подготовить персональный план лечения, можете, пожалуйста, отправить:\n• Фото зубов (спереди и с двух сторон), или\n• Панорамный снимок, если он у вас есть.\n\nЯ здесь, чтобы вам помочь.\n*Что бы вы хотели обсудить первым?*",
+    "active": true
+  },
+  {
+    "id": 1767819965622,
+    "title": "Dental Konsültasyon Polonya",
+    "categoryId": "1767819640245",
+    "advisors": [
+      "EskiData"
+    ],
+    "language": "Polish",
+    "message": "",
+    "active": true,
+    "lastAssignedIndex": 0
+  }
+]

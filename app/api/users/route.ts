@@ -51,7 +51,12 @@ export async function PUT(request: Request) {
     if (index === -1) {
       return NextResponse.json({ error: "Kullanıcı bulunamadı" }, { status: 404 });
     }
-    users[index] = { ...users[index], ...body };
+    // Şifre boş gönderilmişse mevcut şifreyi koru
+    const updateData = { ...body };
+    if (!updateData.password || updateData.password.trim() === "") {
+      delete updateData.password;
+    }
+    users[index] = { ...users[index], ...updateData };
     saveUsers(users);
     return NextResponse.json(users[index]);
   } catch (e) {

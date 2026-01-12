@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "tr": "Yeni Form",
+    "en": "New Form"
+  },
+  {
+    "id": 2,
+    "tr": "Arandı",
+    "en": "Called"
+  },
+  {
+    "id": 3,
+    "tr": "Ön Bilgi",
+    "en": "Pre-Info"
+  },
+  {
+    "id": 4,
+    "tr": "Ön Bilgi 2",
+    "en": "Pre-Info 2"
+  },
+  {
+    "id": 5,
+    "tr": "Ön Bilgi 3",
+    "en": "Pre-Info 3"
+  },
+  {
+    "id": 6,
+    "tr": "Fotoğraf Bekleniyor",
+    "en": "Waiting Photo"
+  },
+  {
+    "id": 7,
+    "tr": "Fotoğraf Bekleniyor 2",
+    "en": "Waiting Photo 2"
+  },
+  {
+    "id": 8,
+    "tr": "Fotoğraf Bekleniyor 3",
+    "en": "Waiting Photo 3"
+  },
+  {
+    "id": 9,
+    "tr": "Teklif Bekliyor",
+    "en": "Waiting Offer"
+  },
+  {
+    "id": 10,
+    "tr": "Teklif Yollandı",
+    "en": "Had a Offer"
+  },
+  {
+    "id": 11,
+    "tr": "Teklif Yollandı 2",
+    "en": "Had a Offer 2"
+  },
+  {
+    "id": 12,
+    "tr": "Teklif Yollandı 3",
+    "en": "Had a Offer 3"
+  },
+  {
+    "id": 13,
+    "tr": "Teklif Yollandı 4",
+    "en": "Had a Offer 4"
+  },
+  {
+    "id": 14,
+    "tr": "Olumlu",
+    "en": "Positive"
+  },
+  {
+    "id": 15,
+    "tr": "Bilet Bekliyor / Bilet Takip",
+    "en": "Booking Pending"
+  },
+  {
+    "id": 16,
+    "tr": "Satış",
+    "en": "Sold"
+  },
+  {
+    "id": 17,
+    "tr": "Satış İptali",
+    "en": "Sale Cancelled"
+  },
+  {
+    "id": 18,
+    "tr": "Olumsuz",
+    "en": "Negative"
+  },
+  {
+    "id": 19,
+    "tr": "Engelli/Spam",
+    "en": "Blocked/Spam"
+  },
+  {
+    "id": 20,
+    "tr": "Cevap Vermedi",
+    "en": "No Answer"
+  },
+  {
+    "id": 21,
+    "tr": "İlgisiz",
+    "en": "Irrelevant"
+  },
+  {
+    "id": 22,
+    "tr": "Ulaşılamadı",
+    "en": "Unreachable"
+  },
+  {
+    "id": 23,
+    "tr": "Fiyat Olumsuz",
+    "en": "Price Issue"
+  },
+  {
+    "id": 24,
+    "tr": "Ghost",
+    "en": "Ghosted"
+  },
+  {
+    "id": 25,
+    "tr": "Eski Data Özel",
+    "en": "Old Data (Special)"
+  },
+  {
+    "id": 26,
+    "tr": "Randevu",
+    "en": "Appointment"
+  },
+  {
+    "id": 27,
+    "tr": "Konsültasyon Olumlu 1",
+    "en": "Consultation Positive 1"
+  },
+  {
+    "id": 28,
+    "tr": "Potansiyel Satış ( Konsültasyon )",
+    "en": "Potential Sale (Consultation)"
+  },
+  {
+    "id": 29,
+    "tr": "Sorunlu Hasta",
+    "en": "Problematic Patient"
+  },
+  {
+    "id": 30,
+    "tr": "Konsültasyon Olumlu 2",
+    "en": "Consultation Positive 2"
+  },
+  {
+    "id": 31,
+    "tr": "Randevu İptal",
+    "en": "Appointment Cancelled"
+  },
+  {
+    "id": 32,
+    "tr": "Randevuya Gelmedi",
+    "en": "No-Show"
+  },
+  {
+    "id": 34,
+    "tr": "Randevu Onaylı",
+    "en": "Appointment Confirmed"
+  },
+  {
+    "id": 35,
+    "tr": "Teklif Yollandı ( Özel )",
+    "en": "Proposal Sent (Special)"
+  },
+  {
+    "id": 36,
+    "tr": "Fotoğraf Bekleniyor (Özel)",
+    "en": "Waiting for Photos (Special)"
+  }
+]

@@ -31,6 +31,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuIcon from "@mui/icons-material/Menu";
+import HotelIcon from "@mui/icons-material/Hotel";
 import { useAuth } from "./AuthProvider";
 import { useI18n } from "./I18nProvider";
 
@@ -79,12 +80,13 @@ export default function Sidebar() {
     return fallback;
   };
 
-  const allowedChatRoles = ["Admin", "Danışman", "Operasyon", "SuperAdmin"];
+  const allowedChatRoles = ["Admin", "Danışman", "Operasyon", "SuperAdmin", "Acenta"];
   const fallbackCanSeeChats = user?.roles?.some((r) => allowedChatRoles.includes(r)) ?? false;
   const canSeeChats = hasPerm("viewChats", fallbackCanSeeChats);
   const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin") || false;
   const isManager = user?.roles?.includes("Yönetici") || false;
   const isAdvisor = user?.roles?.includes("Danışman") || false;
+  const isAgency = user?.roles?.includes("Acenta") || false;
 
   // --- MÜŞTERİ DETAY SAYFASINDA TAMAMEN GİZLE ---
   // Örn: /customers/123
@@ -92,17 +94,27 @@ export default function Sidebar() {
     pathname.startsWith("/customers/") && pathname.split("/").length > 2;
   // -----------------------------------------------------
 
+  const canViewAppointments = hasPerm("viewAppointments", !isAgency);
+
   const baseMenuItems = [
     { text: "ANA SAYFA", textKey: "sidebar.header.home", type: "header" },
     { text: "Kontrol Paneli", textKey: "sidebar.dashboard", icon: <DashboardIcon />, path: "/" },
     { text: "MÜŞTERİ İŞLEMLERİ", textKey: "sidebar.header.customers", type: "header" },
     { text: "Müşteriler", textKey: "sidebar.customers", icon: <PeopleIcon />, path: "/customers" },
-    { text: "Randevular", textKey: "sidebar.appointments", icon: <CalendarMonthIcon />, path: "/appointments" },
-    { text: "Doktorlar", textKey: "sidebar.doctors", icon: <LocalHospitalIcon />, path: "/doctors" },
+    ...(
+      canViewAppointments
+        ? [{ text: "Randevular", textKey: "sidebar.appointments", icon: <CalendarMonthIcon />, path: "/appointments" }]
+        : []
+    ),
     { text: "WHATSAPP", textKey: "sidebar.header.whatsapp", type: "header" },
     ...(
       canSeeChats
         ? [{ text: "Sohbetler", textKey: "sidebar.chats", icon: <WhatsAppIcon color="success" />, path: "/whatsapp" }]
+        : []
+    ),
+    ...(
+      isAdmin
+        ? [{ text: "Wazzup", textKey: "sidebar.wazzup", icon: <WhatsAppIcon color="primary" />, path: "/wazzup" }]
         : []
     ),
     { text: "RAPOR", textKey: "sidebar.header.reports", type: "header" },
@@ -122,13 +134,40 @@ export default function Sidebar() {
     { text: "Ayarlar", textKey: "sidebar.settings", icon: <SettingsIcon />, path: "/settings" },
   ];
 
-  // Danışmanlar için bazı sekmeleri tamamen gizle
-  // İstatistikler, Raporlar, Segmentler, Kampanya Durumları, Kullanıcılar, Mesai Takip, Ayarlar
+  // Danışmanlar ve Acenta için bazı sekmeleri tamamen gizle
   const menuItems = (() => {
     const items = [...baseMenuItems];
 
     // Admin / SuperAdmin / Yönetici rollerine hiçbir kısıtlama uygulama
-    if (isAdmin || isManager || !isAdvisor) {
+    if (isAdmin || isManager) {
+      return items;
+    }
+
+    // Acenta rolü: Sadece Dashboard, Müşteriler, Sohbetler ve Segmentler
+    if (isAgency) {
+      const allowedPaths = new Set(["/", "/customers", "/whatsapp", "/segments"]);
+      const filtered = items.filter((item: any) => {
+        if (!item.path) return true; // Header'ları geçici tut
+        return allowedPaths.has(item.path);
+      });
+      
+      // Boş header'ları temizle
+      const result: any[] = [];
+      for (let i = 0; i < filtered.length; i++) {
+        const item = filtered[i] as any;
+        if (item.type === "header") {
+          const next = filtered[i + 1] as any | undefined;
+          if (!next || next.type === "header") {
+            continue;
+          }
+        }
+        result.push(item);
+      }
+      return result;
+    }
+
+    // Danışmanlar için kısıtlamalar
+    if (!isAdvisor) {
       return items;
     }
 

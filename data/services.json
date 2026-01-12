@@ -1,0 +1,102 @@
+[
+  {
+    "id": 1,
+    "tr": "Randevu",
+    "en": "Appointment"
+  },
+  {
+    "id": 2,
+    "tr": "Diğer",
+    "en": "Other"
+  },
+  {
+    "id": 3,
+    "tr": "Tüp Bebek IVF",
+    "en": "IVF Treatment"
+  },
+  {
+    "id": 4,
+    "tr": "Onkoloji",
+    "en": "Oncology"
+  },
+  {
+    "id": 5,
+    "tr": "Beyin ve Sinir Cerrahisi (Nöroşirürji)",
+    "en": "Neurosurgery"
+  },
+  {
+    "id": 6,
+    "tr": "Göğüs (Akciğer) Hastalıkları",
+    "en": "Pulmonology"
+  },
+  {
+    "id": 7,
+    "tr": "Göz Hastalıkları",
+    "en": "Ophthalmology"
+  },
+  {
+    "id": 8,
+    "tr": "Ortopedi",
+    "en": "Orthopedics"
+  },
+  {
+    "id": 9,
+    "tr": "Obezite Cerrahisi",
+    "en": "Bariatric Surgery"
+  },
+  {
+    "id": 10,
+    "tr": "Saç Ekimi",
+    "en": "Hair Transplant"
+  },
+  {
+    "id": 11,
+    "tr": "Estetik Plastik ve Rekonstrüktif Cerrahi",
+    "en": "Plastic Surgery"
+  },
+  {
+    "id": 12,
+    "tr": "Check-Up",
+    "en": "Check-Up"
+  },
+  {
+    "id": 13,
+    "tr": "Dental Simple Treatments",
+    "en": "Dental Simple Treatments"
+  },
+  {
+    "id": 14,
+    "tr": "Dental Veneers",
+    "en": "Dental Veneers"
+  },
+  {
+    "id": 15,
+    "tr": "Dental Crowns",
+    "en": "Dental Crowns"
+  },
+  {
+    "id": 16,
+    "tr": "Dental Implants&Crowns",
+    "en": "Dental Implants&Crowns"
+  },
+  {
+    "id": 17,
+    "tr": "Dental All on 6",
+    "en": "Dental All on 6"
+  },
+  {
+    "id": 18,
+    "tr": "Dental All on 5",
+    "en": "Dental All on 5"
+  },
+  {
+    "id": 19,
+    "tr": "Dental All on 4",
+    "en": "Dental All on 4"
+  },
+  {
+    "id": 20,
+    "tr": "Dental Smile Makeover",
+    "en": "Dental Smile Makeover"
+  }
+]

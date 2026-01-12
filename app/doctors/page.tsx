@@ -12,9 +12,12 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  IconButton,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export default function DoctorsPage() {
   const [rows, setRows] = useState<any[]>([]);
@@ -41,6 +44,30 @@ export default function DoctorsPage() {
     setOpen(true);
   };
 
+  const handleEdit = (doctor: any) => {
+    setForm(doctor);
+    setOpen(true);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Bu doktoru silmek istediğinize emin misiniz?")) return;
+
+    try {
+      const res = await fetch(`/api/doctors?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        await fetchDoctors();
+      } else {
+        alert("Silme hatası");
+      }
+    } catch (e) {
+      console.error("Silme hatası", e);
+      alert("Silme hatası");
+    }
+  };
+
   const handleSave = () => {
     const method = rows.some((d) => d.id === form.id) ? "PUT" : "POST";
 
@@ -57,6 +84,30 @@ export default function DoctorsPage() {
     { field: "name", headerName: "Doktor Adı", flex: 1, minWidth: 220 },
     { field: "specialty", headerName: "Uzmanlık / Klinik", flex: 1, minWidth: 220 },
     { field: "notes", headerName: "Notlar / Etiketler", flex: 1, minWidth: 220 },
+    {
+      field: "actions",
+      headerName: "İşlemler",
+      width: 120,
+      sortable: false,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1}>
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={() => handleEdit(params.row)}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleDelete(params.row.id)}
+          >
+            <DeleteIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      ),
+    },
   ];
 
   return (

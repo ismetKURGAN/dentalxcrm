@@ -22,6 +22,9 @@ const sections: { title: string; items: SettingsItem[] }[] = [
     items: [
       { label: "Lead Atama Stratejisi", desc: "Yeni leadlerin danışmanlara nasıl atanacağını belirleyin.", href: "/settings/lead-assignment" },
       { label: "Etiketler", desc: "Kategoriye göre danışman ve karşılama mesajı etiketlerini yönetin.", href: "/settings/labels" },
+      { label: "Durum Yönetimi", desc: "Müşteri durumlarını ekleyin, düzenleyin veya silin.", href: "/settings/statuses", adminOnly: true },
+      { label: "Servis Yönetimi", desc: "Hizmet/servis seçeneklerini ekleyin, düzenleyin veya silin.", href: "/settings/services", adminOnly: true },
+      { label: "Kategori Yönetimi", desc: "Lead kategorilerini hiyerarşik yapıda yönetin.", href: "/settings/categories", adminOnly: true },
       { label: "Kullanıcı Bildirimleri", desc: "Yeni lead ve görev bildirimleri için kuralları tanımlayın.", href: "#" },
     ],
   },
@@ -39,6 +42,13 @@ const sections: { title: string; items: SettingsItem[] }[] = [
       { label: "Kullanıcı Yönetimi", desc: "Sisteme erişimi olan kullanıcıları ve oturumlarını yönetin.", href: "/users", adminOnly: true },
       { label: "Roller ve Yetkiler", desc: "Kullanıcı rol tanımları ve modül bazlı yetkiler.", href: "/settings/roles", adminOnly: true },
       { label: "Telefon Numaraları", desc: "Arama entegrasyonu için kullanılacak hatları ve numaraları yönetin.", href: "#" },
+    ],
+  },
+  {
+    title: "Operasyonel Ayarlar",
+    items: [
+      { label: "Doktorlar", desc: "Randevularda kullanılacak doktor listesini yönetin.", href: "/doctors", adminOnly: true },
+      { label: "Oteller", desc: "Müşterilerin konaklayacağı otel listesini yönetin.", href: "/hotels", adminOnly: true },
     ],
   },
   {

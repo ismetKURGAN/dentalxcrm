@@ -1,0 +1,3068 @@
+[
+  {
+    "email": "magictouch0000@gmail.com",
+    "name": "Majid Sichani",
+    "phone": "+4479390838165",
+    "status": "Ulaşılamadı",
+    "advisor": "Sadık",
+    "id": 1765024729986,
+    "createdAt": "2025-12-06T12:38:49.986Z",
+    "personal": {
+      "name": "Majid Sichani",
+      "email": "magictouch0000@gmail.com",
+      "phone": "+4479390838165",
+      "country": "United Kingdom",
+      "notes": "Telefon araması yapılacak, ulaşmaya çalışalım",
+      "registerDate": "12/6/2025, 3:38:49 PM",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": true,
+      "datetime": "2025-12-09T13:26",
+      "notes": "arama yapılsın (Netsipp)",
+      "sent": true
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": "",
+    "category": ""
+  },
+  {
+    "email": "Rokikrk9@gmail.com",
+    "name": "Grzegorz Rokosz",
+    "phone": "+48537977437",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "id": 1765042495402,
+    "createdAt": "2025-12-06T17:34:55.402Z",
+    "personal": {
+      "facebook": {}
+    }
+  },
+  {
+    "email": "arturgrenda161@gmail.com",
+    "name": "Małgorzata kleska",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48695934991",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765058109163,
+    "createdAt": "2025-12-06T21:55:09.163Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "ewzyla84@o2.pl",
+    "name": "Ewa Żyła",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48790704295",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765106558930,
+    "createdAt": "2025-12-07T11:22:38.930Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "m.vahedi@live.se",
+    "name": "Parvin Vahedi",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "+46704507109",
+    "status": "Olumsuz",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765108071892,
+    "createdAt": "2025-12-07T11:47:51.892Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      }
+    }
+  },
+  {
+    "email": "masdfar33@gmail.com",
+    "name": "masoud sharif",
+    "personal.facebook.leadFormId": "2051066015628900",
+    "phone": "+447538502526",
+    "status": "Fotoğraf Bekleniyor",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1765112351425,
+    "createdAt": "2025-12-07T12:59:11.425Z",
+    "personal": {
+      "name": "masoud sharif",
+      "email": "masdfar33@gmail.com",
+      "phone": "+447538502526",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12/7/2025, 3:59:11 PM",
+      "facebook": {
+        "leadFormId": "2051066015628900",
+        "campaignName": "Farsça - İngiltere - Filtreli - 5"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": ""
+  },
+  {
+    "email": "grzegorzsildatke838@gmail.com",
+    "name": "Grzegorz Sildatke",
+    "personal.facebook.leadFormId": "9801591413299023",
+    "phone": "+48781067660",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765116321708,
+    "createdAt": "2025-12-07T14:05:21.708Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "9801591413299023",
+        "campaignName": "Lehçe Polonya - Filtreli - 3"
+      }
+    }
+  },
+  {
+    "email": "marczaj6@gmail.com",
+    "name": "Mariusz Czaja",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48780014745",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765118291618,
+    "createdAt": "2025-12-07T14:38:11.618Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "m.novakowski29@gmail.com",
+    "name": "Marek Nowakowski",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48577661229",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765127148861,
+    "createdAt": "2025-12-07T17:05:48.861Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "mariusz7787@wp.pl",
+    "name": "Mariusz",
+    "personal.facebook.leadFormId": "9801591413299023",
+    "phone": "+48602570028",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765133759402,
+    "createdAt": "2025-12-07T18:55:59.402Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "9801591413299023",
+        "campaignName": "Lehçe Polonya - Filtreli - 3"
+      }
+    }
+  },
+  {
+    "email": "marci_pen@yahoo.co.uk",
+    "name": "Marci Mahi",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+447828448922",
+    "status": "Olumsuz",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765139089906,
+    "createdAt": "2025-12-07T20:24:49.906Z",
+    "personal": {
+      "name": "Marci Mahi",
+      "email": "marci_pen@yahoo.co.uk",
+      "phone": "+447828448922",
+      "country": "United Kingdom",
+      "notes": "İzmirde tedavi olmuş, köprüsü düşmüş bizden yeniden yapıştırmasını istedi, maliyet daha yükseleceğini söyleyince olumsuza dönüştü",
+      "registerDate": "12/7/2025, 11:24:49 PM",
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": ""
+  },
+  {
+    "email": "kawa.thomas1976@gmail.com",
+    "name": "Tomas Kawa",
+    "personal.facebook.leadFormId": "2072907240189767",
+    "phone": "+447927735774",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "id": 1765142054328,
+    "createdAt": "2025-12-07T21:14:14.328Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2072907240189767",
+        "campaignName": " Lehçe Avrupalı Polonyalı - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "marzenazukowska3@gmail.com",
+    "name": "Marzena Biskupska - Żukowska",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48729243325",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765150405247,
+    "createdAt": "2025-12-07T23:33:25.247Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "piotr.babiracki@wp.pl",
+    "name": "Piotr Babiracki",
+    "personal.facebook.leadFormId": "2072907240189767",
+    "phone": "+447512693604",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "id": 1765158209850,
+    "createdAt": "2025-12-08T01:43:29.850Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2072907240189767",
+        "campaignName": " Lehçe Avrupalı Polonyalı - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "Krystianzatwardnicki@gmail.com",
+    "name": "Krystian Zatwardnicki",
+    "personal.facebook.leadFormId": "2072907240189767",
+    "phone": "+447502795291",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "id": 1765170628998,
+    "createdAt": "2025-12-08T05:10:28.998Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2072907240189767",
+        "campaignName": " Lehçe Avrupalı Polonyalı - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "zoska3433@interia.pl",
+    "name": "Izabela Głos",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48694044989",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765194166790,
+    "createdAt": "2025-12-08T11:42:46.790Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "parsi.behnam@yahoo.co.uk",
+    "name": "Behnam Abbasi",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+447884966269",
+    "status": "Ön Bilgi",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765212892395,
+    "createdAt": "2025-12-08T16:54:52.395Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      }
+    }
+  },
+  {
+    "email": "soloo@vp.pl",
+    "name": "Piotr Solarz",
+    "personal.facebook.leadFormId": "2072907240189767",
+    "phone": "+447448258120",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "id": 1765213579409,
+    "createdAt": "2025-12-08T17:06:19.409Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2072907240189767",
+        "campaignName": " Lehçe Avrupalı Polonyalı - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "allan77@interia.pl",
+    "name": "Krzysztof Zieliński",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48728532980",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765215579706,
+    "createdAt": "2025-12-08T17:39:39.706Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "kwiecienl321@gmail.com",
+    "name": "Łukasz Kwiecień",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48512781873",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765224502684,
+    "createdAt": "2025-12-08T20:08:22.684Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "adamwinkiewicz40@gmail.com",
+    "name": "Adam Winkiewicz",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48575256731",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765229506376,
+    "createdAt": "2025-12-08T21:31:46.376Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "zohrenishaboorian@yahoo.de",
+    "name": "Zohreh Nishaboorian",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "+4917634264846",
+    "status": "Ön Bilgi",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765238186183,
+    "createdAt": "2025-12-08T23:56:26.183Z",
+    "personal": {
+      "name": "Zohreh Nishaboorian",
+      "email": "zohrenishaboorian@yahoo.de",
+      "phone": "+4917634264846",
+      "country": "United Kingdom",
+      "notes": "bir köprü için (2implant) istedi, otel ve transfer dahil olduğunu zannetmiş ",
+      "registerDate": "12/9/2025, 2:56:26 AM",
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": ""
+  },
+  {
+    "email": "alibaghkhani7777a@gmail.com",
+    "name": "Ali Baghkhani",
+    "personal.facebook.leadFormId": "2051066015628900",
+    "phone": "+989129478036",
+    "status": "Ön Bilgi",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1765270121908,
+    "createdAt": "2025-12-09T08:48:41.908Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2051066015628900",
+        "campaignName": "Farsça - İngiltere - Filtreli - 5"
+      }
+    }
+  },
+  {
+    "email": "maciejr984@gmail.com",
+    "name": "Maciej Rosinski",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48517279375",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765272470009,
+    "createdAt": "2025-12-09T09:27:50.009Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "khedrimohammed193@gmail.com",
+    "name": "Mohammed Khedri ",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+447378448335",
+    "status": "Ön Bilgi",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765286533783,
+    "createdAt": "2025-12-09T13:22:13.783Z",
+    "personal": {
+      "name": "Mohammed Khedri ",
+      "email": "khedrimohammed193@gmail.com",
+      "phone": "+447378448335",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12/9/2025, 4:22:13 PM",
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": ""
+  },
+  {
+    "email": "kingatokarska@onet.pl",
+    "name": "Kinga Leśniak",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48735030552",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765297737722,
+    "createdAt": "2025-12-09T16:28:57.722Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "tajmm2@gmail.com",
+    "name": "Mehdi Mahyar",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "+31623381270",
+    "status": "Ulaşılamadı",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765306104481,
+    "createdAt": "2025-12-09T18:48:24.481Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      }
+    }
+  },
+  {
+    "email": "davoodnazemi5@gmail.com",
+    "name": "Davood Nazemi",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "4917683291579",
+    "status": "Olumsuz",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765309773943,
+    "createdAt": "2025-12-09T19:49:33.943Z",
+    "personal": {
+      "name": "Davood Nazemi",
+      "email": "davoodnazemi5@gmail.com",
+      "phone": "4917683291579",
+      "country": "United Kingdom",
+      "notes": "Tekrar geldi ",
+      "registerDate": "12/9/2025, 10:49:33 PM",
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": ""
+  },
+  {
+    "email": "Mettrowy1991@wp.pl",
+    "name": "Łukasz Daniel Dąbrowski",
+    "personal.facebook.leadFormId": "2072907240189767",
+    "phone": "+48506061718",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": " Lehçe Avrupalı Polonyalı - Filtreli - 2",
+    "id": 1765311218629,
+    "createdAt": "2025-12-09T20:13:38.629Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2072907240189767",
+        "campaignName": " Lehçe Avrupalı Polonyalı - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "zakarrriyasalllman@gmail.com",
+    "name": "Zakaria",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+447398257347",
+    "status": "Ön Bilgi 2",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765315572741,
+    "createdAt": "2025-12-09T21:26:12.741Z",
+    "personal": {
+      "name": "Zakaria",
+      "email": "zakarrriyasalllman@gmail.com",
+      "phone": "+447398257347",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "10.12.2025 00:26:12",
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      }
+    },
+    "reminder": {
+      "enabled": true,
+      "datetime": "2025-12-10T10:00",
+      "notes": "Sadık Mesaj geldiyse bana yaz Emre ben :)",
+      "sent": true
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": ""
+  },
+  {
+    "email": "pwojnowska92@gmail.com",
+    "name": "Paulina Wojnowska",
+    "personal.facebook.leadFormId": "9801591413299023",
+    "phone": "+48537463484",
+    "status": "Cevap Vermedi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765317135239,
+    "createdAt": "2025-12-09T21:52:15.239Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "9801591413299023",
+        "campaignName": "Lehçe Polonya - Filtreli - 3"
+      }
+    }
+  },
+  {
+    "email": "skutnikagata@gmail.com",
+    "name": "Agata Skutnik",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48539573842",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765341337069,
+    "createdAt": "2025-12-10T04:35:37.069Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "marcin.kurowski84@gmail.com",
+    "name": "Marcin Kurowski",
+    "personal.facebook.leadFormId": "2166758567188170",
+    "phone": "+447584433509",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "id": 1765381355118,
+    "createdAt": "2025-12-10T15:42:35.118Z",
+    "personal": {
+      "name": "Marcin Kurowski",
+      "email": "marcin.kurowski84@gmail.com",
+      "phone": "+447584433509",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "10.12.2025 18:42:35",
+      "facebook": {
+        "leadFormId": "2166758567188170"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "service": "",
+    "category": "Lehçe Avrupalı Polonyalı - Filtreli - 6"
+  },
+  {
+    "email": "mariusz7787@wp.pl",
+    "name": "Mariusz",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48697949774",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765385657491,
+    "createdAt": "2025-12-10T16:54:17.491Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "arturmoryto34@gmail.com",
+    "name": "Artur Moryto",
+    "personal.facebook.leadFormId": "9801591413299023",
+    "phone": "+48501048745",
+    "status": "Engelli/Spam",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765388647734,
+    "createdAt": "2025-12-10T17:44:07.734Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "9801591413299023",
+        "campaignName": "Lehçe Polonya - Filtreli - 3"
+      }
+    }
+  },
+  {
+    "email": "wojtas200174@wp.pl",
+    "name": "Wojciech",
+    "personal.facebook.leadFormId": "2166758567188170",
+    "phone": "+447476358860",
+    "status": "Teklif Yollandı",
+    "advisor": "Lejla",
+    "id": 1765403307965,
+    "createdAt": "2025-12-10T21:48:27.965Z",
+    "personal": {
+      "name": "Wojciech",
+      "email": "wojtas200174@wp.pl",
+      "phone": "+447476358860",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "11.12.2025 00:48:27",
+      "facebook": {
+        "leadFormId": "2166758567188170"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1765607400107,
+        "name": "Wojciech - Your treatment plan - 2025-12-11 (1).pdf",
+        "size": "2214.01 KB",
+        "uploadedAt": "13.12.2025 09:30:00"
+      },
+      {
+        "id": 1765607404054,
+        "name": "Wojciech - Your treatment plan - 2025-12-11 (2).pdf",
+        "size": "2215.56 KB",
+        "uploadedAt": "13.12.2025 09:30:04"
+      }
+    ],
+    "history": [],
+    "service": "Dental Implants&Crowns",
+    "category": "Lehçe Avrupalı Polonyalı - Filtreli - 6"
+  },
+  {
+    "email": "izapokladnik10@gmail.com",
+    "name": "Iza Pokladnik",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48889507198",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765408408668,
+    "createdAt": "2025-12-10T23:13:28.668Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "slawekstasinski200682@gmail.com",
+    "name": "Sławek Stasinski",
+    "personal.facebook.leadFormId": "9801591413299023",
+    "phone": "+48884413839",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765414984363,
+    "createdAt": "2025-12-11T01:03:04.363Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "9801591413299023",
+        "campaignName": "Lehçe Polonya - Filtreli - 3"
+      }
+    }
+  },
+  {
+    "email": "ddziok@interia.pl",
+    "name": "Dawid Dziok",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48796247550",
+    "status": "Teklif Yollandı",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765450108035,
+    "createdAt": "2025-12-11T10:48:28.035Z",
+    "personal": {
+      "name": "Dawid Dziok",
+      "email": "ddziok@interia.pl",
+      "phone": "+48796247550",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "11.12.2025 13:48:28",
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1765607352097,
+        "name": "Dawid Dziok - Your treatment plan - 2025-12-11.pdf",
+        "size": "2216.48 KB",
+        "uploadedAt": "13.12.2025 09:29:12"
+      }
+    ],
+    "history": [],
+    "service": "Dental Implants&Crowns"
+  },
+  {
+    "email": "rafalmeki@icloud.com",
+    "name": "Rafal Qkla",
+    "personal.facebook.leadFormId": "2166758567188170",
+    "phone": "+447763066430",
+    "status": "Fotoğraf Bekleniyor",
+    "advisor": "Lejla",
+    "category": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "id": 1765452095358,
+    "createdAt": "2025-12-11T11:21:35.358Z",
+    "personal": {
+      "name": "Rafal Qkla",
+      "email": "rafalmeki@icloud.com",
+      "phone": "+447763066430",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12/11/2025, 2:21:35 PM",
+      "facebook": {
+        "leadFormId": "2166758567188170",
+        "campaignName": "Lehçe Avrupalı Polonyalı - Filtreli - 6"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1765455667949,
+        "name": "deneme.txt",
+        "size": "0.00 KB",
+        "uploadedAt": "11.12.2025 15:21:07"
+      }
+    ],
+    "history": []
+  },
+  {
+    "email": "jakubhajduk205@gmail.com",
+    "name": "Jakub Hajduk",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "517525200",
+    "status": "Ön Bilgi",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765459142828,
+    "createdAt": "2025-12-11T13:19:02.828Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      }
+    }
+  },
+  {
+    "email": "h_dorna@hotmail.com",
+    "name": "Hossein Hassanzadeh",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "+4793000387",
+    "status": "Fotoğraf Bekleniyor",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765460881120,
+    "createdAt": "2025-12-11T13:48:01.120Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      }
+    }
+  },
+  {
+    "name": "Jamshid Hajian",
+    "phone": "+4915141901959",
+    "advisor": "Sadık",
+    "status": "Ön Bilgi 2",
+    "service": "",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765529588998,
+    "createdAt": "2025-12-12T08:53:08.998Z",
+    "personal": {
+      "name": "Jamshid Hajian",
+      "email": "",
+      "phone": "+4915141901959",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 11:53:08",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "Marek Trawiński",
+    "phone": "+48693450239",
+    "advisor": "Lejla",
+    "status": "Ön Bilgi",
+    "service": "",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765530115509,
+    "createdAt": "2025-12-12T09:01:55.509Z",
+    "personal": {
+      "name": "Marek Trawiński",
+      "email": "",
+      "phone": "+48693450239",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 12:01:55",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "Marek Foszcz",
+    "phone": "+48799988055",
+    "advisor": "Lejla",
+    "status": "Engelli/Spam",
+    "service": "",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765530214602,
+    "createdAt": "2025-12-12T09:03:34.602Z",
+    "personal": {
+      "name": "Marek Foszcz",
+      "email": "",
+      "phone": "+48799988055",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 12:03:34",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "Michał",
+    "phone": "+48660484817",
+    "advisor": "Lejla",
+    "status": "Teklif Yollandı",
+    "service": "Dental Implants&Crowns",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765530266988,
+    "createdAt": "2025-12-12T09:04:26.988Z",
+    "personal": {
+      "name": "Michał",
+      "email": "",
+      "phone": "+48660484817",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 12:04:26",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1765607282803,
+        "name": "Michal Karpowicz - Your treatment plan - 2025-12-12 (1).pdf",
+        "size": "2245.86 KB",
+        "uploadedAt": "13.12.2025 09:28:02"
+      }
+    ],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "Sylwia Gajewska",
+    "phone": "+48694519190",
+    "advisor": "Lejla",
+    "status": "Teklif Yollandı",
+    "service": "Dental Implants&Crowns",
+    "category": "Lehçe Polonya - Filtreli - 3",
+    "id": 1765530290840,
+    "createdAt": "2025-12-12T09:04:50.840Z",
+    "personal": {
+      "name": "Sylwia Gajewska",
+      "email": "",
+      "phone": "+48694519190",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 12:04:50",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1765607237633,
+        "name": "Sylwia Gajewska - Your treatment plan - 2025-12-12.pdf",
+        "size": "2219.03 KB",
+        "uploadedAt": "13.12.2025 09:27:17"
+      }
+    ],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "Damon Salwatore",
+    "phone": "+447481063444",
+    "advisor": "Lejla",
+    "status": "Ön Bilgi",
+    "service": "",
+    "category": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "id": 1765530388137,
+    "createdAt": "2025-12-12T09:06:28.137Z",
+    "personal": {
+      "name": "Damon Salwatore",
+      "email": "",
+      "phone": "+447481063444",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 12:06:28",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "SHAYAN",
+    "phone": "+447592926564",
+    "advisor": "Sadık",
+    "status": "Ön Bilgi 2",
+    "service": "",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1765530631988,
+    "createdAt": "2025-12-12T09:10:31.988Z",
+    "personal": {
+      "name": "SHAYAN",
+      "email": "",
+      "phone": "+447592926564",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12.12.2025 12:10:31",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": [],
+    "email": ""
+  },
+  {
+    "name": "Damian Budzyk",
+    "phone": "+48508981200",
+    "email": "damianbudzyk30@gmail.com",
+    "advisor": "Lejla",
+    "status": "Ön Bilgi",
+    "service": "",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765533896468,
+    "createdAt": "2025-12-12T10:04:56.468Z",
+    "personal": {
+      "facebook": {},
+      "email": "damianbudzyk30@gmail.com",
+      "name": "Damian Budzyk",
+      "phone": "+48508981200"
+    }
+  },
+  {
+    "name": "Józef Baran",
+    "phone": "+48723615604",
+    "email": "baranj377@gmail.com",
+    "advisor": "Lejla",
+    "status": "Olumsuz",
+    "service": "",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765533933124,
+    "createdAt": "2025-12-12T10:05:33.124Z",
+    "personal": {
+      "facebook": {},
+      "email": "baranj377@gmail.com",
+      "name": "Józef Baran",
+      "phone": "+48723615604"
+    }
+  },
+  {
+    "email": "agar6@op.pl",
+    "name": "Marcin Przybyła",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48516120959",
+    "status": "Teklif Bekliyor",
+    "whatsappNumber": "516120959",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765564798418,
+    "createdAt": "2025-12-12T18:39:58.418Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      },
+      "email": "agar6@op.pl",
+      "name": "Marcin Przybyła",
+      "phone": "+48516120959"
+    }
+  },
+  {
+    "email": "bogdanfuh@gmail.com",
+    "name": "Boguił Szuski",
+    "personal.facebook.leadFormId": "2166758567188170",
+    "phone": "+447407600499",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "07407600499",
+    "advisor": "Lejla",
+    "category": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "id": 1765567056575,
+    "createdAt": "2025-12-12T19:17:36.575Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2166758567188170",
+        "campaignName": "Lehçe Avrupalı Polonyalı - Filtreli - 6"
+      },
+      "email": "bogdanfuh@gmail.com",
+      "name": "Boguił Szuski",
+      "phone": "+447407600499"
+    }
+  },
+  {
+    "email": "annaplaczke2@gmail.com",
+    "name": "Anna Placzke",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48665688265",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "665688265",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765580613633,
+    "createdAt": "2025-12-12T23:03:33.633Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      },
+      "email": "annaplaczke2@gmail.com",
+      "name": "Anna Placzke",
+      "phone": "+48665688265"
+    }
+  },
+  {
+    "email": "robson.zurawicz@gmail.com",
+    "name": "Robert Żurawicz",
+    "personal.facebook.leadFormId": "760632030416068",
+    "phone": "+48723701018",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "Whatsapp PL 0048723701018",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 6",
+    "id": 1765965082234,
+    "createdAt": "2025-12-17T09:51:22.234Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "760632030416068",
+        "campaignName": "Lehçe Polonya - Filtreli - 6"
+      },
+      "email": "robson.zurawicz@gmail.com",
+      "name": "Robert Żurawicz",
+      "phone": "+48723701018"
+    }
+  },
+  {
+    "email": "jack2345tb@gmail.com",
+    "name": "Mohammed Azeem Khan",
+    "personal.facebook.leadFormId": "1348403586640761",
+    "phone": "+447405256860",
+    "status": "Ön Bilgi 2",
+    "whatsappNumber": "07405256860",
+    "category": "İngiltere - Filtreli - 8",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "İngiltere - Filtreli - 8",
+    "id": 1765968882519,
+    "createdAt": "2025-12-17T10:54:42.519Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1348403586640761",
+        "campaignName": "İngiltere - Filtreli - 8"
+      },
+      "email": "jack2345tb@gmail.com",
+      "name": "Mohammed Azeem Khan",
+      "phone": "+447405256860"
+    },
+    "advisor": "Buse"
+  },
+  {
+    "email": "noorudenomarkhill1996@gmail.com",
+    "name": "Noor Omar",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+447462843998",
+    "status": "Ön Bilgi 2",
+    "whatsappNumber": "07562843998",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765969683024,
+    "createdAt": "2025-12-17T11:08:03.024Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      },
+      "email": "noorudenomarkhill1996@gmail.com",
+      "name": "Noor Omar",
+      "phone": "+447462843998"
+    }
+  },
+  {
+    "name": "Haroon Noorani",
+    "phone": "+4915510370965",
+    "email": "haroonnoorani25@gmail.com",
+    "advisor": "Sadık",
+    "status": "Olumsuz",
+    "service": "",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765974529638,
+    "createdAt": "2025-12-17T12:28:49.638Z",
+    "personal": {
+      "facebook": {},
+      "email": "haroonnoorani25@gmail.com",
+      "name": "Haroon Noorani",
+      "phone": "+4915510370965"
+    }
+  },
+  {
+    "name": "vahid",
+    "phone": "+4917684374804",
+    "email": "vahidmousaviean@yahoo.com",
+    "advisor": "Sadık",
+    "status": "Teklif Yollandı",
+    "service": "Dental Implants&Crowns",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765974643922,
+    "createdAt": "2025-12-17T12:30:43.922Z",
+    "personal": {
+      "facebook": {},
+      "email": "vahidmousaviean@yahoo.com",
+      "name": "vahid",
+      "phone": "+4917684374804"
+    }
+  },
+  {
+    "name": "Ali Mozafari",
+    "phone": "+4524803040",
+    "email": "alisen76@yahoo.com",
+    "advisor": "Sadık",
+    "status": "Ön Bilgi 2",
+    "service": "",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765974696719,
+    "createdAt": "2025-12-17T12:31:36.719Z",
+    "personal": {
+      "facebook": {},
+      "email": "alisen76@yahoo.com",
+      "name": "Ali Mozafari",
+      "phone": "+4524803040"
+    }
+  },
+  {
+    "email": "sebakaszuba@yahoo.co.uk",
+    "name": "Sebastian Kaszuba",
+    "personal.facebook.leadFormId": "2166758567188170",
+    "phone": "+447792099275",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "07792099275",
+    "advisor": "Lejla",
+    "category": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Avrupalı Polonyalı - Filtreli - 6",
+    "id": 1765975012338,
+    "createdAt": "2025-12-17T12:36:52.338Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2166758567188170",
+        "campaignName": "Lehçe Avrupalı Polonyalı - Filtreli - 6"
+      },
+      "email": "sebakaszuba@yahoo.co.uk",
+      "name": "Sebastian Kaszuba",
+      "phone": "+447792099275"
+    }
+  },
+  {
+    "name": "Aria A Hemmat Pour",
+    "phone": "+447915002090",
+    "email": "alihemmatpour4@gmail.com",
+    "advisor": "Sadık",
+    "status": "Fotoğraf Bekleniyor",
+    "service": "",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765975019965,
+    "createdAt": "2025-12-17T12:36:59.965Z",
+    "personal": {
+      "facebook": {},
+      "email": "alihemmatpour4@gmail.com",
+      "name": "Aria A Hemmat Pour",
+      "phone": "+447915002090"
+    }
+  },
+  {
+    "name": "Vali",
+    "phone": "+447477980447",
+    "email": "valiasadiellie@gmail.com",
+    "advisor": "Sadık",
+    "status": "Olumsuz",
+    "service": "",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765975425167,
+    "createdAt": "2025-12-17T12:43:45.167Z",
+    "personal": {
+      "facebook": {},
+      "email": "valiasadiellie@gmail.com",
+      "name": "Vali",
+      "phone": "+447477980447"
+    }
+  },
+  {
+    "name": "ROSTAM",
+    "phone": "+447404182681",
+    "email": "rostam44112@gmail.com",
+    "advisor": "Sadık",
+    "status": "Fotoğraf Bekleniyor",
+    "service": "",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765975870826,
+    "createdAt": "2025-12-17T12:51:10.826Z",
+    "personal": {
+      "facebook": {},
+      "email": "rostam44112@gmail.com",
+      "name": "ROSTAM",
+      "phone": "+447404182681"
+    }
+  },
+  {
+    "name": "Karim Nemati",
+    "phone": "+447490101516",
+    "email": "karim.neamati91@gmail.com",
+    "advisor": "Sadık",
+    "status": "Fotoğraf Bekleniyor 2",
+    "service": "",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1765975910725,
+    "createdAt": "2025-12-17T12:51:50.725Z",
+    "personal": {
+      "facebook": {},
+      "email": "karim.neamati91@gmail.com",
+      "name": "Karim Nemati",
+      "phone": "+447490101516"
+    }
+  },
+  {
+    "name": "Sara Ram",
+    "phone": "+447481951555",
+    "email": "Ramsara84@yahoo.com",
+    "advisor": "Sadık",
+    "status": "Fotoğraf Bekleniyor",
+    "service": "",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1765975957675,
+    "createdAt": "2025-12-17T12:52:37.675Z",
+    "personal": {
+      "name": "Sara Ram",
+      "email": "Ramsara84@yahoo.com",
+      "phone": "+447481951555",
+      "country": "United Kingdom",
+      "notes": "Kendisi iletsime gececektir ",
+      "registerDate": "12/17/2025, 3:52:37 PM",
+      "facebook": {}
+    },
+    "reminder": {
+      "enabled": true,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [],
+    "history": []
+  },
+  {
+    "email": "Mohammadzad1970@gmail.com",
+    "name": "M R A B",
+    "personal.facebook.leadFormId": "2051066015628900",
+    "phone": "+447310947869",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "00447888742442",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1765981026173,
+    "createdAt": "2025-12-17T14:17:06.173Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2051066015628900",
+        "campaignName": "Farsça - İngiltere - Filtreli - 5"
+      },
+      "email": "Mohammadzad1970@gmail.com",
+      "name": "M R A B",
+      "phone": "+447310947869"
+    }
+  },
+  {
+    "email": "arash.joya001@gmail.com",
+    "name": "Arash Mohammadi",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "+46702973017",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "0046702973017",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1765981542488,
+    "createdAt": "2025-12-17T14:25:42.488Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      },
+      "email": "arash.joya001@gmail.com",
+      "name": "Arash Mohammadi",
+      "phone": "+46702973017"
+    }
+  },
+  {
+    "email": "szafirgryf@onet.pl",
+    "name": "SZAFIR biżuteria srebrna",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48691504346",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "691504346",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1765993481318,
+    "createdAt": "2025-12-17T17:44:41.318Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      },
+      "email": "szafirgryf@onet.pl",
+      "name": "SZAFIR biżuteria srebrna",
+      "phone": "+48691504346"
+    }
+  },
+  {
+    "email": "mahshid.kargar@yahoo.com",
+    "name": "Mahshid Kargar",
+    "personal.facebook.leadFormId": "2051066015628900",
+    "phone": "+447949369823",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "00447949369823",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1765995423588,
+    "createdAt": "2025-12-17T18:17:03.588Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2051066015628900",
+        "campaignName": "Farsça - İngiltere - Filtreli - 5"
+      },
+      "email": "mahshid.kargar@yahoo.com",
+      "name": "Mahshid Kargar",
+      "phone": "+447949369823"
+    }
+  },
+  {
+    "email": "clifforddarren@ymail.com",
+    "name": "Darren Clifford",
+    "personal.facebook.leadFormId": "1348403586640761",
+    "phone": "+447411274601",
+    "status": "Ön Bilgi 2",
+    "whatsappNumber": "07411274601",
+    "advisor": "Buse",
+    "category": "İngiltere - Filtreli - 8",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "İngiltere - Filtreli - 8",
+    "id": 1765997238397,
+    "createdAt": "2025-12-17T18:47:18.397Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1348403586640761",
+        "campaignName": "İngiltere - Filtreli - 8"
+      },
+      "email": "clifforddarren@ymail.com",
+      "name": "Darren Clifford",
+      "phone": "+447411274601"
+    }
+  },
+  {
+    "email": "irek.ruman@gmail.com",
+    "name": "Irek Ruman",
+    "personal.facebook.leadFormId": "760632030416068",
+    "phone": "+48663685080",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "Whatsapp +48663685080",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 6",
+    "id": 1765998707175,
+    "createdAt": "2025-12-17T19:11:47.175Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "760632030416068",
+        "campaignName": "Lehçe Polonya - Filtreli - 6"
+      },
+      "email": "irek.ruman@gmail.com",
+      "name": "Irek Ruman",
+      "phone": "+48663685080"
+    }
+  },
+  {
+    "email": "hania.milewska@wp.pl",
+    "name": "Hanna Milewska",
+    "personal.facebook.leadFormId": "760632030416068",
+    "phone": "+48606905363",
+    "status": "Teklif Yollandı",
+    "whatsappNumber": "Whatsapp +48606905363",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 6",
+    "id": 1766009178595,
+    "createdAt": "2025-12-17T22:06:18.595Z",
+    "personal": {
+      "name": "Hanna Milewska",
+      "email": "hania.milewska@wp.pl",
+      "phone": "+48606905363",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "12/18/2025, 1:06:18 AM",
+      "facebook": {
+        "leadFormId": "760632030416068",
+        "campaignName": "Lehçe Polonya - Filtreli - 6"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "notes": ""
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": [
+        {
+          "name": "1. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        },
+        {
+          "name": "2. Seyahat",
+          "appointmentDate": "",
+          "appointmentTime": "",
+          "doctor": "",
+          "service": "",
+          "hotel": "",
+          "transfer": false,
+          "roomType": "",
+          "peopleCount": "",
+          "travelNotes": "",
+          "arrivalDate": "",
+          "arrivalTime": "",
+          "departureDate": "",
+          "departureTime": "",
+          "returnPickupTime": "",
+          "ticketArrival": "",
+          "ticketDeparture": ""
+        }
+      ]
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1766063052355,
+        "name": "Hana Milewska - Your treatment plan - 2025-12-18.pdf",
+        "size": "2229.25 KB",
+        "uploadedAt": "18.12.2025 16:04:12"
+      }
+    ],
+    "history": []
+  },
+  {
+    "email": "roghayyehmahmoudifar00@gmail.com",
+    "name": "Rebeka Piran",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+905363721430",
+    "status": "Teklif Yollandı",
+    "whatsappNumber": "90 536 372 14 30",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1766011209735,
+    "createdAt": "2025-12-17T22:40:09.735Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      },
+      "email": "roghayyehmahmoudifar00@gmail.com",
+      "name": "Rebeka Piran",
+      "phone": "+905363721430"
+    },
+    "service": "Dental Implants&Crowns"
+  },
+  {
+    "email": "kaamil.fornal@gmail.com",
+    "name": "Kamil Fornal",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48607522087",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "607 522 087",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1766012637784,
+    "createdAt": "2025-12-17T23:03:57.784Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      },
+      "email": "kaamil.fornal@gmail.com",
+      "name": "Kamil Fornal",
+      "phone": "+48607522087"
+    }
+  },
+  {
+    "email": "anthonyhiggins58@googlemail.com",
+    "name": "Tony Higgins",
+    "personal.facebook.leadFormId": "1348403586640761",
+    "phone": "+447711985400",
+    "status": "Teklif Yollandı",
+    "whatsappNumber": "+44  7711985400",
+    "advisor": "Buse",
+    "category": "İngiltere - Filtreli - 8",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "İngiltere - Filtreli - 8",
+    "id": 1766041902390,
+    "createdAt": "2025-12-18T07:11:42.390Z",
+    "personal": {
+      "name": "Tony Higgins",
+      "email": "anthonyhiggins58@googlemail.com",
+      "phone": "+447711985400",
+      "country": "United Kingdom",
+      "notes": "",
+      "registerDate": "18.12.2025 10:11:42",
+      "facebook": {
+        "leadFormId": "1348403586640761",
+        "campaignName": "İngiltere - Filtreli - 8"
+      }
+    },
+    "reminder": {
+      "enabled": false,
+      "datetime": "",
+      "notes": ""
+    },
+    "payment": {
+      "prePayments": [
+        {
+          "id": 1766229942798,
+          "tripName": "1. Seyahat",
+          "description": "",
+          "amount": "",
+          "currency": ""
+        }
+      ],
+      "prePaymentNotes": "",
+      "finalPayments": {
+        "costs": [
+          {
+            "id": 1766229942798,
+            "category": "1. Seyahat",
+            "amount": "",
+            "currency": ""
+          }
+        ],
+        "sales": [
+          {
+            "id": 1766229942799,
+            "category": "1. Seyahat",
+            "amount": "",
+            "currency": ""
+          }
+        ],
+        "notes": ""
+      }
+    },
+    "sales": {
+      "salesDate": "",
+      "healthNotes": "",
+      "feedback": {
+        "trustpilot": false,
+        "googleMaps": false,
+        "survey": false,
+        "warrantySent": false,
+        "rpt": false
+      },
+      "trips": []
+    },
+    "calls": [],
+    "files": [
+      {
+        "id": 1766229960570,
+        "name": "Tony Higgins - Your suggested treatment - 2025-12-20 (2).pdf",
+        "size": "2168.60 KB",
+        "uploadedAt": "20.12.2025 14:26:00"
+      },
+      {
+        "id": 1766229966113,
+        "name": "Tony Higgins - Your suggested treatment - 2025-12-20 (1).pdf",
+        "size": "2175.78 KB",
+        "uploadedAt": "20.12.2025 14:26:06"
+      }
+    ],
+    "history": [],
+    "service": "Dental All on 6"
+  },
+  {
+    "email": "marcinklein30@onet.pl",
+    "name": "Marcin Klein",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48605658277",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "605658277",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1766051166912,
+    "createdAt": "2025-12-18T09:46:06.912Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      },
+      "email": "marcinklein30@onet.pl",
+      "name": "Marcin Klein",
+      "phone": "+48605658277"
+    }
+  },
+  {
+    "email": "naderv48@gmail.com",
+    "name": "Sh Panahi Nader",
+    "personal.facebook.leadFormId": "1781545762532581",
+    "phone": "+447449944409",
+    "status": "Fotoğraf Bekleniyor",
+    "whatsappNumber": "07449944409",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 6",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 6",
+    "id": 1766054435054,
+    "createdAt": "2025-12-18T10:40:35.054Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "1781545762532581",
+        "campaignName": "Farsça - İngiltere - Filtreli - 6"
+      },
+      "email": "naderv48@gmail.com",
+      "name": "Sh Panahi Nader",
+      "phone": "+447449944409"
+    }
+  },
+  {
+    "email": "hassanshahamat65@gmail.com",
+    "name": "Hase45sanali Shahamat",
+    "personal.facebook.leadFormId": "2051066015628900",
+    "phone": "+447765763163",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "07765763163",
+    "advisor": "Sadık",
+    "category": "Farsça - İngiltere - Filtreli - 5",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - İngiltere - Filtreli - 5",
+    "id": 1766071791615,
+    "createdAt": "2025-12-18T15:29:51.615Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "2051066015628900",
+        "campaignName": "Farsça - İngiltere - Filtreli - 5"
+      },
+      "email": "hassanshahamat65@gmail.com",
+      "name": "Hase45sanali Shahamat",
+      "phone": "+447765763163"
+    }
+  },
+  {
+    "email": "shahin.ashimi@gmail.co.com",
+    "name": "Shahin A",
+    "personal.facebook.leadFormId": "842327928337981",
+    "phone": "+4917661117247",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "017661117247",
+    "advisor": "Sadık",
+    "category": "Farsça - Avrupa - Filtreli - 2\t",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Farsça - Avrupa - Filtreli - 2\t",
+    "id": 1766074354584,
+    "createdAt": "2025-12-18T16:12:34.584Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "842327928337981",
+        "campaignName": "Farsça - Avrupa - Filtreli - 2\t"
+      },
+      "email": "shahin.ashimi@gmail.co.com",
+      "name": "Shahin A",
+      "phone": "+4917661117247"
+    }
+  },
+  {
+    "email": "Travismills30@hotmail.com",
+    "name": "Sarahssraj Mills",
+    "personal.facebook.leadFormId": "form07484827437",
+    "phone": "+447484827437",
+    "status": {
+      "0": "Y",
+      "1": "e",
+      "2": "n",
+      "3": "i",
+      "4": " ",
+      "5": "F",
+      "6": "o",
+      "7": "r",
+      "8": "m",
+      "notes": "WhatsApp: Whatsapp 07484827437"
+    },
+    "whatsappNumber": "Whatsapp 07484827437",
+    "advisor": "Danışment",
+    "id": 1766074397036,
+    "createdAt": "2025-12-18T16:13:17.036Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "form07484827437"
+      },
+      "email": "Travismills30@hotmail.com",
+      "name": "Sarahssraj Mills",
+      "phone": "+447484827437"
+    }
+  },
+  {
+    "email": "saganekpiotr@gmail.com",
+    "name": "Piotr Saganek",
+    "personal.facebook.leadFormId": "833724029027660",
+    "phone": "+48782861029",
+    "status": "Ön Bilgi",
+    "whatsappNumber": "782861029",
+    "advisor": "Lejla",
+    "category": "Lehçe Polonya - Filtreli - 2",
+    "parentCategory": "Meta",
+    "categoryLevel1": "Meta",
+    "categoryLevel5": "Lehçe Polonya - Filtreli - 2",
+    "id": 1766080030857,
+    "createdAt": "2025-12-18T17:47:10.857Z",
+    "personal": {
+      "facebook": {
+        "leadFormId": "833724029027660",
+        "campaignName": "Lehçe Polonya - Filtreli - 2"
+      },
+      "email": "saganekpiotr@gmail.com",
+      "name": "Piotr Saganek",
+      "phone": "+48782861029"
+    }
+  }
+]

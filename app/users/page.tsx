@@ -65,6 +65,7 @@ export default function UsersPage() {
       id: undefined,
       name: "",
       email: "",
+      password: "",
       roles: ["Danışman"],
       languages: ["Turkish"],
       session: "default",
@@ -213,6 +214,25 @@ export default function UsersPage() {
                 <Stack spacing={2} mt={1}>
                     <TextField label="Ad Soyad" fullWidth value={editUser.name} onChange={(e) => setEditUser({...editUser, name: e.target.value})} />
                     <TextField label="E-Posta" type="email" fullWidth value={editUser.email} onChange={(e) => setEditUser({...editUser, email: e.target.value})} />
+                    {isAdmin && (
+                      <TextField 
+                        label="Şifre" 
+                        type="password" 
+                        fullWidth 
+                        value={editUser.password || ""} 
+                        onChange={(e) => setEditUser({...editUser, password: e.target.value})}
+                        placeholder={editUser.id ? "Değiştirmek için yeni şifre girin" : "Şifre belirleyin"}
+                        helperText={editUser.id ? "Boş bırakırsanız mevcut şifre korunur" : "Kullanıcı için şifre belirleyin"}
+                        required={!editUser.id}
+                      />
+                    )}
+                    <TextField 
+                      label="Telefon" 
+                      fullWidth 
+                      value={editUser.phone || ""} 
+                      onChange={(e) => setEditUser({...editUser, phone: e.target.value})}
+                      placeholder="WhatsApp bildirimleri için"
+                    />
                     
                     <FormControl fullWidth>
                         <InputLabel>Roller</InputLabel>

@@ -19,6 +19,7 @@ import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useI18n } from "./components/I18nProvider";
+import { useAuth } from "./components/AuthProvider";
 
 // GRAFİK
 import { 
@@ -69,11 +70,23 @@ function buildChartData(customers: any[]): { name: string; musteri: number; tekl
     const bucket = buckets[indexFromEnd];
     bucket.musteri += 1;
 
-    const status: string = (c.status || '').toString().toLowerCase();
-    if (status.includes('teklif')) {
+    // Status ve hizmet bilgisini al
+    let hasService = false;
+    let statusValue = '';
+    
+    if (typeof c.status === 'object' && c.status !== null) {
+      hasService = c.status.services && c.status.services.trim() !== '';
+      statusValue = (c.status.status || '').toString().toLowerCase();
+    } else if (typeof c.status === 'string') {
+      statusValue = c.status.toLowerCase();
+      hasService = c.service && c.service.trim() !== '';
+    }
+    
+    // Teklif: Hizmet seçilmiş VE durum "teklif" içeriyor
+    if (hasService && statusValue.includes('teklif')) {
       bucket.teklif += 1;
     }
-    if (status.includes('satış') || status.includes('satis') || status.includes('sale')) {
+    if (statusValue.includes('satış') || statusValue.includes('satis') || statusValue.includes('sale')) {
       bucket.satis += 1;
     }
   });
@@ -84,6 +97,8 @@ function buildChartData(customers: any[]): { name: string; musteri: number; tekl
 export default function Dashboard() {
   const router = useRouter();
   const { t, language } = useI18n();
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin");
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState(INITIAL_CHART_DATA);
@@ -107,7 +122,19 @@ export default function Dashboard() {
       try {
         const res = await fetch("/api/crm", { cache: "no-store" });
         if (res.ok) {
-          const data = await res.json();
+          let data = await res.json();
+          
+          // Admin değilse sadece kendi müşterilerini filtrele
+          if (!isAdmin && user?.name) {
+            data = data.filter((c: any) => {
+              // Status objesinden danışman bilgisini al
+              if (typeof c.status === 'object' && c.status !== null) {
+                return c.status.consultant === user.name;
+              }
+              // Eski formatta advisor alanını kontrol et
+              return c.advisor === user.name;
+            });
+          }
 
           // Filtreleme: Reminder objesi var mı ve enabled true mu?
           const active = data.filter((c: any) => c.reminder && c.reminder.enabled === true);
@@ -160,13 +187,36 @@ export default function Dashboard() {
           // Üst kartlar için gerçek istatistikler
           try {
             const totalCustomers = Array.isArray(data) ? data.length : 0;
+            
+            // Teklif: Hizmet seçilmiş VE durum "Teklif" içeren müşteriler
             const offers = Array.isArray(data)
-              ? data.filter((c: any) => (c.status || '').toString().toLowerCase().includes('teklif')).length
+              ? data.filter((c: any) => {
+                  // Status objesinden hizmet ve durum bilgisini al
+                  let hasService = false;
+                  let statusValue = '';
+                  
+                  if (typeof c.status === 'object' && c.status !== null) {
+                    hasService = c.status.services && c.status.services.trim() !== '';
+                    statusValue = (c.status.status || '').toString().toLowerCase();
+                  } else if (typeof c.status === 'string') {
+                    statusValue = c.status.toLowerCase();
+                    // Eski formatta service alanını kontrol et
+                    hasService = c.service && c.service.trim() !== '';
+                  }
+                  
+                  return hasService && statusValue.includes('teklif');
+                }).length
               : 0;
+              
             const sales = Array.isArray(data)
               ? data.filter((c: any) => {
-                  const s = (c.status || '').toString().toLowerCase();
-                  return s.includes('satış') || s.includes('satis') || s.includes('sale');
+                  let statusValue = '';
+                  if (typeof c.status === 'object' && c.status !== null) {
+                    statusValue = (c.status.status || '').toString().toLowerCase();
+                  } else if (typeof c.status === 'string') {
+                    statusValue = c.status.toLowerCase();
+                  }
+                  return statusValue.includes('satış') || statusValue.includes('satis') || statusValue.includes('sale');
                 }).length
               : 0;
             const conversion = offers > 0 ? (sales / offers) * 100 : 0;
@@ -188,7 +238,7 @@ export default function Dashboard() {
       }
     };
     fetchReminders();
-  }, []);
+  }, [isAdmin, user]);
 
   return (
     <Box

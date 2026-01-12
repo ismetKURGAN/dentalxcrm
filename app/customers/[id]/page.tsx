@@ -20,13 +20,14 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Grid,
   CircularProgress,
   Snackbar,
   Alert,
   Switch,
   IconButton,
   Fab,
+  Autocomplete,
+  Grid,
 } from "@mui/material";
 
 // ICONS
@@ -46,6 +47,8 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DownloadIcon from "@mui/icons-material/Download";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useI18n } from "../../components/I18nProvider";
 
 // SEÇENEKLER
@@ -128,55 +131,22 @@ const CRM_STATUSES = [
   "Ön Bilgi",
   "Yeni Form"
 ];
-const CRM_COUNTRIES = ["United Kingdom", "Turkey", "Germany", "France", "USA"];
-
-const CRM_HOTELS = [
-  "Adonis Hotel Antalya",
-  "Akra Hotels Antalya",
-  "Alp Paşa Hotel Kaleiçi Antalya",
-  "Beyond Otel Konyaaltı / Antalya",
-  "Cartoon Hotel İstanbul",
-  "Cender Hotel",
-  "Delphin Imperial Hotel",
-  "Falcon Hotel Antalya",
-  "Grand Park Lara Antalya",
-  "HEDEF RESORT HOTEL&SPA ALANYA",
-  "Hotel Lunay Antalya",
-  "Hotel S White Antalya",
-  "Kaya Otel Belek",
-  "Lara Garden Otel",
-  "Laren Family Hotel Spa Antalya",
-  "Laren Seaside Hotel & Spa Antalya",
-  "Let'stay Hotel Antalya",
-  "Midmar Hotel Yenibosna İstanbul",
-  "Mori Club Hotel Antalya",
-  "Otel Belli Değil",
-  "Oteli Kendi Belirleyecek",
-  "Ramada By Wyndham Lara",
-  "Ramada Hotel & Suites by Wyndham Istanbul Merter",
-  "Ramada Plaza Antalya Hotel",
-  "Ramada Plaza By Wyndham Istanbul Ataköy",
-  "Regnum Carya Otel",
-  "Renex Hotel Antalya",
-  "Rodinn Park Hotel Antalya",
-  "Route Hotel Kaleiçi Antalya",
-  "Royal Holiday Palace Antalya",
-  "Sealife Family Resort Hotel Antalya",
-  "Sianji Well Being Resort Bodrum",
-  "Sky Business Hotel & SPA",
-  "Susesi Luxury Resort",
-  "Swandor Hotels & Resorts",
-  "The Corner Park Hotel Antalya",
-  "The Marmara Antalya",
-  "The Mill Hotel Bomonti",
-  "Titanic Mardan Palace",
-  "Wanda Vista Hotel İstanbul",
-  "Wolf Of The City & Spa Antalya",
+const CRM_COUNTRIES = [
+  "Türkiye", "United Kingdom", "Germany", "France", "Netherlands", "Belgium", 
+  "Austria", "Switzerland", "Poland", "Denmark", "Sweden", "Norway", "Ireland", 
+  "Italy", "Spain", "Portugal", "Greece", "USA", "Canada", "Australia", 
+  "Iran", "Iraq", "Saudi Arabia", "UAE", "Qatar", "Kuwait", "Bahrain", "Oman",
+  "Russia", "Ukraine", "Romania", "Bulgaria", "Czech Republic", "Hungary",
+  "Other"
 ];
+const CRM_CURRENCIES = ["EUR", "USD", "GBP", "TRY"];
+const CRM_PAYMENT_CATEGORIES = ["1. Seyahat", "2. Seyahat", "3. Seyahat", "Otel", "Diğer"];
+
 
 // --- TİPLER ---
 type CustomerState = {
   id: number;
+  createdAt?: string;
   personal: {
     name: string;
     email: string;
@@ -198,7 +168,31 @@ type CustomerState = {
     status: string;
   };
   reminder: { enabled: boolean; datetime: string; notes: string };
-  payment: { notes: string };
+  payment: {
+    prePayments: {
+      id: number;
+      tripName: string;
+      description: string;
+      amount: string;
+      currency: string;
+    }[];
+    prePaymentNotes: string;
+    finalPayments: {
+      costs: {
+        id: number;
+        category: string;
+        amount: string;
+        currency: string;
+      }[];
+      sales: {
+        id: number;
+        category: string;
+        amount: string;
+        currency: string;
+      }[];
+      notes: string;
+    };
+  };
   sales: {
     salesDate: string;
     healthNotes: string;
@@ -210,23 +204,24 @@ type CustomerState = {
       rpt: boolean;
     };
     trips: {
+      id: number;
       name: string;
+      dateUndetermined: boolean;
       appointmentDate: string;
       appointmentTime: string;
       doctor: string;
       service: string;
       hotel: string;
-      transfer: boolean;
+      transferCompany: string;
       roomType: string;
       peopleCount: string;
       travelNotes: string;
       arrivalDate: string;
       arrivalTime: string;
+      arrivalFlightCode: string;
       departureDate: string;
       departureTime: string;
-      returnPickupTime: string;
-      ticketArrival: string;
-      ticketDeparture: string;
+      departureFlightCode: string;
     }[];
   };
   calls: { id: number; title: string; date: string; notes: string }[];
@@ -239,6 +234,7 @@ type CustomerState = {
     date: string;
     user: string;
   }[];
+  soldBy?: string;
 };
 
 // Başlangıç Şablonu
@@ -260,7 +256,37 @@ const INITIAL_STATE: CustomerState = {
   },
   status: { consultant: "", category: "", services: "", status: "" },
   reminder: { enabled: false, datetime: "", notes: "" },
-  payment: { notes: "" },
+  payment: {
+    prePayments: [
+      {
+        id: Date.now(),
+        tripName: "1. Seyahat",
+        description: "",
+        amount: "",
+        currency: "",
+      },
+    ],
+    prePaymentNotes: "",
+    finalPayments: {
+      costs: [
+        {
+          id: Date.now(),
+          category: "1. Seyahat",
+          amount: "",
+          currency: "",
+        },
+      ],
+      sales: [
+        {
+          id: Date.now() + 1,
+          category: "1. Seyahat",
+          amount: "",
+          currency: "",
+        },
+      ],
+      notes: "",
+    },
+  },
   sales: {
     salesDate: "",
     healthNotes: "",
@@ -271,46 +297,7 @@ const INITIAL_STATE: CustomerState = {
       warrantySent: false,
       rpt: false,
     },
-    trips: [
-      {
-        name: "1. Seyahat",
-        appointmentDate: "",
-        appointmentTime: "",
-        doctor: "",
-        service: "",
-        hotel: "",
-        transfer: false,
-        roomType: "",
-        peopleCount: "",
-        travelNotes: "",
-        arrivalDate: "",
-        arrivalTime: "",
-        departureDate: "",
-        departureTime: "",
-        returnPickupTime: "",
-        ticketArrival: "",
-        ticketDeparture: "",
-      },
-      {
-        name: "2. Seyahat",
-        appointmentDate: "",
-        appointmentTime: "",
-        doctor: "",
-        service: "",
-        hotel: "",
-        transfer: false,
-        roomType: "",
-        peopleCount: "",
-        travelNotes: "",
-        arrivalDate: "",
-        arrivalTime: "",
-        departureDate: "",
-        departureTime: "",
-        returnPickupTime: "",
-        ticketArrival: "",
-        ticketDeparture: "",
-      },
-    ],
+    trips: [],
   },
   calls: [],
   files: [],
@@ -332,27 +319,44 @@ export default function CustomerDetailPage() {
   });
 
   const [customer, setCustomer] = useState<CustomerState>(INITIAL_STATE);
+  const [userRole, setUserRole] = useState<string>("");
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   
   // Dinamik listeler
   const [advisorOptions, setAdvisorOptions] = useState<string[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
   const [serviceOptions, setServiceOptions] = useState<string[]>([]);
   const [statusOptions, setStatusOptions] = useState<string[]>([]);
+  const [doctorOptions, setDoctorOptions] = useState<string[]>([]);
+  const [transferCompanyOptions, setTransferCompanyOptions] = useState<string[]>([]);
+const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
   // --- VERİ ÇEKME ---
   useEffect(() => {
     const fetchData = async () => {
       if (!(params as any)?.id) return;
       try {
-        // Kullanıcıları çek
+        // Kullanıcıları çek ve mevcut kullanıcının rolünü belirle
         const usersRes = await fetch("/api/users");
         if (usersRes.ok) {
           const users = await usersRes.json();
           const advisors = users
-            .filter((u: any) => Array.isArray(u.roles) && u.roles.includes("Danışman"))
+            .filter((u: any) => Array.isArray(u.roles) && (u.roles.includes("Danışman") || u.roles.includes("Acenta")))
             .map((u: any) => u.name)
             .filter(Boolean);
           setAdvisorOptions(advisors);
+          
+          // Mevcut kullanıcının rolünü belirle (localStorage'dan email al)
+          const currentUserEmail = localStorage.getItem("userEmail");
+          const currentUser = users.find((u: any) => u.email === currentUserEmail);
+          if (currentUser && Array.isArray(currentUser.roles)) {
+            setUserRoles(currentUser.roles);
+            if (currentUser.roles.includes("Admin")) {
+              setUserRole("Admin");
+            } else if (currentUser.roles.includes("Fiyatlandırma")) {
+              setUserRole("Fiyatlandırma");
+            }
+          }
         }
         
         // Kategorileri çek
@@ -363,9 +367,50 @@ export default function CustomerDetailPage() {
           setCategoryOptions(categories);
         }
         
-        // Hizmetleri ve durumları ayarla (sabit listelerden)
+        // Hizmetleri ayarla (sabit listeden)
         setServiceOptions(CRM_SERVICES);
-        setStatusOptions(CRM_STATUSES);
+        
+        // Durumları API'den çek
+        const statusesRes = await fetch("/api/statuses", { cache: "no-store" });
+        if (statusesRes.ok) {
+          const statusesData = await statusesRes.json();
+          // Yeni format: [{id, tr, en}, ...] - sadece Türkçe isimleri al
+          if (Array.isArray(statusesData) && statusesData.length > 0 && typeof statusesData[0] === 'object') {
+            setStatusOptions(statusesData.map((s: any) => s.tr));
+          } else {
+            setStatusOptions(statusesData);
+          }
+        } else {
+          // Hata durumunda varsayılan durumları kullan
+          setStatusOptions(CRM_STATUSES);
+        }
+        
+        // Doktorları çek
+        const doctorsRes = await fetch("/api/doctors");
+        if (doctorsRes.ok) {
+          const doctors = await doctorsRes.json();
+          const doctorNames = doctors.map((d: any) => d.name).filter(Boolean);
+          setDoctorOptions(doctorNames);
+        }
+        
+        // Transfer firmalarını çek (segments API'den)
+        const segmentsRes = await fetch("/api/segments");
+        if (segmentsRes.ok) {
+          const segments = await segmentsRes.json();
+          const transferCompanies = segments
+            .filter((s: any) => s.type === "transfer")
+            .map((s: any) => s.name)
+            .filter(Boolean);
+          setTransferCompanyOptions(transferCompanies);
+        }
+        
+        // Otelleri çek
+        const hotelsRes = await fetch("/api/hotels");
+        if (hotelsRes.ok) {
+          const hotels = await hotelsRes.json();
+          const hotelNames = hotels.map((h: any) => h.name).filter(Boolean);
+          setHotelOptions(hotelNames.sort());
+        }
         
         const res = await fetch("/api/crm", { cache: "no-store" });
         if (res.ok) {
@@ -377,6 +422,7 @@ export default function CustomerDetailPage() {
           if (found) {
             setCustomer({
               id: found.id,
+              createdAt: found.createdAt,
               personal: {
                 name: found.personal?.name || found.name || "",
                 email: found.personal?.email || found.email || "",
@@ -419,18 +465,155 @@ export default function CustomerDetailPage() {
     fetchData();
   }, [params]);
 
+  // Seyahat ekleme fonksiyonu
+  const handleAddTrip = () => {
+    const newTrip = {
+      id: Date.now(),
+      name: `${customer.sales.trips.length + 1}. Seyahat`,
+      dateUndetermined: false,
+      appointmentDate: "",
+      appointmentTime: "",
+      doctor: "",
+      service: "",
+      hotel: "",
+      transferCompany: "",
+      roomType: "",
+      peopleCount: "",
+      travelNotes: "",
+      arrivalDate: "",
+      arrivalTime: "",
+      arrivalFlightCode: "",
+      departureDate: "",
+      departureTime: "",
+      departureFlightCode: "",
+    };
+    setCustomer((prev) => ({
+      ...prev,
+      sales: { ...prev.sales, trips: [...prev.sales.trips, newTrip] },
+    }));
+  };
+
+  // Seyahat silme fonksiyonu
+  const handleRemoveTrip = (tripId: number) => {
+    setCustomer((prev) => ({
+      ...prev,
+      sales: {
+        ...prev.sales,
+        trips: prev.sales.trips.filter((t) => t.id !== tripId),
+      },
+    }));
+  };
+
+  // Tedavi öncesi ödeme ekleme
+  const handleAddPrePayment = () => {
+    const newPayment = {
+      id: Date.now(),
+      tripName: `${customer.payment.prePayments.length + 1}. Seyahat`,
+      description: "",
+      amount: "",
+      currency: "",
+    };
+    setCustomer((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        prePayments: [...prev.payment.prePayments, newPayment],
+      },
+    }));
+  };
+
+  // Tedavi öncesi ödeme silme
+  const handleRemovePrePayment = (paymentId: number) => {
+    setCustomer((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        prePayments: prev.payment.prePayments.filter((p) => p.id !== paymentId),
+      },
+    }));
+  };
+
+  // Maliyet ekleme
+  const handleAddCost = () => {
+    const newCost = {
+      id: Date.now(),
+      category: "1. Seyahat",
+      amount: "",
+      currency: "",
+    };
+    setCustomer((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        finalPayments: {
+          ...prev.payment.finalPayments,
+          costs: [...prev.payment.finalPayments.costs, newCost],
+        },
+      },
+    }));
+  };
+
+  // Maliyet silme
+  const handleRemoveCost = (costId: number) => {
+    setCustomer((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        finalPayments: {
+          ...prev.payment.finalPayments,
+          costs: prev.payment.finalPayments.costs.filter((c) => c.id !== costId),
+        },
+      },
+    }));
+  };
+
+  // Satış ekleme
+  const handleAddSale = () => {
+    const newSale = {
+      id: Date.now(),
+      category: "1. Seyahat",
+      amount: "",
+      currency: "",
+    };
+    setCustomer((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        finalPayments: {
+          ...prev.payment.finalPayments,
+          sales: [...prev.payment.finalPayments.sales, newSale],
+        },
+      },
+    }));
+  };
+
+  // Satış silme
+  const handleRemoveSale = (saleId: number) => {
+    setCustomer((prev) => ({
+      ...prev,
+      payment: {
+        ...prev.payment,
+        finalPayments: {
+          ...prev.payment.finalPayments,
+          sales: prev.payment.finalPayments.sales.filter((s) => s.id !== saleId),
+        },
+      },
+    }));
+  };
+
   // 8. SATIŞ (yalnızca durum "Satış" olduğunda gösterilecek sekme)
   const renderSalesTab = () => (
     <Stack spacing={3}>
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-          {t("customerDetail.sales.infoTitle")}
+      {/* Satış Bilgileri */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          Satış Bilgileri
         </Typography>
         <Grid container spacing={2}>
-          <Grid xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               type="date"
-              label={t("customerDetail.sales.date")}
+              label="Satış Tarihi"
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={customer.sales.salesDate}
@@ -442,11 +625,11 @@ export default function CustomerDetailPage() {
               }
             />
           </Grid>
-          <Grid xs={12}>
+          <Grid size={{ xs: 12 }}>
             <TextField
               multiline
-              rows={3}
-              label={t("customerDetail.sales.healthNotes")}
+              rows={5}
+              label="Sağlık Notları"
               fullWidth
               InputLabelProps={{ shrink: true }}
               value={customer.sales.healthNotes}
@@ -456,19 +639,20 @@ export default function CustomerDetailPage() {
                   sales: { ...prev.sales, healthNotes: e.target.value },
                 }))
               }
-              placeholder={t("customerDetail.sales.healthNotes.placeholder")}
+              placeholder="Hastanın sağlık durumu, alerjiler, özel notlar..."
             />
           </Grid>
         </Grid>
       </Paper>
 
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-          {t("customerDetail.sales.feedbackTitle")}
+      {/* Müşteri Geri Bildirimleri */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          Müşteri Geri Bildirimleri
         </Typography>
         <Stack spacing={1}>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t("customerDetail.sales.feedback.trustpilot")}</Typography>
+            <Typography>Trustpilot İncelemesi</Typography>
             <Switch
               checked={customer.sales.feedback.trustpilot}
               onChange={(e) =>
@@ -483,7 +667,7 @@ export default function CustomerDetailPage() {
             />
           </Stack>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t("customerDetail.sales.feedback.googleMaps")}</Typography>
+            <Typography>Google İncelemesi</Typography>
             <Switch
               checked={customer.sales.feedback.googleMaps}
               onChange={(e) =>
@@ -498,7 +682,7 @@ export default function CustomerDetailPage() {
             />
           </Stack>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t("customerDetail.sales.feedback.survey")}</Typography>
+            <Typography>Memnuniyet Anketi</Typography>
             <Switch
               checked={customer.sales.feedback.survey}
               onChange={(e) =>
@@ -513,7 +697,7 @@ export default function CustomerDetailPage() {
             />
           </Stack>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t("customerDetail.sales.feedback.warranty")}</Typography>
+            <Typography>Garanti Gönderildi</Typography>
             <Switch
               checked={customer.sales.feedback.warrantySent}
               onChange={(e) =>
@@ -528,7 +712,7 @@ export default function CustomerDetailPage() {
             />
           </Stack>
           <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Typography>{t("customerDetail.sales.feedback.rpt")}</Typography>
+            <Typography>RPT</Typography>
             <Switch
               checked={customer.sales.feedback.rpt}
               onChange={(e) =>
@@ -545,277 +729,345 @@ export default function CustomerDetailPage() {
         </Stack>
       </Paper>
 
-      {customer.sales.trips.map((trip, index) => (
-        <Paper key={index} variant="outlined" sx={{ p: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-            {trip.name}
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid xs={12} md={3}>
-              <TextField
-                type="date"
-                label={t("customerDetail.sales.trip.appointmentDate")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.appointmentDate}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], appointmentDate: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                type="time"
-                label={t("customerDetail.sales.trip.appointmentTime")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.appointmentTime}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], appointmentTime: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                label={t("customerDetail.sales.trip.doctor")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.doctor}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], doctor: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                label={t("customerDetail.sales.trip.service")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.service}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], service: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
+{/* Seyahatler Bölümü */}
+      <Box>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+          <Typography variant="h6" fontWeight={600}>Seyahatler</Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleAddTrip}
+            sx={{ textTransform: 'none', bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' } }}
+          >
+            Seyahat Ekle
+          </Button>
+        </Stack>
 
-            <Grid xs={12} md={6}>
-              <FormControl fullWidth>
-                <InputLabel shrink>Otel</InputLabel>
-                <Select
-                  label={t("customerDetail.sales.trip.hotel")}
-                  value={trip.hotel}
-                  onChange={(e) =>
-                    setCustomer((prev) => {
-                      const trips = [...prev.sales.trips];
-                      trips[index] = { ...trips[index], hotel: e.target.value as string };
-                      return { ...prev, sales: { ...prev.sales, trips } };
-                    })
-                  }
+        {customer.sales.trips.length === 0 && (
+          <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderStyle: 'dashed' }}>
+            <Typography color="text.secondary">
+              Henüz seyahat eklenmemiş. Seyahat eklemek için yukarıdaki butona tıklayın.
+            </Typography>
+          </Paper>
+        )}
+
+        {customer.sales.trips.map((trip, index) => (
+          <Paper key={trip.id} variant="outlined" sx={{ p: 2.5, borderRadius: 2, mb: 2 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight={600}>{trip.name}</Typography>
+              <Stack direction="row" spacing={1}>
+                <FormControl size="small" sx={{ minWidth: 200 }}>
+                  <Select
+                    value={trip.dateUndetermined ? "undetermined" : "determined"}
+                    onChange={(e) => {
+                      const isUndetermined = e.target.value === "undetermined";
+                      setCustomer((prev) => {
+                        const trips = [...prev.sales.trips];
+                        trips[index] = { ...trips[index], dateUndetermined: isUndetermined };
+                        return { ...prev, sales: { ...prev.sales, trips } };
+                      });
+                    }}
+                  >
+                    <MenuItem value="determined">Seyahat Tarihi Belli</MenuItem>
+                    <MenuItem value="undetermined">Seyahat Tarihi Belli Değil</MenuItem>
+                  </Select>
+                </FormControl>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => {
+                    if (confirm(`${trip.name} silinecek. Emin misiniz?`)) {
+                      handleRemoveTrip(trip.id);
+                    }
+                  }}
                 >
-                  {CRM_HOTELS.map((h) => (
-                    <MenuItem key={h} value={h}>
-                      {h}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                label={t("customerDetail.sales.trip.roomType")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.roomType}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], roomType: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                label={t("customerDetail.sales.trip.peopleCount")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.peopleCount}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], peopleCount: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
+                  <DeleteIcon />
+                </IconButton>
+              </Stack>
+            </Stack>
 
-            <Grid xs={12} md={3} sx={{ display: "flex", alignItems: "center" }}>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Typography>{t("customerDetail.sales.trip.transfer")}</Typography>
-                <Switch
-                  checked={trip.transfer}
+            {trip.dateUndetermined && (
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Bu seyahat için tarih henüz belirlenmemiş. Notlar bölümünü kullanabilirsiniz.
+              </Alert>
+            )}
+
+            <Stack spacing={2.5}>
+              {/* Randevu Bilgileri */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                  Randevu Bilgileri
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField
+                      type="date"
+                      label="Randevu Tarihi"
+                      fullWidth
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                      value={trip.appointmentDate}
+                      onChange={(e) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], appointmentDate: e.target.value };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <TextField
+                      type="time"
+                      label="Randevu Saati"
+                      fullWidth
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                      value={trip.appointmentTime}
+                      onChange={(e) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], appointmentTime: e.target.value };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Autocomplete
+                      size="small"
+                      options={doctorOptions}
+                      value={trip.doctor || null}
+                      onChange={(_, newValue) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], doctor: newValue || "" };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                      renderInput={(params) => (
+                        <TextField {...params} label="Doktor" placeholder="Doktor seçin..." />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Otel ve Transfer */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                  Otel ve Transfer
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <Autocomplete
+                      size="small"
+                      options={hotelOptions}
+                      value={trip.hotel || null}
+                      onChange={(_, newValue) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], hotel: newValue || "" };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                      freeSolo
+                      renderInput={(params) => (
+                        <TextField {...params} label="Otel" placeholder="Otel seçin veya yazın..." />
+                      )}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 3 }}>
+                    <TextField
+                      label="Oda Tipi"
+                      fullWidth
+                      size="small"
+                      InputLabelProps={{ shrink: true }}
+                      value={trip.roomType}
+                      onChange={(e) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], roomType: e.target.value };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 3 }}>
+                    <TextField
+                      label="Kişi Sayısı"
+                      fullWidth
+                      size="small"
+                      type="number"
+                      InputLabelProps={{ shrink: true }}
+                      value={trip.peopleCount}
+                      onChange={(e) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], peopleCount: e.target.value };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12 }}>
+                    <Autocomplete
+                      size="small"
+                      options={transferCompanyOptions}
+                      value={trip.transferCompany || null}
+                      onChange={(_, newValue) =>
+                        setCustomer((prev) => {
+                          const trips = [...prev.sales.trips];
+                          trips[index] = { ...trips[index], transferCompany: newValue || "" };
+                          return { ...prev, sales: { ...prev.sales, trips } };
+                        })
+                      }
+                      renderInput={(params) => (
+                        <TextField {...params} label="Transfer Firması" placeholder="Firma seçin..." />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Geliş ve Gidiş Bilgileri */}
+              {!trip.dateUndetermined && (
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                    Geliş ve Gidiş Bilgileri
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        type="date"
+                        label="Geliş Tarihi"
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        value={trip.arrivalDate}
+                        onChange={(e) =>
+                          setCustomer((prev) => {
+                            const trips = [...prev.sales.trips];
+                            trips[index] = { ...trips[index], arrivalDate: e.target.value };
+                            return { ...prev, sales: { ...prev.sales, trips } };
+                          })
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        type="time"
+                        label="Geliş Saati"
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        value={trip.arrivalTime}
+                        onChange={(e) =>
+                          setCustomer((prev) => {
+                            const trips = [...prev.sales.trips];
+                            trips[index] = { ...trips[index], arrivalTime: e.target.value };
+                            return { ...prev, sales: { ...prev.sales, trips } };
+                          })
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        label="Uçak Kodu (Geliş)"
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        value={trip.arrivalFlightCode}
+                        onChange={(e) =>
+                          setCustomer((prev) => {
+                            const trips = [...prev.sales.trips];
+                            trips[index] = { ...trips[index], arrivalFlightCode: e.target.value };
+                            return { ...prev, sales: { ...prev.sales, trips } };
+                          })
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        type="date"
+                        label="Dönüş Tarihi"
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        value={trip.departureDate}
+                        onChange={(e) =>
+                          setCustomer((prev) => {
+                            const trips = [...prev.sales.trips];
+                            trips[index] = { ...trips[index], departureDate: e.target.value };
+                            return { ...prev, sales: { ...prev.sales, trips } };
+                          })
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        type="time"
+                        label="Dönüş Saati"
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        value={trip.departureTime}
+                        onChange={(e) =>
+                          setCustomer((prev) => {
+                            const trips = [...prev.sales.trips];
+                            trips[index] = { ...trips[index], departureTime: e.target.value };
+                            return { ...prev, sales: { ...prev.sales, trips } };
+                          })
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 4 }}>
+                      <TextField
+                        label="Uçak Kodu (Dönüş)"
+                        fullWidth
+                        size="small"
+                        InputLabelProps={{ shrink: true }}
+                        value={trip.departureFlightCode}
+                        onChange={(e) =>
+                          setCustomer((prev) => {
+                            const trips = [...prev.sales.trips];
+                            trips[index] = { ...trips[index], departureFlightCode: e.target.value };
+                            return { ...prev, sales: { ...prev.sales, trips } };
+                          })
+                        }
+                      />
+                    </Grid>
+                  </Grid>
+                </Box>
+              )}
+
+              {/* Notlar */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                  Notlar
+                </Typography>
+                <TextField
+                  multiline
+                  rows={4}
+                  label="Seyahat Notları"
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                  value={trip.travelNotes}
                   onChange={(e) =>
                     setCustomer((prev) => {
                       const trips = [...prev.sales.trips];
-                      trips[index] = { ...trips[index], transfer: e.target.checked };
+                      trips[index] = { ...trips[index], travelNotes: e.target.value };
                       return { ...prev, sales: { ...prev.sales, trips } };
                     })
                   }
+                  placeholder="Seyahat ile ilgili özel notlar, talepler..."
                 />
-              </Stack>
-            </Grid>
-
-            <Grid xs={12} md={3}>
-              <TextField
-                type="date"
-                label="Geliş Tarihi"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.arrivalDate}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], arrivalDate: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                type="time"
-                label="Geliş Saati"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.arrivalTime}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], arrivalTime: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                type="date"
-                label="Gidiş Tarihi"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.departureDate}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], departureDate: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={3}>
-              <TextField
-                type="time"
-                label="Gidiş Saati"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.departureTime}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], departureTime: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-
-            <Grid xs={12} md={3}>
-              <TextField
-                type="time"
-                label="Dönüş Alınma Saati"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.returnPickupTime}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], returnPickupTime: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-
-            <Grid xs={12}>
-              <TextField
-                multiline
-                rows={3}
-                label={t("customerDetail.sales.trip.notes")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.travelNotes}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], travelNotes: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-
-            <Grid xs={12} md={6}>
-              <TextField
-                label={t("customerDetail.sales.trip.ticketArrival")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.ticketArrival}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], ticketArrival: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <TextField
-                label={t("customerDetail.sales.trip.ticketDeparture")}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={trip.ticketDeparture}
-                onChange={(e) =>
-                  setCustomer((prev) => {
-                    const trips = [...prev.sales.trips];
-                    trips[index] = { ...trips[index], ticketDeparture: e.target.value };
-                    return { ...prev, sales: { ...prev.sales, trips } };
-                  })
-                }
-              />
-            </Grid>
-          </Grid>
-        </Paper>
-      ))}
+              </Box>
+            </Stack>
+          </Paper>
+        ))}
+      </Box>
     </Stack>
   );
 
@@ -1080,23 +1332,373 @@ export default function CustomerDetailPage() {
 
   // 5. ÖDEME
   const renderPaymentTab = () => (
-    <Stack spacing={2}>
-      <TextField
-        multiline
-        rows={6}
-        label={t("customerDetail.payment.notes")}
-        fullWidth
-        value={customer.payment.notes}
-        onChange={(e) => handleChange("payment", "notes", e.target.value)}
-        InputLabelProps={{ shrink: true }}
-        placeholder={t("customerDetail.payment.placeholder")}
-      />
+    <Stack spacing={3}>
+      {/* Tedavi Öncesi Ödeme Bilgileri */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ color: "#374151" }}>
+            Tedavi Öncesi Ödeme Bilgileri
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={handleAddPrePayment}
+            sx={{ textTransform: 'none' }}
+          >
+            Ödeme Ekle
+          </Button>
+        </Stack>
+
+        <Stack spacing={2}>
+          {customer.payment.prePayments.map((payment, index) => (
+            <Paper key={payment.id} variant="outlined" sx={{ p: 2, bgcolor: "#f9fafb" }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                <Typography variant="body2" fontWeight={600}>{payment.tripName}</Typography>
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={() => handleRemovePrePayment(payment.id)}
+                >
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <Autocomplete
+                    size="small"
+                    options={CRM_PAYMENT_CATEGORIES}
+                    value={payment.description || null}
+                    onChange={(_, newValue) => {
+                      setCustomer((prev) => {
+                        const prePayments = [...prev.payment.prePayments];
+                        prePayments[index] = { ...prePayments[index], description: newValue || "" };
+                        return { ...prev, payment: { ...prev.payment, prePayments } };
+                      });
+                    }}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Ödeme Türü" placeholder="Seçin..." />
+                    )}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <TextField
+                    size="small"
+                    label="Tutar"
+                    fullWidth
+                    type="number"
+                    InputLabelProps={{ shrink: true }}
+                    value={payment.amount}
+                    onChange={(e) => {
+                      setCustomer((prev) => {
+                        const prePayments = [...prev.payment.prePayments];
+                        prePayments[index] = { ...prePayments[index], amount: e.target.value };
+                        return { ...prev, payment: { ...prev.payment, prePayments } };
+                      });
+                    }}
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 4 }}>
+                  <FormControl fullWidth size="small" required>
+                    <InputLabel>Para Birimi *</InputLabel>
+                    <Select
+                      value={payment.currency}
+                      label="Para Birimi *"
+                      onChange={(e) => {
+                        setCustomer((prev) => {
+                          const prePayments = [...prev.payment.prePayments];
+                          prePayments[index] = { ...prePayments[index], currency: e.target.value };
+                          return { ...prev, payment: { ...prev.payment, prePayments } };
+                        });
+                      }}
+                    >
+                      {CRM_CURRENCIES.map((curr) => (
+                        <MenuItem key={curr} value={curr}>{curr}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Paper>
+          ))}
+
+          <TextField
+            multiline
+            minRows={9}
+            maxRows={50}
+            label="Notlar"
+            fullWidth
+            size="small"
+            InputLabelProps={{ shrink: true }}
+            value={customer.payment.prePaymentNotes}
+            onChange={(e) =>
+              setCustomer((prev) => ({
+                ...prev,
+                payment: { ...prev.payment, prePaymentNotes: e.target.value },
+              }))
+            }
+            placeholder="Ödeme ile ilgili notlar..."
+          />
+        </Stack>
+      </Paper>
+
+      {/* Tedavi Sonrası Kesin Ödeme Bilgileri - Sadece Admin ve Fiyatlandırma */}
+      {(userRoles.includes("Admin") || userRoles.includes("Fiyatlandırma")) && (
+        <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "#fef3c7", borderColor: "#fbbf24" }}>
+          <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#92400e" }}>
+            Tedavi Sonrası Kesin Ödeme Bilgileri (Sadece Admin/Fiyatlandırma)
+          </Typography>
+
+          {/* Maliyet */}
+          <Box sx={{ mb: 3 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+              <Typography variant="body2" fontWeight={600}>Maliyet</Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleAddCost}
+                sx={{ textTransform: 'none' }}
+              >
+                Maliyet Ekle
+              </Button>
+            </Stack>
+            <Stack spacing={1.5}>
+              {customer.payment.finalPayments.costs.map((cost, index) => (
+                <Paper key={cost.id} variant="outlined" sx={{ p: 1.5, bgcolor: "#fff" }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Grid container spacing={1.5} sx={{ flex: 1 }}>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Kategori</InputLabel>
+                          <Select
+                            value={cost.category}
+                            label="Kategori"
+                            onChange={(e) => {
+                              setCustomer((prev) => {
+                                const costs = [...prev.payment.finalPayments.costs];
+                                costs[index] = { ...costs[index], category: e.target.value };
+                                return {
+                                  ...prev,
+                                  payment: {
+                                    ...prev.payment,
+                                    finalPayments: { ...prev.payment.finalPayments, costs },
+                                  },
+                                };
+                              });
+                            }}
+                          >
+                            {CRM_PAYMENT_CATEGORIES.map((cat) => (
+                              <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField
+                          size="small"
+                          label="Tutar"
+                          fullWidth
+                          type="number"
+                          InputLabelProps={{ shrink: true }}
+                          value={cost.amount}
+                          onChange={(e) => {
+                            setCustomer((prev) => {
+                              const costs = [...prev.payment.finalPayments.costs];
+                              costs[index] = { ...costs[index], amount: e.target.value };
+                              return {
+                                ...prev,
+                                payment: {
+                                  ...prev.payment,
+                                  finalPayments: { ...prev.payment.finalPayments, costs },
+                                },
+                              };
+                            });
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <FormControl fullWidth size="small" required>
+                          <InputLabel>Para Birimi *</InputLabel>
+                          <Select
+                            value={cost.currency}
+                            label="Para Birimi *"
+                            onChange={(e) => {
+                              setCustomer((prev) => {
+                                const costs = [...prev.payment.finalPayments.costs];
+                                costs[index] = { ...costs[index], currency: e.target.value };
+                                return {
+                                  ...prev,
+                                  payment: {
+                                    ...prev.payment,
+                                    finalPayments: { ...prev.payment.finalPayments, costs },
+                                  },
+                                };
+                              });
+                            }}
+                          >
+                            {CRM_CURRENCIES.map((curr) => (
+                              <MenuItem key={curr} value={curr}>{curr}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleRemoveCost(cost.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Satış */}
+          <Box sx={{ mb: 3 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+              <Typography variant="body2" fontWeight={600}>Satış</Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<AddIcon />}
+                onClick={handleAddSale}
+                sx={{ textTransform: 'none' }}
+              >
+                Satış Ekle
+              </Button>
+            </Stack>
+            <Stack spacing={1.5}>
+              {customer.payment.finalPayments.sales.map((sale, index) => (
+                <Paper key={sale.id} variant="outlined" sx={{ p: 1.5, bgcolor: "#fff" }}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Grid container spacing={1.5} sx={{ flex: 1 }}>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Kategori</InputLabel>
+                          <Select
+                            value={sale.category}
+                            label="Kategori"
+                            onChange={(e) => {
+                              setCustomer((prev) => {
+                                const sales = [...prev.payment.finalPayments.sales];
+                                sales[index] = { ...sales[index], category: e.target.value };
+                                return {
+                                  ...prev,
+                                  payment: {
+                                    ...prev.payment,
+                                    finalPayments: { ...prev.payment.finalPayments, sales },
+                                  },
+                                };
+                              });
+                            }}
+                          >
+                            {CRM_PAYMENT_CATEGORIES.map((cat) => (
+                              <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <TextField
+                          size="small"
+                          label="Tutar"
+                          fullWidth
+                          type="number"
+                          InputLabelProps={{ shrink: true }}
+                          value={sale.amount}
+                          onChange={(e) => {
+                            setCustomer((prev) => {
+                              const sales = [...prev.payment.finalPayments.sales];
+                              sales[index] = { ...sales[index], amount: e.target.value };
+                              return {
+                                ...prev,
+                                payment: {
+                                  ...prev.payment,
+                                  finalPayments: { ...prev.payment.finalPayments, sales },
+                                },
+                              };
+                            });
+                          }}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 4 }}>
+                        <FormControl fullWidth size="small" required>
+                          <InputLabel>Para Birimi *</InputLabel>
+                          <Select
+                            value={sale.currency}
+                            label="Para Birimi *"
+                            onChange={(e) => {
+                              setCustomer((prev) => {
+                                const sales = [...prev.payment.finalPayments.sales];
+                                sales[index] = { ...sales[index], currency: e.target.value };
+                                return {
+                                  ...prev,
+                                  payment: {
+                                    ...prev.payment,
+                                    finalPayments: { ...prev.payment.finalPayments, sales },
+                                  },
+                                };
+                              });
+                            }}
+                          >
+                            {CRM_CURRENCIES.map((curr) => (
+                              <MenuItem key={curr} value={curr}>{curr}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                    </Grid>
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => handleRemoveSale(sale.id)}
+                    >
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
+          </Box>
+
+          {/* Notlar */}
+          <TextField
+            multiline
+            minRows={9}
+            maxRows={50}
+            label="Notlar"
+            fullWidth
+            size="small"
+            InputLabelProps={{ shrink: true }}
+            value={customer.payment.finalPayments.notes}
+            onChange={(e) =>
+              setCustomer((prev) => ({
+                ...prev,
+                payment: {
+                  ...prev.payment,
+                  finalPayments: { ...prev.payment.finalPayments, notes: e.target.value },
+                },
+              }))
+            }
+            placeholder="Kesin ödeme ile ilgili notlar..."
+          />
+        </Paper>
+      )}
     </Stack>
   );
 
   // 6. DOSYALAR
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<{ open: boolean; url: string; name: string }>({
+    open: false,
+    url: "",
+    name: ""
+  });
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -1260,56 +1862,99 @@ export default function CustomerDetailPage() {
             Yüklenen Dosyalar
           </Typography>
           <Stack spacing={1}>
-            {customer.files.map((file) => (
-              <Paper key={file.id} variant="outlined" sx={{ p: 2 }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Box>
-                    <Typography variant="body2" fontWeight={500}>
-                      {file.name}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {file.size} • {file.uploadedAt}
-                    </Typography>
-                  </Box>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={async () => {
-                      const updatedCustomer = {
-                        ...customer,
-                        files: customer.files.filter((f) => f.id !== file.id),
-                      };
+            {customer.files.map((file) => {
+              const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(file.name);
+              
+              return (
+                <Paper key={file.id} variant="outlined" sx={{ p: 2 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Box 
+                      sx={{ 
+                        flex: 1,
+                        cursor: isImage ? 'pointer' : 'default',
+                        '&:hover': isImage ? { opacity: 0.7 } : {}
+                      }}
+                      onClick={() => {
+                        if (isImage && file.url) {
+                          setImagePreview({ open: true, url: file.url, name: file.name });
+                        }
+                      }}
+                    >
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        {isImage && <VisibilityIcon fontSize="small" color="primary" />}
+                        <Box>
+                          <Typography variant="body2" fontWeight={500}>
+                            {file.name}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {file.size} • {file.uploadedAt}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                    <Stack direction="row" spacing={1}>
+                      {/* İndirme Butonu */}
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => {
+                          if (file.url) {
+                            const link = document.createElement('a');
+                            link.href = file.url;
+                            link.download = file.name;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }
+                        }}
+                        title="İndir"
+                      >
+                        <DownloadIcon fontSize="small" />
+                      </IconButton>
                       
-                      setCustomer(updatedCustomer);
-                      
-                      // API'ye kaydet
-                      try {
-                        await fetch("/api/crm", {
-                          method: "PUT",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify(updatedCustomer),
-                        });
-                        
-                        setSnackbar({
-                          open: true,
-                          message: "Dosya silindi",
-                          severity: "success",
-                        });
-                      } catch (error) {
-                        console.error("Dosya silme hatası:", error);
-                        setSnackbar({
-                          open: true,
-                          message: "Dosya silinemedi",
-                          severity: "error",
-                        });
-                      }
-                    }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              </Paper>
-            ))}
+                      {/* Silme Butonu */}
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={async () => {
+                          const updatedCustomer = {
+                            ...customer,
+                            files: customer.files.filter((f) => f.id !== file.id),
+                          };
+                          
+                          setCustomer(updatedCustomer);
+                          
+                          // API'ye kaydet
+                          try {
+                            await fetch("/api/crm", {
+                              method: "PUT",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(updatedCustomer),
+                            });
+                            
+                            setSnackbar({
+                              open: true,
+                              message: "Dosya silindi",
+                              severity: "success",
+                            });
+                          } catch (error) {
+                            console.error("Dosya silme hatası:", error);
+                            setSnackbar({
+                              open: true,
+                              message: "Dosya silinemedi",
+                              severity: "error",
+                            });
+                          }
+                        }}
+                        title="Sil"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </Stack>
+                </Paper>
+              );
+            })}
           </Stack>
         </Box>
       )}
@@ -1349,53 +1994,152 @@ export default function CustomerDetailPage() {
 
   // 1. KİŞİSEL BİLGİLER
   const renderPersonalTab = () => (
-    <Grid container spacing={3}>
-      <Grid xs={12} md={6}>
-        <TextField
-          label={t("customerDetail.personal.name")}
-          fullWidth
-          value={customer.personal.name}
-          onChange={(e) => handleChange("personal", "name", e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-      </Grid>
-      <Grid xs={12} md={6}>
-        <TextField
-          label={t("customerDetail.personal.email")}
-          fullWidth
-          value={customer.personal.email}
-          onChange={(e) => handleChange("personal", "email", e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-      </Grid>
-      <Grid xs={12} md={6}>
-        <TextField
-          label={t("customerDetail.personal.phone")}
-          fullWidth
-          value={customer.personal.phone}
-          onChange={(e) => handleChange("personal", "phone", e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-      </Grid>
-      <Grid xs={12} md={6}>
-        <FormControl fullWidth>
-          <InputLabel shrink>{t("customerDetail.personal.country")}</InputLabel>
-          <Select
-            value={customer.personal.country}
-            label={t("customerDetail.personal.country")}
-            onChange={(e) =>
-              handleChange("personal", "country", e.target.value)
-            }
-          >
-            {CRM_COUNTRIES.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid xs={12}>
+    <Stack spacing={3}>
+      {/* 1. Satır: Ad Soyad ve Telefon */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          İletişim Bilgileri
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              label={t("customerDetail.personal.name")}
+              fullWidth
+              value={customer.personal.name}
+              onChange={(e) => handleChange("personal", "name", e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              label={t("customerDetail.personal.phone")}
+              fullWidth
+              value={customer.personal.phone}
+              onChange={(e) => {
+                const phone = e.target.value;
+                handleChange("personal", "phone", phone);
+                
+                // Telefon numarasından ülke tespiti
+                if (phone) {
+                  const digits = phone.replace(/\D/g, "");
+                  let detectedCountry = "";
+                  
+                  if (digits.startsWith("90")) detectedCountry = "Türkiye";
+                  else if (digits.startsWith("44")) detectedCountry = "United Kingdom";
+                  else if (digits.startsWith("49")) detectedCountry = "Germany";
+                  else if (digits.startsWith("33")) detectedCountry = "France";
+                  else if (digits.startsWith("31")) detectedCountry = "Netherlands";
+                  else if (digits.startsWith("32")) detectedCountry = "Belgium";
+                  else if (digits.startsWith("43")) detectedCountry = "Austria";
+                  else if (digits.startsWith("41")) detectedCountry = "Switzerland";
+                  else if (digits.startsWith("48")) detectedCountry = "Poland";
+                  else if (digits.startsWith("45")) detectedCountry = "Denmark";
+                  else if (digits.startsWith("46")) detectedCountry = "Sweden";
+                  else if (digits.startsWith("47")) detectedCountry = "Norway";
+                  else if (digits.startsWith("353")) detectedCountry = "Ireland";
+                  else if (digits.startsWith("39")) detectedCountry = "Italy";
+                  else if (digits.startsWith("34")) detectedCountry = "Spain";
+                  else if (digits.startsWith("351")) detectedCountry = "Portugal";
+                  else if (digits.startsWith("30")) detectedCountry = "Greece";
+                  else if (digits.startsWith("1")) detectedCountry = "USA";
+                  else if (digits.startsWith("61")) detectedCountry = "Australia";
+                  else if (digits.startsWith("98")) detectedCountry = "Iran";
+                  else if (digits.startsWith("964")) detectedCountry = "Iraq";
+                  else if (digits.startsWith("966")) detectedCountry = "Saudi Arabia";
+                  else if (digits.startsWith("971")) detectedCountry = "UAE";
+                  else if (digits.startsWith("974")) detectedCountry = "Qatar";
+                  else if (digits.startsWith("965")) detectedCountry = "Kuwait";
+                  else if (digits.startsWith("973")) detectedCountry = "Bahrain";
+                  else if (digits.startsWith("968")) detectedCountry = "Oman";
+                  else if (digits.startsWith("7")) detectedCountry = "Russia";
+                  else if (digits.startsWith("380")) detectedCountry = "Ukraine";
+                  else if (digits.startsWith("40")) detectedCountry = "Romania";
+                  else if (digits.startsWith("359")) detectedCountry = "Bulgaria";
+                  else if (digits.startsWith("420")) detectedCountry = "Czech Republic";
+                  else if (digits.startsWith("36")) detectedCountry = "Hungary";
+                  else if (digits.startsWith("358")) detectedCountry = "Other"; // Finlandiya
+                  
+                  if (detectedCountry && !customer.personal.country) {
+                    handleChange("personal", "country", detectedCountry);
+                  }
+                }
+              }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* 2. Satır: E-posta ve Ülke */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              label={t("customerDetail.personal.email")}
+              fullWidth
+              value={customer.personal.email}
+              onChange={(e) => handleChange("personal", "email", e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Autocomplete
+              options={CRM_COUNTRIES}
+              value={customer.personal.country || null}
+              onChange={(_, newValue) => handleChange("personal", "country", newValue || "")}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label={t("customerDetail.personal.country")}
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* 3. Satır: Kayıt Tarihi ve Saati */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          Kayıt Bilgileri
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 12 }}>
+            <TextField
+              type="datetime-local"
+              label="Kayıt Tarihi ve Saati"
+              fullWidth
+              value={customer.createdAt ? 
+                (() => {
+                  try {
+                    const d = new Date(customer.createdAt);
+                    if (isNaN(d.getTime())) return "";
+                    return d.toISOString().slice(0, 16);
+                  } catch { return ""; }
+                })() : ""
+              }
+              onChange={(e) => {
+                const newDateTime = e.target.value;
+                if (newDateTime) {
+                  const isoString = new Date(newDateTime).toISOString();
+                  setCustomer((prev) => ({
+                    ...prev,
+                    createdAt: isoString,
+                  }));
+                }
+              }}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* 4. Satır: Notlar */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          Notlar
+        </Typography>
         <TextField
           fullWidth
           multiline
@@ -1405,181 +2149,207 @@ export default function CustomerDetailPage() {
           onChange={(e) => handleChange("personal", "notes", e.target.value)}
           InputLabelProps={{ shrink: true }}
         />
-      </Grid>
-      <Grid xs={12}>
-        <TextField
-          label={t("customerDetail.personal.registerDate")}
-          fullWidth
-          value={customer.personal.registerDate}
-          disabled
-          InputLabelProps={{ shrink: true }}
-        />
-      </Grid>
-      <Grid xs={12}>
-        <Paper
-          variant="outlined"
-          sx={{ p: 2, bgcolor: "#f8fafc", borderRadius: 2 }}
-        >
-          <Stack direction="row" spacing={1} mb={2} alignItems="center">
-            <FacebookIcon color="primary" />
-            <Typography variant="subtitle2" fontWeight="bold">
-              {t("customerDetail.facebook.title")}
-            </Typography>
-          </Stack>
-          <Grid container spacing={2}>
-            <Grid xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label={t("customerDetail.facebook.adName")}
-                value={customer.personal.facebook.adName}
-                onChange={(e) =>
-                  setCustomer((p) => ({
-                    ...p,
-                    personal: {
-                      ...p.personal,
-                      facebook: {
-                        ...p.personal.facebook,
-                        adName: e.target.value,
-                      },
+      </Paper>
+
+      {/* 5. Satır: Reklam Bilgileri (Facebook) */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "#f8fafc" }}>
+        <Stack direction="row" spacing={1} mb={2} alignItems="center">
+          <FacebookIcon color="primary" />
+          <Typography variant="subtitle2" fontWeight={600} color="#374151">
+            {t("customerDetail.facebook.title")}
+          </Typography>
+        </Stack>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label={t("customerDetail.facebook.adName")}
+              value={customer.personal.facebook.adName}
+              onChange={(e) =>
+                setCustomer((p) => ({
+                  ...p,
+                  personal: {
+                    ...p.personal,
+                    facebook: {
+                      ...p.personal.facebook,
+                      adName: e.target.value,
                     },
-                  }))
-                }
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid xs={12} md={6}>
-              <TextField
-                fullWidth
-                size="small"
-                label={t("customerDetail.facebook.formId")}
-                value={customer.personal.facebook.leadFormId}
-                disabled
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
+                  },
+                }))
+              }
+              InputLabelProps={{ shrink: true }}
+            />
           </Grid>
-        </Paper>
-      </Grid>
-    </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Reklam Grubu"
+              value={customer.personal.facebook.adGroupName}
+              onChange={(e) =>
+                setCustomer((p) => ({
+                  ...p,
+                  personal: {
+                    ...p.personal,
+                    facebook: {
+                      ...p.personal.facebook,
+                      adGroupName: e.target.value,
+                    },
+                  },
+                }))
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Kampanya Adı"
+              value={customer.personal.facebook.campaignName}
+              onChange={(e) =>
+                setCustomer((p) => ({
+                  ...p,
+                  personal: {
+                    ...p.personal,
+                    facebook: {
+                      ...p.personal.facebook,
+                      campaignName: e.target.value,
+                    },
+                  },
+                }))
+              }
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              size="small"
+              label={t("customerDetail.facebook.formId")}
+              value={customer.personal.facebook.leadFormId}
+              disabled
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+    </Stack>
   );
 
   // 2. DURUM BİLGİLERİ
   const renderStatusTab = () => (
-    <Grid container spacing={3}>
-      <Grid xs={12} md={6}>
-        <FormControl fullWidth>
-          <InputLabel shrink>{t("customerDetail.status.consultant")}</InputLabel>
-          <Select
-            value={customer.status.consultant}
-            label={t("customerDetail.status.consultant")}
-            onChange={(e) =>
-              handleChange("status", "consultant", e.target.value)
-            }
-            displayEmpty
-            renderValue={(selected) => {
-              if (!selected) {
-                return <em style={{ color: "#9ca3af" }}>Danışman Seçiniz</em>;
-              }
-              return selected;
-            }}
-          >
-            <MenuItem value="">
-              <em>Danışman Seçiniz</em>
-            </MenuItem>
-            {advisorOptions.map((u) => (
-              <MenuItem key={u} value={u}>
-                {u}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid xs={12} md={6}>
-        <FormControl fullWidth>
-          <InputLabel shrink>{t("customerDetail.status.category")}</InputLabel>
-          <Select
-            value={customer.status.category}
-            label={t("customerDetail.status.category")}
-            onChange={(e) =>
-              handleChange("status", "category", e.target.value)
-            }
-            displayEmpty
-            renderValue={(selected) => {
-              if (!selected) {
-                return <em style={{ color: "#9ca3af" }}>Kategori Seçiniz</em>;
-              }
-              return selected;
-            }}
-          >
-            <MenuItem value="">
-              <em>Kategori Seçiniz</em>
-            </MenuItem>
-            {categoryOptions.map((c) => (
-              <MenuItem key={c} value={c}>
-                {c}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid xs={12}>
-        <FormControl fullWidth>
-          <InputLabel shrink>{t("customerDetail.status.services")}</InputLabel>
-          <Select
-            value={customer.status.services}
-            label={t("customerDetail.status.services")}
-            onChange={(e) =>
-              handleChange("status", "services", e.target.value)
-            }
-            displayEmpty
-            renderValue={(selected) => {
-              if (!selected) {
-                return <em style={{ color: "#9ca3af" }}>Hizmet Seçiniz</em>;
-              }
-              return selected;
-            }}
-          >
-            <MenuItem value="">
-              <em>Hizmet Seçiniz</em>
-            </MenuItem>
-            {serviceOptions.map((s) => (
-              <MenuItem key={s} value={s}>
-                {s}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid xs={12}>
-        <FormControl fullWidth>
-          <InputLabel shrink>{t("customerDetail.status.status")}</InputLabel>
-          <Select
-            value={customer.status.status}
-            label={t("customerDetail.status.status")}
-            onChange={(e) =>
-              handleChange("status", "status", e.target.value)
-            }
-            displayEmpty
-            renderValue={(selected) => {
-              if (!selected) {
-                return <em style={{ color: "#9ca3af" }}>Durum Seçiniz</em>;
-              }
-              return selected;
-            }}
-          >
-            <MenuItem value="">
-              <em>Durum Seçiniz</em>
-            </MenuItem>
-            {statusOptions.map((s) => (
-              <MenuItem key={s} value={s}>
-                {s}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Grid>
-    </Grid>
+    <Stack spacing={3}>
+      {/* 1. Satır: Danışman ve Kategori */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          Atama Bilgileri
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Autocomplete
+              options={advisorOptions}
+              value={customer.status.consultant || null}
+              onChange={(_, newValue) => handleChange("status", "consultant", newValue || "")}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label={t("customerDetail.status.consultant")}
+                  placeholder="Danışman seçin..."
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
+            <Autocomplete
+              options={categoryOptions}
+              value={customer.status.category || null}
+              onChange={(_, newValue) => handleChange("status", "category", newValue || "")}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label={t("customerDetail.status.category")}
+                  placeholder="Kategori seçin..."
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* 2. Satır: Hizmet ve Durum */}
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+          Hizmet ve Durum Bilgileri
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Autocomplete
+              options={serviceOptions}
+              value={customer.status.services || null}
+              onChange={(_, newValue) => {
+                handleChange("status", "services", newValue || "");
+                // Hizmet seçildiğinde ve durum "Yeni Form" veya boşsa, otomatik "Teklif Yollandı" yap
+                if (newValue && (!customer.status.status || customer.status.status === 'Yeni Form' || customer.status.status === 'Seçiniz')) {
+                  handleChange("status", "status", "Teklif Yollandı");
+                }
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label={t("customerDetail.status.services")}
+                  placeholder="Hizmet seçin..."
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Autocomplete
+              options={statusOptions}
+              value={customer.status.status || null}
+              onChange={(_, newValue) => {
+                // Teklif aşamalarına geçmeden önce hizmet kontrolü
+                const TEKLIF_STAGES = [
+                  "Teklif Yollandı",
+                  "Teklif Yollandı 2",
+                  "Teklif Yollandı 3",
+                  "Teklif Yollandı 4",
+                  "Teklif Yollandı 5",
+                  "Satış",
+                  "Satış Kapalı"
+                ];
+                
+                if (newValue && TEKLIF_STAGES.includes(newValue)) {
+                  const hasService = customer.status.services && customer.status.services.trim() !== '';
+                  if (!hasService) {
+                    setSnackbar({
+                      open: true,
+                      message: "⚠️ Önce hizmet seçmelisiniz! Teklif aşamalarına geçmek için hizmet alanı zorunludur.",
+                      severity: "warning"
+                    });
+                    return;
+                  }
+                }
+                
+                handleChange("status", "status", newValue || "");
+              }}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  label={t("customerDetail.status.status")}
+                  placeholder="Durum seçin..."
+                  InputLabelProps={{ shrink: true }}
+                />
+              )}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+    </Stack>
   );
 
   const renderContent = () => {
@@ -1889,6 +2659,99 @@ export default function CustomerDetailPage() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      {/* Resim Önizleme Modal */}
+      <Box
+        sx={{
+          display: imagePreview.open ? 'flex' : 'none',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          bgcolor: 'rgba(0, 0, 0, 0.9)',
+          zIndex: 9999,
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer'
+        }}
+        onClick={() => setImagePreview({ open: false, url: '', name: '' })}
+      >
+        <Box
+          sx={{
+            position: 'relative',
+            maxWidth: '90vw',
+            maxHeight: '90vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 2
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Box
+            sx={{
+              position: 'absolute',
+              top: -50,
+              right: 0,
+              display: 'flex',
+              gap: 1
+            }}
+          >
+            <IconButton
+              sx={{ 
+                bgcolor: 'white',
+                '&:hover': { bgcolor: '#f5f5f5' }
+              }}
+              onClick={() => {
+                if (imagePreview.url) {
+                  const link = document.createElement('a');
+                  link.href = imagePreview.url;
+                  link.download = imagePreview.name;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }
+              }}
+              title="İndir"
+            >
+              <DownloadIcon />
+            </IconButton>
+            <IconButton
+              sx={{ 
+                bgcolor: 'white',
+                '&:hover': { bgcolor: '#f5f5f5' }
+              }}
+              onClick={() => setImagePreview({ open: false, url: '', name: '' })}
+              title="Kapat"
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+          <img
+            src={imagePreview.url}
+            alt={imagePreview.name}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: '8px'
+            }}
+          />
+          <Typography
+            variant="body2"
+            sx={{
+              color: 'white',
+              bgcolor: 'rgba(0, 0, 0, 0.7)',
+              px: 2,
+              py: 1,
+              borderRadius: 1
+            }}
+          >
+            {imagePreview.name}
+          </Typography>
+        </Box>
+      </Box>
     </Box>
   );
 }

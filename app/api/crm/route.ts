@@ -119,9 +119,34 @@ function pickAdvisorFromLabel(label: LabelConfig | null): string | undefined {
   if (!label || !Array.isArray(label.advisors)) return undefined;
   const list = label.advisors.filter(Boolean);
   if (!list.length) return undefined;
-  // Şimdilik basit: rastgele seçim. İleride label içi round-robin eklenebilir.
-  const idx = Math.floor(Math.random() * list.length);
-  return list[idx];
+  
+  // Etiket bazlı round-robin: Her etiket için ayrı index tut
+  try {
+    const labelsPath = path.join(process.cwd(), "labels.json");
+    if (!fs.existsSync(labelsPath)) return list[0];
+    
+    const raw = fs.readFileSync(labelsPath, "utf-8");
+    const labels = JSON.parse(raw);
+    const labelIndex = labels.findIndex((l: any) => l && l.id === label.id);
+    
+    if (labelIndex === -1) return list[0];
+    
+    const currentLabel = labels[labelIndex];
+    let lastIndex = typeof currentLabel.lastAssignedIndex === "number" ? currentLabel.lastAssignedIndex : -1;
+    const nextIndex = (lastIndex + 1) % list.length;
+    const advisorName = list[nextIndex];
+    
+    // Index'i güncelle ve kaydet
+    currentLabel.lastAssignedIndex = nextIndex;
+    labels[labelIndex] = currentLabel;
+    fs.writeFileSync(labelsPath, JSON.stringify(labels, null, 2), "utf-8");
+    
+    return advisorName;
+  } catch (e) {
+    console.error("Etiket bazlı round-robin hatası:", e);
+    // Hata durumunda ilk danışmanı döndür
+    return list[0];
+  }
 }
 
 function getCampaignsSafe() {
@@ -276,10 +301,13 @@ function getWhatsappSessionForAdvisor(advisorName?: string): string {
       (u) => u.name && u.name.toLowerCase() === advisorName.toLowerCase()
     );
 
-    if (found?.session && typeof found.session === "string") {
+    // Session alanı varsa ve boş değilse kullan, yoksa default'a düş
+    if (found?.session && typeof found.session === "string" && found.session.trim() !== "") {
+      console.log(`[WhatsApp Session] ${advisorName} için session: ${found.session}`);
       return found.session;
     }
 
+    console.log(`[WhatsApp Session] ${advisorName} için session bulunamadı, default kullanılıyor`);
     return getDefaultWhatsappSession();
   } catch (e) {
     console.error("getWhatsappSessionForAdvisor hatası", e);
@@ -330,20 +358,34 @@ function getWelcomeTemplate(
 }
 
 async function sendAutoWelcomeIfPossible(customer: any) {
+  // noAutoWelcome flag'i varsa karşılama mesajı gönderme
+  if (customer.noAutoWelcome) {
+    console.log("[crm:auto-welcome] Müşteri noAutoWelcome flag'i ile işaretli, mesaj gönderilmedi");
+    return;
+  }
+
   const rawPhone = customer.phone || customer.personal?.phone;
   const phone = normalizePhone(rawPhone);
-  if (!phone) return;
+  if (!phone) {
+    console.log("[crm:auto-welcome] Telefon numarası bulunamadı, mesaj gönderilmedi");
+    return;
+  }
 
   const category = customer.category || customer.personal?.facebook?.campaignName;
   const lang = detectLanguageFromCategory(category);
   const advisorName = customer.advisor || customer.personal?.advisor;
   const tpl = getWelcomeTemplate(lang, advisorName);
-  if (!tpl) return; // Bu dil için şablon yoksa sessizce geç
+  
+  if (!tpl) {
+    console.log("[crm:auto-welcome] Bu dil için şablon bulunamadı:", lang);
+    return;
+  }
 
   const name = customer.name || customer.personal?.name || "";
   const user = customer.advisor || "Xirtiz Health";
 
-  console.log("[crm:auto-welcome] kampanyaDilLog", {
+  console.log("[crm:auto-welcome] Karşılama mesajı gönderiliyor:", {
+    customerName: name,
     category,
     detectedLang: lang,
     advisorName,
@@ -363,6 +405,12 @@ async function sendAutoWelcomeIfPossible(customer: any) {
       from_me: true,
     };
 
+    console.log("[crm:auto-welcome] Payload hazırlandı:", { 
+      instance_name: payload.instance_name, 
+      remote_jid: payload.remote_jid,
+      message_preview: text.substring(0, 50) + "..."
+    });
+
     const response = await fetch(`${INTERNAL_BASE_URL.replace(/\/$/, "")}/api/wp/messages`, {
       method: "POST",
       headers: {
@@ -372,7 +420,13 @@ async function sendAutoWelcomeIfPossible(customer: any) {
     });
 
     const respText = await response.text();
-    console.log("[crm:auto-welcome] Evolution API response", response.status, respText);
+    console.log("[crm:auto-welcome] Evolution API response", response.status, respText.substring(0, 200));
+    
+    if (!response.ok) {
+      console.error("[crm:auto-welcome] Mesaj gönderilemedi! Status:", response.status);
+    } else {
+      console.log("[crm:auto-welcome] ✓ Mesaj başarıyla gönderildi");
+    }
   } catch (e) {
     console.error("[crm:auto-welcome] WhatsApp gönderim hatası:", e);
   }
@@ -383,6 +437,12 @@ async function sendAutoWelcomeByLabelIfPossible(
   customer: any,
   label: LabelConfig
 ) {
+  // noAutoWelcome flag'i varsa karşılama mesajı gönderme
+  if (customer.noAutoWelcome) {
+    console.log("[crm:auto-welcome:label] Müşteri noAutoWelcome flag'i ile işaretli, mesaj gönderilmedi");
+    return;
+  }
+
   const rawPhone = customer.phone || customer.personal?.phone;
   const phone = normalizePhone(rawPhone);
   if (!phone) return;
@@ -645,13 +705,18 @@ export async function POST(request: Request) {
 
     // Zapier'dan gelen WhatsApp numarasını status.notes'a ekle
     const whatsappNumber = body.whatsappNumber || body.personal?.whatsappNumber || body["jaki_jest_twoj_numer_whatsapp"];
-    const statusNotes = whatsappNumber ? `WhatsApp: ${whatsappNumber}` : (body.status?.notes || "");
+    const statusNotes = whatsappNumber ? `WhatsApp: ${whatsappNumber}` : "";
+
+    // Status alanını düzgün şekilde ayarla - default "Yeni Form"
+    const incomingStatus = typeof body.status === "string" ? body.status : (body.status?.status || "Yeni Form");
+    const incomingCategory = matchedCampaign?.title || body.category || '';
+    const incomingServices = body.service || body.services || '';
 
     const newCustomer = {
       ...body,
       advisor,
       // Kampanya eşleşmesi varsa kategori ve üst kategori bilgilerini yaz
-      category: matchedCampaign?.title || body.category,
+      category: incomingCategory,
       parentCategory: matchedCampaign?.parent || body.parentCategory,
       categoryLevel1: matchedCampaign?.parent,
       categoryLevel2: (matchedCampaign as any)?.level2,
@@ -659,11 +724,16 @@ export async function POST(request: Request) {
       categoryLevel4: (matchedCampaign as any)?.level4,
       categoryLevel5: (matchedCampaign as any)?.level5 || matchedCampaign?.title,
       id: Date.now(), // Benzersiz ID
-      createdAt: new Date().toISOString(),
+      // Eğer body'de createdAt varsa onu kullan (manuel ekleme), yoksa şimdiki zamanı kullan
+      createdAt: body.createdAt || new Date().toISOString(),
+      // Status objesini doğru formatta oluştur
       status: {
-        ...(body.status || {}),
-        notes: statusNotes,
+        consultant: advisor || '',
+        category: incomingCategory,
+        services: incomingServices,
+        status: incomingStatus || "Yeni Form"
       },
+      statusNotes: statusNotes,
     } as any;
 
     // Nested personal alanlarını güncelle
@@ -681,6 +751,13 @@ export async function POST(request: Request) {
     // Phone varsa personal.phone'a da yaz
     if (body.phone && !newCustomer.personal.phone) {
       newCustomer.personal.phone = body.phone;
+    }
+    // WhatsApp numarasını notlar kısmına ekle
+    if (whatsappNumber) {
+      const existingNotes = newCustomer.personal.notes || body.notes || "";
+      newCustomer.personal.notes = existingNotes 
+        ? `${existingNotes}\n\nWhatsApp: ${whatsappNumber}` 
+        : `WhatsApp: ${whatsappNumber}`;
     }
     if (incomingLeadFormId) {
       newCustomer.personal.facebook.leadFormId = incomingLeadFormId;
@@ -729,8 +806,53 @@ export async function PUT(request: Request) {
     const index = customers.findIndex((c: any) => c.id == body.id);
 
     if (index > -1) {
-      // Mevcut veriyi koru, gelen değişikliği üstüne yaz
-      customers[index] = { ...customers[index], ...body };
+      // Mevcut müşteriyi al
+      const existingCustomer = customers[index];
+      
+      // Eğer body'de advisor, service, category gibi düz alanlar varsa
+      // bunları status objesine dönüştür
+      if (body.advisor !== undefined || body.service !== undefined || 
+          body.category !== undefined || body.status !== undefined) {
+        
+        // Mevcut status objesini koru
+        const currentStatus = typeof existingCustomer.status === 'object' 
+          ? existingCustomer.status 
+          : { consultant: '', category: '', services: '', status: '' };
+        
+        // Yeni status objesi oluştur
+        const newStatus = {
+          consultant: body.advisor !== undefined ? body.advisor : currentStatus.consultant,
+          category: body.category !== undefined ? body.category : currentStatus.category,
+          services: body.service !== undefined ? body.service : currentStatus.services,
+          status: body.status !== undefined && typeof body.status === 'string' 
+            ? body.status 
+            : (body.status?.status || currentStatus.status)
+        };
+        
+        // Body'den düz alanları temizle
+        const cleanBody = { ...body };
+        delete cleanBody.advisor;
+        delete cleanBody.service;
+        delete cleanBody.category;
+        if (typeof body.status === 'string') {
+          delete cleanBody.status;
+        }
+        
+        // Güncellemeyi yap
+        customers[index] = { 
+          ...existingCustomer, 
+          ...cleanBody,
+          status: { ...currentStatus, ...newStatus, ...(typeof body.status === 'object' ? body.status : {}) },
+          // Düz alanları da güncelle (müşteri listesi için)
+          advisor: newStatus.consultant,
+          category: newStatus.category,
+          service: newStatus.services
+        };
+      } else {
+        // Normal güncelleme
+        customers[index] = { ...existingCustomer, ...body };
+      }
+      
       saveCustomers(customers);
       return withCors(NextResponse.json(customers[index]), request);
     } else {
@@ -747,7 +869,7 @@ export async function PUT(request: Request) {
   }
 }
 
-// DELETE: Müşteri Sil
+// DELETE: Müşteri Sil (Soft Delete - deleted-customers.json'a taşı)
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -756,11 +878,41 @@ export async function DELETE(request: Request) {
     if (!id) return withCors(NextResponse.json({ error: "ID gerekli" }, { status: 400 }), request);
 
     let customers = getCustomers();
-    // ID'si eşleşmeyenleri tut (eşleşeni sil)
-    customers = customers.filter((c: any) => c.id != id);
     
+    // Silinecek müşteriyi bul
+    const customerToDelete = customers.find((c: any) => c.id == id);
+    
+    if (!customerToDelete) {
+      return withCors(NextResponse.json({ error: "Müşteri bulunamadı" }, { status: 404 }), request);
+    }
+    
+    // Silme bilgilerini ekle
+    const deletedCustomer = {
+      ...customerToDelete,
+      deletedAt: new Date().toISOString(),
+      deletedBy: request.headers.get('x-user-email') || 'unknown'
+    };
+    
+    // deleted-customers.json'a ekle
+    const deletedPath = path.join(process.cwd(), "deleted-customers.json");
+    let deletedCustomers: any[] = [];
+    
+    try {
+      const deletedData = fs.readFileSync(deletedPath, "utf-8");
+      deletedCustomers = JSON.parse(deletedData);
+    } catch (e) {
+      // Dosya yoksa veya boşsa, boş array
+      deletedCustomers = [];
+    }
+    
+    deletedCustomers.push(deletedCustomer);
+    fs.writeFileSync(deletedPath, JSON.stringify(deletedCustomers, null, 2), "utf-8");
+    
+    // Ana listeden sil
+    customers = customers.filter((c: any) => c.id != id);
     saveCustomers(customers);
-    return withCors(NextResponse.json({ success: true }), request);
+    
+    return withCors(NextResponse.json({ success: true, message: "Müşteri deleted-customers.json'a taşındı" }), request);
   } catch (error) {
     return withCors(
       NextResponse.json({ error: "Silme hatası" }, { status: 500 }),

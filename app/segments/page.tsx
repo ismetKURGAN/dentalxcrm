@@ -266,6 +266,10 @@ export default function SegmentsPage() {
             case "Kategoriler":
                 return c.category || "";
             case "Durumlar":
+                // Status obje veya string olabilir
+                if (typeof c.status === "object" && c.status !== null) {
+                    return c.status.status || "";
+                }
                 return c.status || "";
             case "Hizmetler":
                 return c.service || "";
@@ -281,8 +285,9 @@ export default function SegmentsPage() {
     const matchesRule = (c: any, rule: FilterRule): boolean => {
         const raw = getFieldValue(c, rule.field) || "";
         const value = rule.value || "";
-        const vLower = value.toLowerCase();
-        const rLower = raw.toLowerCase();
+        // raw ve value string olmayabilir, güvenli dönüşüm yap
+        const vLower = String(value).toLowerCase();
+        const rLower = String(raw).toLowerCase();
 
         switch (rule.operator) {
             case "İçinde":

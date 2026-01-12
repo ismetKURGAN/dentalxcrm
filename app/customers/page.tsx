@@ -22,7 +22,13 @@ import {
   Select,
   MenuItem,
   Snackbar,
-  Alert
+  Alert,
+  Autocomplete,
+  Card,
+  CardContent,
+  Chip,
+  useMediaQuery,
+  useTheme
 } from "@mui/material";
 
 import {
@@ -41,8 +47,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import CategoryIcon from "@mui/icons-material/Category";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import { useI18n } from "../components/I18nProvider";
+import { useI18n, translateValue } from "../components/I18nProvider";
 import { useAuth } from "../components/AuthProvider";
 
 // =================== TAM LİSTELER ===================
@@ -128,24 +133,68 @@ const getStatusColor = (status: any) => {
 
 export default function CustomersPage() {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { user } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [statusObjects, setStatusObjects] = useState<{id: number; tr: string; en: string}[]>([]);
+  const [serviceObjects, setServiceObjects] = useState<{id: number; tr: string; en: string}[]>([]);
+  const [serviceNames, setServiceNames] = useState<string[]>(CRM_SERVICES);
+  const [statuses, setStatuses] = useState<string[]>(CRM_STATUSES);
   
   // Gelişmiş Filtre State'leri
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [advancedFilters, setAdvancedFilters] = useState<Array<{
-    field: string;
-    operator: string;
-    value: string;
-  }>>([]);
-  const [tempFilters, setTempFilters] = useState<Array<{
-    field: string;
-    operator: string;
-    value: string;
-  }>>([]);
+  const [filterLogic, setFilterLogic] = useState<"VE" | "VEYA">("VE");
+  const [advancedFilters, setAdvancedFilters] = useState<{
+    categories: string[];
+    advisors: string[];
+    statuses: string[];
+    services: string[];
+    countries: string[];
+    trustpilot: string | null;
+    googleReview: string | null;
+    satisfactionSurvey: string | null;
+    guaranteeSent: string | null;
+    rpt: string | null;
+    salesDateFrom: string;
+    salesDateTo: string;
+    registerDateFrom: string;
+    registerDateTo: string;
+    editDateFrom: string;
+    editDateTo: string;
+    categoryOperator: "içinde" | "içinde değil";
+    advisorOperator: "içinde" | "içinde değil";
+    statusOperator: "içinde" | "içinde değil";
+    serviceOperator: "içinde" | "içinde değil";
+    countryOperator: "içinde" | "içinde değil";
+  }>({
+    categories: [],
+    advisors: [],
+    statuses: [],
+    services: [],
+    countries: [],
+    trustpilot: null,
+    googleReview: null,
+    satisfactionSurvey: null,
+    guaranteeSent: null,
+    rpt: null,
+    salesDateFrom: "",
+    salesDateTo: "",
+    registerDateFrom: "",
+    registerDateTo: "",
+    editDateFrom: "",
+    editDateTo: "",
+    categoryOperator: "içinde",
+    advisorOperator: "içinde",
+    statusOperator: "içinde",
+    serviceOperator: "içinde",
+    countryOperator: "içinde",
+  });
+  const [tempFilters, setTempFilters] = useState(advancedFilters);
+  const [tempFilterLogic, setTempFilterLogic] = useState<"VE" | "VEYA">("VE");
   const isMountedRef = useRef(false);
   const [advisorOptions, setAdvisorOptions] = useState<string[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
@@ -153,8 +202,76 @@ export default function CustomersPage() {
   // Modal
   const [open, setOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
-    name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: ""
+    name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: "", country: "", registerDate: ""
   });
+  
+  // Arama state'i
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Sayfa başına satır sayısı
+  const [pageSize, setPageSize] = useState(50);
+
+  // --- Durumları Çek ---
+  const fetchStatuses = async () => {
+    try {
+      const res = await fetch("/api/statuses", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          if (typeof data[0] === "object") {
+            setStatusObjects(data);
+            setStatuses(data.map((s: any) => s.tr).filter(Boolean));
+          } else {
+            setStatuses(data);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Durumlar yüklenirken hata:", e);
+      setStatuses(CRM_STATUSES);
+    }
+  };
+
+  // Dile göre durum adını getir
+  const getStatusLabel = (statusTr: string): string => {
+    if (!statusTr) return "";
+    const found = statusObjects.find(s => s.tr === statusTr);
+    if (found && language === "en" && found.en) {
+      return found.en;
+    }
+    return statusTr;
+  };
+
+  // --- Servisleri Çek ---
+  const fetchServices = async () => {
+    try {
+      const res = await fetch("/api/services", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          if (typeof data[0] === "object") {
+            setServiceObjects(data);
+            setServiceNames(data.map((s: any) => s.tr).filter(Boolean));
+          } else {
+            setServiceNames(data);
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Servisler yüklenirken hata:", e);
+      setServiceNames(CRM_SERVICES);
+    }
+  };
+
+  // Dile göre servis adını getir
+  const getServiceLabel = (serviceTr: string): string => {
+    if (!serviceTr) return "";
+    const found = serviceObjects.find(s => s.tr === serviceTr);
+    if (found && language === "en" && found.en) {
+      return found.en;
+    }
+    return serviceTr;
+  };
 
   // --- Verileri Çek ---
   const fetchCustomers = async () => {
@@ -164,10 +281,39 @@ export default function CustomersPage() {
       const res = await fetch("/api/crm", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
-        const formatted = data.map((c: any) => ({
-          ...c,
-          date: c.date || new Date(c.createdAt).toLocaleDateString('tr-TR')
-        }));
+        // Acenta = Danışman ile aynı, filtreleme yok
+        let filteredData = data;
+
+        const formatted = filteredData.map((c: any) => {
+          const createdDate = new Date(c.createdAt);
+          
+          // Status bilgisini düzelt - hem eski (string) hem yeni (object) formatı destekle
+          let advisor = '';
+          let status = '';
+          let service = '';
+          
+          if (typeof c.status === 'object' && c.status !== null) {
+            advisor = c.status.consultant || '';
+            status = c.status.status || '';
+            service = c.status.services || c.service || '';
+          } else if (typeof c.status === 'string') {
+            status = c.status;
+            service = c.service || '';
+          }
+          
+          return {
+            ...c,
+            advisor: advisor,
+            status: status,
+            service: service,
+            date: c.date || createdDate.toLocaleString('tr-TR', {
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric'
+            }),
+            time: `${String(createdDate.getHours()).padStart(2, '0')}:${String(createdDate.getMinutes()).padStart(2, '0')}`
+          };
+        });
         if (!isMountedRef.current) return;
         setRows(formatted);
       }
@@ -182,6 +328,8 @@ export default function CustomersPage() {
   useEffect(() => {
     isMountedRef.current = true;
     fetchCustomers();
+    fetchStatuses();
+    fetchServices();
 
     // Danışman listesi: users.json üzerinden, roles içinde "Danışman" olan kullanıcı adları
     const fetchAdvisors = async () => {
@@ -190,7 +338,7 @@ export default function CustomersPage() {
         if (!res.ok) return;
         const data = await res.json();
         const names = (data || [])
-          .filter((u: any) => Array.isArray(u.roles) && u.roles.includes("Danışman"))
+          .filter((u: any) => Array.isArray(u.roles) && (u.roles.includes("Danışman") || u.roles.includes("Acenta")))
           .map((u: any) => u.name)
           .filter(Boolean);
         setAdvisorOptions(names);
@@ -225,24 +373,86 @@ export default function CustomersPage() {
 
   // --- Satır İçi Güncelleme (Inline Edit) ---
   const handleInlineUpdate = async (id: number, field: string, value: string) => {
+    // Teklif aşamalarına geçmeden önce hizmet kontrolü
+    const TEKLIF_STAGES = [
+      "Teklif Yollandı",
+      "Teklif Yollandı 2",
+      "Teklif Yollandı 3",
+      "Teklif Yollandı 4",
+      "Teklif Yollandı 5",
+      "Satış",
+      "Satış Kapalı"
+    ];
+    
+    if (field === 'status' && TEKLIF_STAGES.includes(value)) {
+      // İlgili müşteriyi bul
+      const customer = rows.find((r) => r.id === id);
+      const hasService = customer?.service && customer.service.trim() !== '';
+      
+      if (!hasService) {
+        setSnackbar({ 
+          open: true, 
+          message: "⚠️ Önce hizmet seçmelisiniz! Teklif aşamalarına geçmek için hizmet alanı zorunludur.",
+          severity: "warning"
+        });
+        return;
+      }
+    }
+    
     // 1. Önce arayüzü güncelle (Hızlı tepki için)
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, [field]: value } : r)));
 
     // 2. Arka planda API'ye kaydet
     try {
+      // advisor ve status alanları için özel işlem
+      let updateData: any = { id };
+      
+      if (field === 'advisor') {
+        // advisor güncellenirken status.consultant olarak kaydet
+        updateData.status = { consultant: value };
+      } else if (field === 'status') {
+        // status güncellenirken status.status olarak kaydet
+        updateData.status = { status: value };
+      } else if (field === 'service') {
+        // Hizmet seçildiğinde otomatik olarak durumu "Teklif Yollandı" yap
+        const customer = rows.find((r) => r.id === id);
+        const currentStatus = customer?.status || '';
+        
+        // Eğer durum "Yeni Form" veya boşsa, otomatik "Teklif Yollandı" yap
+        if (!currentStatus || currentStatus === 'Yeni Form' || currentStatus === 'Seçiniz') {
+          updateData.service = value;
+          updateData.status = 'Teklif Yollandı';
+          // UI'da da durumu güncelle
+          setRows((prev) => prev.map((r) => 
+            r.id === id ? { ...r, service: value, status: 'Teklif Yollandı' } : r
+          ));
+        } else {
+          // Sadece hizmeti güncelle
+          updateData.service = value;
+        }
+      } else {
+        // Diğer alanlar direkt kaydedilir
+        updateData[field] = value;
+      }
+      
       const res = await fetch("/api/crm", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, [field]: value }),
+        body: JSON.stringify(updateData),
       });
 
       if (res.ok) {
+        // API'den güncel veriyi çek
+        await fetchCustomers();
         setSnackbar({ open: true, message: t("customers.snackbar.updated") });
       } else {
-        // Hata olursa geri al (Opsiyonel)
+        // Hata olursa geri al
+        await fetchCustomers();
         console.error("Güncelleme başarısız");
       }
     } catch (error) {
+      // Hata olursa geri al
+      await fetchCustomers();
       console.error("Bağlantı hatası", error);
     }
   };
@@ -250,16 +460,38 @@ export default function CustomersPage() {
   // --- Müşteri Ekle ---
   const handleCreateCustomer = async () => {
     try {
+      // newCustomer'daki advisor ve status'u doğru formata çevir
+      const customerData = {
+        ...newCustomer,
+        status: {
+          consultant: newCustomer.advisor,
+          category: newCustomer.category || '',
+          services: newCustomer.service || '',
+          status: newCustomer.status || 'Yeni Form'
+        }
+      };
+      
+      // Kullanıcının seçtiği kayıt tarihini createdAt olarak ayarla
+      if (newCustomer.registerDate) {
+        (customerData as any).createdAt = new Date(newCustomer.registerDate).toISOString();
+      }
+      
+      // Gereksiz alanları temizle
+      delete (customerData as any).advisor;
+      delete (customerData as any).service;
+      delete (customerData as any).category;
+      delete (customerData as any).registerDate;
+      
       const res = await fetch("/api/crm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newCustomer),
+        body: JSON.stringify(customerData),
       });
       
       if (res.ok) {
         await fetchCustomers();
         setOpen(false);
-        setNewCustomer({ name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: "" });
+        setNewCustomer({ name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: "", country: "", registerDate: "" });
         setSnackbar({ open: true, message: t("customers.snackbar.created") });
       } else if (res.status === 409) {
         // Mükerrer müşteri hatası
@@ -303,7 +535,36 @@ export default function CustomersPage() {
   // ==================== KOLONLAR ====================
   const columns: GridColDef[] = [
     { field: "id", headerName: t("customers.columns.id"), width: 90 },
-    { field: "date", headerName: t("customers.columns.date"), width: 150 },
+    { 
+      field: "date", 
+      headerName: t("customers.columns.date"), 
+      width: 200,
+      renderCell: (params) => {
+        if (!params.row.createdAt) return null;
+        const d = new Date(params.row.createdAt);
+        if (isNaN(d.getTime())) return null;
+        
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        
+        return (
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827" }}>
+              {`${day}.${month}.${year}`}
+            </Typography>
+            <Typography sx={{ fontSize: "0.8rem", color: "#6b7280" }}>
+              -
+            </Typography>
+            <Typography sx={{ fontSize: "0.8rem", color: "#6b7280" }}>
+              {`${hours}:${minutes}`}
+            </Typography>
+          </Box>
+        );
+      },
+    },
 
     {
       field: "advisor", headerName: t("customers.columns.advisor"), width: 150,
@@ -328,7 +589,7 @@ export default function CustomersPage() {
     },
 
     {
-      field: "name", headerName: t("customers.columns.name"), flex: 1, minWidth: 200,
+      field: "name", headerName: t("customers.columns.name"), width: 160,
       renderCell: (params) => (
         <Typography 
             onClick={() => router.push(`/customers/${params.row.id}`)}
@@ -347,7 +608,7 @@ export default function CustomersPage() {
     { field: "phone", headerName: t("customers.columns.phone"), width: 140 },
 
     {
-        field: "category", headerName: t("customers.columns.category"), width: 180,
+        field: "category", headerName: t("customers.columns.category"), width: 220, flex: 1,
         renderCell: (params) => (
           <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, px: 1, py: 0.5, borderRadius: 2, bgcolor: "#F3F4FF", fontSize: "0.75rem", color: "#6366F1" }}>
             <CategoryIcon sx={{ fontSize: 14 }} />
@@ -361,25 +622,48 @@ export default function CustomersPage() {
       renderCell: (params) => {
         const style = getStatusColor(params.value || "");
         return (
-            <FormControl fullWidth size="small" variant="standard">
-                <Select
-                    value={params.value || ""}
-                    onChange={(e) => handleInlineUpdate(params.row.id, "status", e.target.value)}
-                    disableUnderline
-                    sx={{ 
-                        fontSize: "0.75rem", 
-                        fontWeight: 600,
-                        bgcolor: style.bg, 
-                        color: style.color, 
-                        borderRadius: 4, 
-                        px: 1.5,
-                        textAlign: "center",
-                        ".MuiSelect-select": { py: 0.5 }
+            <Autocomplete
+                size="small"
+                options={statuses}
+                value={params.value || ""}
+                onChange={(_, newValue) => {
+                  if (newValue) handleInlineUpdate(params.row.id, "status", newValue);
+                }}
+                disableClearable
+                getOptionLabel={(option) => getStatusLabel(option)}
+                renderInput={(inputParams) => (
+                  <TextField
+                    {...inputParams}
+                    variant="standard"
+                    InputProps={{
+                      ...inputParams.InputProps,
+                      disableUnderline: true,
                     }}
-                >
-                    {CRM_STATUSES.map(st => <MenuItem key={st} value={st}>{st}</MenuItem>)}
-                </Select>
-            </FormControl>
+                    sx={{ 
+                      fontSize: "0.7rem", 
+                      fontWeight: 600,
+                      bgcolor: style.bg, 
+                      color: style.color, 
+                      borderRadius: 4, 
+                      px: 1.5,
+                      "& input": { py: 0.5, fontSize: "0.7rem", fontWeight: 600, color: style.color }
+                    }}
+                  />
+                )}
+                ListboxProps={{
+                  sx: {
+                    maxHeight: "400px",
+                    "& .MuiAutocomplete-option": {
+                      fontSize: "0.7rem",
+                      borderBottom: "1px solid #F3F4F6",
+                      "&:last-child": {
+                        borderBottom: "none"
+                      }
+                    }
+                  }
+                }}
+                sx={{ width: "100%" }}
+            />
         );
       },
     },
@@ -387,25 +671,52 @@ export default function CustomersPage() {
     {
       field: "service", headerName: t("customers.columns.service"), width: 160,
       renderCell: (params) => (
-        <FormControl fullWidth size="small" variant="standard">
-            <Select
-                value={params.value || ""}
-                onChange={(e) => handleInlineUpdate(params.row.id, "service", e.target.value)}
-                disableUnderline
-                displayEmpty
-                sx={{ 
-                    fontSize: "0.8rem", 
-                    bgcolor: "#EEF2FF", 
-                    color: "#4F46E5", 
-                    borderRadius: 1, 
-                    px: 1,
-                    ".MuiSelect-select": { py: 0.5 } 
+        <Autocomplete
+            size="small"
+            options={serviceNames}
+            value={params.value || ""}
+            onChange={(_, newValue) => {
+              if (newValue) handleInlineUpdate(params.row.id, "service", newValue);
+            }}
+            getOptionLabel={(option) => getServiceLabel(option)}
+            renderInput={(inputParams) => (
+              <TextField
+                {...inputParams}
+                variant="standard"
+                placeholder={t("common.select")}
+                InputProps={{
+                  ...inputParams.InputProps,
+                  disableUnderline: true,
                 }}
-            >
-                <MenuItem value="" disabled>Seçiniz</MenuItem>
-                {CRM_SERVICES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-            </Select>
-        </FormControl>
+                sx={{ 
+                  fontSize: "0.7rem",
+                  color: params.value ? "#8B5CF6" : "#9CA3AF",
+                  "& input": { 
+                    fontSize: "0.7rem",
+                    color: params.value ? "#8B5CF6" : "#9CA3AF",
+                    fontWeight: 500
+                  },
+                  "& input::placeholder": {
+                    color: "#9CA3AF",
+                    opacity: 1
+                  }
+                }}
+              />
+            )}
+            ListboxProps={{
+              sx: {
+                maxHeight: "400px",
+                "& .MuiAutocomplete-option": {
+                  fontSize: "0.7rem",
+                  borderBottom: "1px solid #F3F4F6",
+                  "&:last-child": {
+                    borderBottom: "none"
+                  }
+                }
+              }
+            }}
+            sx={{ width: "100%" }}
+        />
       ),
     },
 
@@ -445,36 +756,149 @@ export default function CustomersPage() {
     let filtered = rows;
     
     // Rol bazlı filtreleme
-    if (roles.includes("Danışman") && !roles.includes("Admin") && !roles.includes("Yönetici")) {
+    if ((roles.includes("Danışman") || roles.includes("Acenta")) && !roles.includes("Admin") && !roles.includes("Yönetici")) {
       filtered = filtered.filter((r) => r.advisor === user.name);
     }
     
-    // Gelişmiş filtreler
-    if (advancedFilters.length > 0) {
+    // Arama filtresi (isim, telefon, email)
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter((row) => {
-        return advancedFilters.every((filter) => {
-          const fieldValue = (row as any)[filter.field];
-          const filterValue = filter.value.toLowerCase();
-          const rowValue = String(fieldValue || "").toLowerCase();
-          
-          switch (filter.operator) {
-            case "içinde":
-              return rowValue.includes(filterValue);
-            case "eşit":
-              return rowValue === filterValue;
-            case "başlar":
-              return rowValue.startsWith(filterValue);
-            case "biter":
-              return rowValue.endsWith(filterValue);
-            default:
-              return true;
-          }
-        });
+        const name = String(row.name || "").toLowerCase();
+        const phone = String(row.phone || "").toLowerCase();
+        const email = String(row.email || "").toLowerCase();
+        return name.includes(query) || phone.includes(query) || email.includes(query);
+      });
+    }
+    
+    // Gelişmiş filtreler
+    const hasActiveFilters = 
+      advancedFilters.categories.length > 0 ||
+      advancedFilters.advisors.length > 0 ||
+      advancedFilters.statuses.length > 0 ||
+      advancedFilters.services.length > 0 ||
+      advancedFilters.countries.length > 0 ||
+      advancedFilters.trustpilot !== null ||
+      advancedFilters.googleReview !== null ||
+      advancedFilters.satisfactionSurvey !== null ||
+      advancedFilters.guaranteeSent !== null ||
+      advancedFilters.rpt !== null ||
+      advancedFilters.salesDateFrom ||
+      advancedFilters.salesDateTo ||
+      advancedFilters.registerDateFrom ||
+      advancedFilters.registerDateTo ||
+      advancedFilters.editDateFrom ||
+      advancedFilters.editDateTo;
+
+    if (hasActiveFilters) {
+      filtered = filtered.filter((row) => {
+        const conditions: boolean[] = [];
+
+        // Kategori filtresi
+        if (advancedFilters.categories.length > 0) {
+          const rowCategory = String(row.category || "").toLowerCase();
+          const match = advancedFilters.categories.some(c => rowCategory.includes(c.toLowerCase()));
+          conditions.push(advancedFilters.categoryOperator === "içinde" ? match : !match);
+        }
+
+        // Danışman filtresi
+        if (advancedFilters.advisors.length > 0) {
+          const rowAdvisor = String(row.advisor || "").toLowerCase();
+          const match = advancedFilters.advisors.some(a => rowAdvisor === a.toLowerCase());
+          conditions.push(advancedFilters.advisorOperator === "içinde" ? match : !match);
+        }
+
+        // Durum filtresi
+        if (advancedFilters.statuses.length > 0) {
+          const rowStatus = String(row.status || "").toLowerCase();
+          const match = advancedFilters.statuses.some(s => rowStatus === s.toLowerCase());
+          conditions.push(advancedFilters.statusOperator === "içinde" ? match : !match);
+        }
+
+        // Hizmet filtresi
+        if (advancedFilters.services.length > 0) {
+          const rowService = String(row.service || "").toLowerCase();
+          const match = advancedFilters.services.some(s => rowService === s.toLowerCase());
+          conditions.push(advancedFilters.serviceOperator === "içinde" ? match : !match);
+        }
+
+        // Ülke filtresi
+        if (advancedFilters.countries.length > 0) {
+          const rowCountry = String(row.country || "").toLowerCase();
+          const match = advancedFilters.countries.some(c => rowCountry === c.toLowerCase());
+          conditions.push(advancedFilters.countryOperator === "içinde" ? match : !match);
+        }
+
+        // Boolean filtreler (Evet/Hayır)
+        if (advancedFilters.trustpilot !== null) {
+          const hasValue = !!row.trustpilotReview;
+          conditions.push(advancedFilters.trustpilot === "Evet" ? hasValue : !hasValue);
+        }
+        if (advancedFilters.googleReview !== null) {
+          const hasValue = !!row.googleReview;
+          conditions.push(advancedFilters.googleReview === "Evet" ? hasValue : !hasValue);
+        }
+        if (advancedFilters.satisfactionSurvey !== null) {
+          const hasValue = !!row.satisfactionSurvey;
+          conditions.push(advancedFilters.satisfactionSurvey === "Evet" ? hasValue : !hasValue);
+        }
+        if (advancedFilters.guaranteeSent !== null) {
+          const hasValue = !!row.guaranteeSent;
+          conditions.push(advancedFilters.guaranteeSent === "Evet" ? hasValue : !hasValue);
+        }
+        if (advancedFilters.rpt !== null) {
+          const hasValue = !!row.rpt;
+          conditions.push(advancedFilters.rpt === "Evet" ? hasValue : !hasValue);
+        }
+
+        // Tarih filtreleri
+        const rowCreatedAt = row.createdAt ? new Date(row.createdAt) : null;
+        const rowSalesDate = row.salesDate ? new Date(row.salesDate) : null;
+        const rowUpdatedAt = row.updatedAt ? new Date(row.updatedAt) : null;
+
+        // Kayıt Tarihi
+        if (advancedFilters.registerDateFrom) {
+          const fromDate = new Date(advancedFilters.registerDateFrom);
+          conditions.push(rowCreatedAt ? rowCreatedAt >= fromDate : false);
+        }
+        if (advancedFilters.registerDateTo) {
+          const toDate = new Date(advancedFilters.registerDateTo);
+          toDate.setHours(23, 59, 59, 999);
+          conditions.push(rowCreatedAt ? rowCreatedAt <= toDate : false);
+        }
+
+        // Satış Tarihi
+        if (advancedFilters.salesDateFrom) {
+          const fromDate = new Date(advancedFilters.salesDateFrom);
+          conditions.push(rowSalesDate ? rowSalesDate >= fromDate : false);
+        }
+        if (advancedFilters.salesDateTo) {
+          const toDate = new Date(advancedFilters.salesDateTo);
+          toDate.setHours(23, 59, 59, 999);
+          conditions.push(rowSalesDate ? rowSalesDate <= toDate : false);
+        }
+
+        // Düzenleme Tarihi
+        if (advancedFilters.editDateFrom) {
+          const fromDate = new Date(advancedFilters.editDateFrom);
+          conditions.push(rowUpdatedAt ? rowUpdatedAt >= fromDate : false);
+        }
+        if (advancedFilters.editDateTo) {
+          const toDate = new Date(advancedFilters.editDateTo);
+          toDate.setHours(23, 59, 59, 999);
+          conditions.push(rowUpdatedAt ? rowUpdatedAt <= toDate : false);
+        }
+
+        // VE / VEYA mantığı
+        if (conditions.length === 0) return true;
+        return filterLogic === "VE" 
+          ? conditions.every(c => c) 
+          : conditions.some(c => c);
       });
     }
     
     return filtered;
-  }, [rows, user, advancedFilters]);
+  }, [rows, user, advancedFilters, searchQuery, filterLogic]);
 
   return (
     <Box
@@ -507,31 +931,36 @@ export default function CustomersPage() {
         >
           {t("customers.actions.new")}
         </Button>
-        <Button
-          variant="outlined"
-          startIcon={<FileDownloadIcon />}
-          onClick={exportToCSV}
-          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-        >
-          {t("customers.actions.export")}
-        </Button>
+        {(user?.roles?.includes("SuperAdmin") || user?.name?.toLowerCase() === "seref") && (
+          <Button
+            variant="outlined"
+            startIcon={<FileDownloadIcon />}
+            onClick={exportToCSV}
+            sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+          >
+            {t("customers.actions.export")}
+          </Button>
+        )}
         <Button
           variant="outlined"
           startIcon={<FilterListIcon />}
           onClick={() => {
-            setTempFilters([...advancedFilters]);
+            setTempFilters({...advancedFilters});
+            setTempFilterLogic(filterLogic);
             setFilterDialogOpen(true);
           }}
           sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
         >
-          Gelişmiş Filtreler {advancedFilters.length > 0 && `(${advancedFilters.length})`}
+          Gelişmiş Filtreler {(advancedFilters.categories.length + advancedFilters.advisors.length + advancedFilters.statuses.length + advancedFilters.services.length + advancedFilters.countries.length) > 0 && `(${advancedFilters.categories.length + advancedFilters.advisors.length + advancedFilters.statuses.length + advancedFilters.services.length + advancedFilters.countries.length})`}
         </Button>
         
         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
         
         <TextField 
           placeholder={t("customers.search.placeholder")} 
-          size="small" 
+          size="small"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} 
           sx={{
             bgcolor: '#F9FAFB',
@@ -544,12 +973,13 @@ export default function CustomersPage() {
         </IconButton>
       </Paper>
 
-      {/* TABLO */}
-      <Box sx={{ width: '100%', overflowX: 'auto' }}>
+      {/* TABLO - Masaüstü */}
+      {!isMobile && (
         <Paper
           sx={{
-            height: { xs: 520, md: 650 },
-            minWidth: 800,
+            width: '100%',
+            height: pageSize === 100 ? 'calc(100vh - 200px)' : pageSize === 50 ? 700 : pageSize === 25 ? 520 : 400,
+            minHeight: 400,
             borderRadius: 2,
             boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
           }}
@@ -561,58 +991,294 @@ export default function CustomersPage() {
             disableRowSelectionOnClick
             loading={loading}
             rowHeight={60}
+            pageSizeOptions={[10, 25, 50, 100]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 50 } },
+            }}
+            onPaginationModelChange={(model) => setPageSize(model.pageSize)}
+            columnVisibilityModel={{
+              id: false,
+            }}
             sx={{
               border: "none",
-              "& .MuiDataGrid-columnHeaders": { bgcolor: "#F9FAFB", color: "#374151", fontWeight: 600 },
-              "& .MuiDataGrid-cell": { borderBottom: "1px solid #F3F4F6", display: 'flex', alignItems: 'center' },
+              fontSize: "0.8rem",
+              "& .MuiDataGrid-columnHeaders": { bgcolor: "#F9FAFB", color: "#374151", fontWeight: 600, fontSize: "0.75rem", borderBottom: "1px solid #E5E7EB" },
+              "& .MuiDataGrid-cell": { 
+                borderBottom: "1px solid #F3F4F6", 
+                borderRight: "1px solid #F3F4F6",
+                display: 'flex', 
+                alignItems: 'center', 
+                fontSize: "0.8rem" 
+              },
               "& .MuiDataGrid-row:hover": { bgcolor: "#F9FAFB" },
+              "& .MuiDataGrid-columnSeparator": { display: "none" },
             }}
           />
         </Paper>
-      </Box>
+      )}
 
-      {/* MODAL */}
-      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t("customers.modal.newTitle")}</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField label={t("customers.modal.name")} size="small" value={newCustomer.name} onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})} />
-            <TextField label={t("customers.modal.phone")} size="small" value={newCustomer.phone} onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})} />
-            <TextField label="E-posta" size="small" type="email" value={newCustomer.email} onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})} />
-            
-            <FormControl size="small"><InputLabel>{t("customers.modal.advisor")}</InputLabel>
-                <Select
-                  value={newCustomer.advisor}
-                  label={t("customers.modal.advisor")}
-                  onChange={(e) => setNewCustomer({ ...newCustomer, advisor: e.target.value })}
+      {/* KART GÖRÜNÜMÜ - Mobil */}
+      {isMobile && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {loading ? (
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography>Yükleniyor...</Typography>
+            </Paper>
+          ) : filteredRows.length === 0 ? (
+            <Paper sx={{ p: 3, textAlign: 'center' }}>
+              <Typography>Müşteri bulunamadı</Typography>
+            </Paper>
+          ) : (
+            filteredRows.slice(0, pageSize).map((row) => {
+              const statusColors = getStatusColor(row.status);
+              return (
+                <Card 
+                  key={row.id}
+                  sx={{ 
+                    borderRadius: 2,
+                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                    '&:active': { bgcolor: '#F9FAFB' }
+                  }}
+                  onClick={() => router.push(`/customers/${row.id}`)}
                 >
-                  {advisorOptions.map((u) => (
-                    <MenuItem key={u} value={u}>
-                      {u}
-                    </MenuItem>
-                  ))}
-                </Select>
-            </FormControl>
-            <FormControl size="small"><InputLabel>{t("customers.modal.status")}</InputLabel>
-                <Select value={newCustomer.status} label={t("customers.modal.status")} onChange={(e) => setNewCustomer({...newCustomer, status: e.target.value})}>
-                    {CRM_STATUSES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                </Select>
-            </FormControl>
-            <FormControl size="small"><InputLabel>{t("customers.modal.service")}</InputLabel>
-                <Select value={newCustomer.service} label={t("customers.modal.service")} onChange={(e) => setNewCustomer({...newCustomer, service: e.target.value})}>
-                    {CRM_SERVICES.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                </Select>
-            </FormControl>
-            <FormControl size="small"><InputLabel>{t("customers.modal.category")}</InputLabel>
-                <Select value={newCustomer.category} label={t("customers.modal.category")} onChange={(e) => setNewCustomer({...newCustomer, category: e.target.value})}>
-                    {categoryOptions.map(c => <MenuItem key={c} value={c}>{c}</MenuItem>)}
-                </Select>
-            </FormControl>
+                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                    <Stack spacing={1.5}>
+                      {/* Başlık - İsim ve Tarih */}
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                        <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
+                          {row.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap', ml: 1 }}>
+                          {row.date}
+                        </Typography>
+                      </Stack>
+
+                      {/* Telefon */}
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                          Telefon:
+                        </Typography>
+                        <Typography variant="body2">
+                          {row.phone || '-'}
+                        </Typography>
+                      </Stack>
+
+                      {/* Danışman */}
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                          Danışman:
+                        </Typography>
+                        <Typography variant="body2">
+                          {row.advisor || '-'}
+                        </Typography>
+                      </Stack>
+
+                      {/* Durum ve Hizmet */}
+                      <Stack direction="row" spacing={1} flexWrap="wrap">
+                        <Chip 
+                          label={row.status}
+                          size="small"
+                          sx={{ 
+                            bgcolor: statusColors.bg,
+                            color: statusColors.color,
+                            fontWeight: 500,
+                            fontSize: '0.75rem'
+                          }}
+                        />
+                        {row.service && (
+                          <Chip 
+                            label={row.service}
+                            size="small"
+                            variant="outlined"
+                            sx={{ fontSize: '0.75rem' }}
+                          />
+                        )}
+                      </Stack>
+
+                      {/* Kategori */}
+                      {row.category && (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                            Kategori:
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontSize: '0.85rem' }}>
+                            {row.category}
+                          </Typography>
+                        </Stack>
+                      )}
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+          
+          {/* Sayfalama Bilgisi */}
+          {filteredRows.length > 0 && (
+            <Paper sx={{ p: 2, textAlign: 'center', mt: 1 }}>
+              <Typography variant="body2" color="text.secondary">
+                Toplam {filteredRows.length} müşteri gösteriliyor
+              </Typography>
+            </Paper>
+          )}
+        </Box>
+      )}
+
+      {/* MODAL - Yeni Müşteri Ekle */}
+      <Dialog 
+        open={open} 
+        onClose={() => setOpen(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: { borderRadius: 2 }
+        }}
+      >
+        <DialogTitle sx={{ pb: 0.5 }}>
+          <Typography variant="h6" fontWeight={600}>Yeni Müşteri Ekle</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Yeni müşteriyi burada oluşturun. İşlem tamamlandığında kaydet'e tıklayın.
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          <Stack spacing={2.5}>
+            {/* Ad Soyad */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Ad Soyad</Typography>
+              <TextField 
+                placeholder="Ad Soyad" 
+                size="small" 
+                fullWidth
+                value={newCustomer.name} 
+                onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})} 
+              />
+            </Box>
+
+            {/* E-Posta */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>E-Posta</Typography>
+              <TextField 
+                placeholder="ornek@email.com" 
+                size="small" 
+                fullWidth
+                type="email" 
+                value={newCustomer.email} 
+                onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})} 
+              />
+            </Box>
+
+            {/* Telefon */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Telefon</Typography>
+              <TextField 
+                placeholder="+90" 
+                size="small" 
+                fullWidth
+                value={newCustomer.phone} 
+                onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})} 
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Box component="span" sx={{ fontSize: '1.2rem' }}>🇹🇷</Box>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+
+            {/* Ülke */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Ülke</Typography>
+              <Autocomplete
+                size="small"
+                options={["Türkiye", "United Kingdom", "Germany", "France", "Netherlands", "Belgium", "Austria", "Switzerland", "Poland", "Denmark", "Sweden", "Norway", "Ireland", "Italy", "Spain", "Portugal", "Greece", "USA", "Canada", "Australia", "Other"]}
+                value={newCustomer.country || null}
+                onChange={(_, newValue) => setNewCustomer({...newCustomer, country: newValue || ""})}
+                renderInput={(params) => <TextField {...params} placeholder="Ülke seçin" />}
+              />
+            </Box>
+
+            {/* Danışman */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Danışman</Typography>
+              <Autocomplete
+                size="small"
+                options={advisorOptions}
+                value={newCustomer.advisor || null}
+                onChange={(_, newValue) => setNewCustomer({...newCustomer, advisor: newValue || ""})}
+                renderInput={(params) => <TextField {...params} placeholder="Danışman seçin" />}
+              />
+            </Box>
+
+            {/* Kategori */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Kategori</Typography>
+              <Autocomplete
+                size="small"
+                options={categoryOptions}
+                value={newCustomer.category || null}
+                onChange={(_, newValue) => setNewCustomer({...newCustomer, category: newValue || ""})}
+                renderInput={(params) => <TextField {...params} placeholder="Kategori seçin" />}
+              />
+            </Box>
+
+            {/* Hizmetler */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Hizmetler</Typography>
+              <Autocomplete
+                size="small"
+                options={serviceNames}
+                value={newCustomer.service || null}
+                onChange={(_, newValue) => setNewCustomer({...newCustomer, service: newValue || ""})}
+                renderInput={(params) => <TextField {...params} placeholder="Hizmet seçin" />}
+              />
+            </Box>
+
+            {/* Durum */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Durum</Typography>
+              <Autocomplete
+                size="small"
+                options={statuses}
+                value={newCustomer.status || null}
+                onChange={(_, newValue) => setNewCustomer({...newCustomer, status: newValue || "Yeni Form"})}
+                renderInput={(params) => <TextField {...params} placeholder="Durum seçin" />}
+              />
+            </Box>
+
+            {/* Kayıt Tarihi */}
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Kayıt Tarihi</Typography>
+              <TextField 
+                type="datetime-local"
+                size="small" 
+                fullWidth
+                value={newCustomer.registerDate} 
+                onChange={(e) => setNewCustomer({...newCustomer, registerDate: e.target.value})} 
+                InputLabelProps={{ shrink: true }}
+              />
+            </Box>
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>{t("customers.modal.cancel")}</Button>
-          <Button onClick={handleCreateCustomer} variant="contained" color="success">{t("customers.modal.save")}</Button>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button 
+            onClick={() => setOpen(false)}
+            sx={{ textTransform: 'none', color: 'text.secondary' }}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={handleCreateCustomer} 
+            variant="contained" 
+            sx={{ 
+              textTransform: 'none', 
+              bgcolor: '#3b82f6', 
+              '&:hover': { bgcolor: '#2563eb' },
+              px: 3
+            }}
+          >
+            Kaydet
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -624,14 +1290,15 @@ export default function CustomersPage() {
       <Dialog 
         open={filterDialogOpen} 
         onClose={() => setFilterDialogOpen(false)} 
-        maxWidth="md" 
+        maxWidth="lg" 
         fullWidth
+        PaperProps={{ sx: { maxHeight: '90vh' } }}
       >
         <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Box>
             <Typography variant="h6" fontWeight={600}>Gelişmiş Filtreler</Typography>
             <Typography variant="caption" color="text.secondary">
-              Verilerinizi filtrelemek için koşullar ekleyin
+              Verilerinizi filtrelemek için koşullar seçin
             </Typography>
           </Box>
           <IconButton onClick={() => setFilterDialogOpen(false)} size="small">
@@ -639,22 +1306,25 @@ export default function CustomersPage() {
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <Stack spacing={2}>
+          <Stack spacing={3}>
+            {/* VE / VEYA Mantığı */}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
               <Typography variant="subtitle2" fontWeight={600}>
                 Filtreler Arası Mantık
               </Typography>
               <Stack direction="row" spacing={1}>
                 <Button 
-                  variant="contained" 
+                  variant={tempFilterLogic === "VE" ? "contained" : "outlined"}
                   size="small"
+                  onClick={() => setTempFilterLogic("VE")}
                   sx={{ textTransform: "none", minWidth: 60 }}
                 >
                   VE
                 </Button>
                 <Button 
-                  variant="outlined" 
+                  variant={tempFilterLogic === "VEYA" ? "contained" : "outlined"}
                   size="small"
+                  onClick={() => setTempFilterLogic("VEYA")}
                   sx={{ textTransform: "none", minWidth: 60 }}
                 >
                   VEYA
@@ -662,90 +1332,353 @@ export default function CustomersPage() {
               </Stack>
             </Box>
 
-            {tempFilters.map((filter, index) => (
-              <Paper key={index} sx={{ p: 2, bgcolor: "#f8f9fa" }}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <FormControl size="small" sx={{ minWidth: 180 }}>
-                    <InputLabel>Alan</InputLabel>
-                    <Select
-                      value={filter.field}
-                      label="Alan"
-                      onChange={(e) => {
-                        const newFilters = [...tempFilters];
-                        newFilters[index].field = e.target.value;
-                        setTempFilters(newFilters);
-                      }}
-                    >
-                      <MenuItem value="name">Müşteri Adı</MenuItem>
-                      <MenuItem value="phone">Telefon</MenuItem>
-                      <MenuItem value="advisor">Danışman</MenuItem>
-                      <MenuItem value="status">Durum</MenuItem>
-                      <MenuItem value="service">Hizmet</MenuItem>
-                      <MenuItem value="category">Kategori</MenuItem>
-                      <MenuItem value="parentCategory">Üst Kategori</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <FormControl size="small" sx={{ minWidth: 140 }}>
-                    <InputLabel>Operatör</InputLabel>
-                    <Select
-                      value={filter.operator}
-                      label="Operatör"
-                      onChange={(e) => {
-                        const newFilters = [...tempFilters];
-                        newFilters[index].operator = e.target.value;
-                        setTempFilters(newFilters);
-                      }}
-                    >
-                      <MenuItem value="içinde">İçinde</MenuItem>
-                      <MenuItem value="eşit">Eşit</MenuItem>
-                      <MenuItem value="başlar">Başlar</MenuItem>
-                      <MenuItem value="biter">Biter</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    size="small"
-                    label="Değer"
-                    value={filter.value}
-                    onChange={(e) => {
-                      const newFilters = [...tempFilters];
-                      newFilters[index].value = e.target.value;
-                      setTempFilters(newFilters);
-                    }}
-                    sx={{ flex: 1 }}
-                  />
-
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => {
-                      const newFilters = tempFilters.filter((_, i) => i !== index);
-                      setTempFilters(newFilters);
-                    }}
+            {/* Kategoriler */}
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 120 }}>Kategoriler</Typography>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <Select
+                    value={tempFilters.categoryOperator}
+                    onChange={(e) => setTempFilters({...tempFilters, categoryOperator: e.target.value as any})}
                   >
-                    <CloseIcon />
-                  </IconButton>
-                </Stack>
-              </Paper>
-            ))}
+                    <MenuItem value="içinde">İçinde</MenuItem>
+                    <MenuItem value="içinde değil">İçinde Değil</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Autocomplete
+                multiple
+                size="small"
+                options={categoryOptions}
+                value={tempFilters.categories}
+                onChange={(_, newValue) => setTempFilters({...tempFilters, categories: newValue})}
+                renderInput={(params) => <TextField {...params} placeholder="Kategori seçin..." />}
+              />
+            </Box>
 
-            <Button
-              startIcon={<AddCircleOutlineIcon />}
-              onClick={() => {
-                setTempFilters([...tempFilters, { field: "name", operator: "içinde", value: "" }]);
-              }}
-              sx={{ textTransform: "none", alignSelf: "flex-start" }}
-            >
-              + Filtre ekle
-            </Button>
+            {/* Danışmanlar */}
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 120 }}>Danışmanlar</Typography>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <Select
+                    value={tempFilters.advisorOperator}
+                    onChange={(e) => setTempFilters({...tempFilters, advisorOperator: e.target.value as any})}
+                  >
+                    <MenuItem value="içinde">İçinde</MenuItem>
+                    <MenuItem value="içinde değil">İçinde Değil</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Autocomplete
+                multiple
+                size="small"
+                options={advisorOptions}
+                value={tempFilters.advisors}
+                onChange={(_, newValue) => setTempFilters({...tempFilters, advisors: newValue})}
+                renderInput={(params) => <TextField {...params} placeholder="Danışman seçin..." />}
+              />
+            </Box>
+
+            {/* Durum */}
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 120 }}>Durum</Typography>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <Select
+                    value={tempFilters.statusOperator}
+                    onChange={(e) => setTempFilters({...tempFilters, statusOperator: e.target.value as any})}
+                  >
+                    <MenuItem value="içinde">İçinde</MenuItem>
+                    <MenuItem value="içinde değil">İçinde Değil</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Autocomplete
+                multiple
+                size="small"
+                options={statuses}
+                value={tempFilters.statuses}
+                onChange={(_, newValue) => setTempFilters({...tempFilters, statuses: newValue})}
+                renderInput={(params) => <TextField {...params} placeholder="Durum seçin..." />}
+              />
+            </Box>
+
+            {/* Hizmetler */}
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 120 }}>Hizmetler</Typography>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <Select
+                    value={tempFilters.serviceOperator}
+                    onChange={(e) => setTempFilters({...tempFilters, serviceOperator: e.target.value as any})}
+                  >
+                    <MenuItem value="içinde">İçinde</MenuItem>
+                    <MenuItem value="içinde değil">İçinde Değil</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Autocomplete
+                multiple
+                size="small"
+                options={serviceNames}
+                value={tempFilters.services}
+                onChange={(_, newValue) => setTempFilters({...tempFilters, services: newValue})}
+                renderInput={(params) => <TextField {...params} placeholder="Hizmet seçin..." />}
+              />
+            </Box>
+
+            {/* Ülkeler */}
+            <Box>
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ minWidth: 120 }}>Ülkeler</Typography>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <Select
+                    value={tempFilters.countryOperator}
+                    onChange={(e) => setTempFilters({...tempFilters, countryOperator: e.target.value as any})}
+                  >
+                    <MenuItem value="içinde">İçinde</MenuItem>
+                    <MenuItem value="içinde değil">İçinde Değil</MenuItem>
+                  </Select>
+                </FormControl>
+              </Stack>
+              <Autocomplete
+                multiple
+                size="small"
+                options={["Türkiye", "United Kingdom", "Germany", "France", "Netherlands", "Belgium", "Austria", "Switzerland", "Poland", "Denmark", "Sweden", "Norway", "Ireland", "Italy", "Spain", "Portugal", "Greece", "USA", "Canada", "Australia", "Other"]}
+                value={tempFilters.countries}
+                onChange={(_, newValue) => setTempFilters({...tempFilters, countries: newValue})}
+                renderInput={(params) => <TextField {...params} placeholder="Ülke seçin..." />}
+              />
+            </Box>
+
+            {/* Evet/Hayır Filtreleri */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+              {/* Trustpilot */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Trustpilot İncelemesi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    variant={tempFilters.trustpilot === "Evet" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, trustpilot: tempFilters.trustpilot === "Evet" ? null : "Evet"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Evet
+                  </Button>
+                  <Button 
+                    variant={tempFilters.trustpilot === "Hayır" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, trustpilot: tempFilters.trustpilot === "Hayır" ? null : "Hayır"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Hayır
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Google İncelemesi */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Google İncelemesi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    variant={tempFilters.googleReview === "Evet" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, googleReview: tempFilters.googleReview === "Evet" ? null : "Evet"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Evet
+                  </Button>
+                  <Button 
+                    variant={tempFilters.googleReview === "Hayır" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, googleReview: tempFilters.googleReview === "Hayır" ? null : "Hayır"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Hayır
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Memnuniyet Anketi */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Memnuniyet Anketi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    variant={tempFilters.satisfactionSurvey === "Evet" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, satisfactionSurvey: tempFilters.satisfactionSurvey === "Evet" ? null : "Evet"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Evet
+                  </Button>
+                  <Button 
+                    variant={tempFilters.satisfactionSurvey === "Hayır" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, satisfactionSurvey: tempFilters.satisfactionSurvey === "Hayır" ? null : "Hayır"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Hayır
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* Garanti Gönderildi */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Garanti Gönderildi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    variant={tempFilters.guaranteeSent === "Evet" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, guaranteeSent: tempFilters.guaranteeSent === "Evet" ? null : "Evet"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Evet
+                  </Button>
+                  <Button 
+                    variant={tempFilters.guaranteeSent === "Hayır" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, guaranteeSent: tempFilters.guaranteeSent === "Hayır" ? null : "Hayır"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Hayır
+                  </Button>
+                </Stack>
+              </Box>
+
+              {/* RPT */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>RPT</Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button 
+                    variant={tempFilters.rpt === "Evet" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, rpt: tempFilters.rpt === "Evet" ? null : "Evet"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Evet
+                  </Button>
+                  <Button 
+                    variant={tempFilters.rpt === "Hayır" ? "contained" : "outlined"} 
+                    size="small"
+                    onClick={() => setTempFilters({...tempFilters, rpt: tempFilters.rpt === "Hayır" ? null : "Hayır"})}
+                    sx={{ textTransform: "none", flex: 1 }}
+                  >
+                    Hayır
+                  </Button>
+                </Stack>
+              </Box>
+            </Box>
+
+            {/* Tarih Filtreleri */}
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 2 }}>
+              {/* Kayıt Tarihi */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Kayıt Tarihi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    type="date"
+                    size="small"
+                    label="Başlangıç"
+                    value={tempFilters.registerDateFrom}
+                    onChange={(e) => setTempFilters({...tempFilters, registerDateFrom: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                  <TextField
+                    type="date"
+                    size="small"
+                    label="Bitiş"
+                    value={tempFilters.registerDateTo}
+                    onChange={(e) => setTempFilters({...tempFilters, registerDateTo: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </Box>
+
+              {/* Satış Tarihi */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Satış Tarihi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    type="date"
+                    size="small"
+                    label="Başlangıç"
+                    value={tempFilters.salesDateFrom}
+                    onChange={(e) => setTempFilters({...tempFilters, salesDateFrom: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                  <TextField
+                    type="date"
+                    size="small"
+                    label="Bitiş"
+                    value={tempFilters.salesDateTo}
+                    onChange={(e) => setTempFilters({...tempFilters, salesDateTo: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </Box>
+
+              {/* Düzenleme Tarihi */}
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Düzenleme Tarihi</Typography>
+                <Stack direction="row" spacing={1}>
+                  <TextField
+                    type="date"
+                    size="small"
+                    label="Başlangıç"
+                    value={tempFilters.editDateFrom}
+                    onChange={(e) => setTempFilters({...tempFilters, editDateFrom: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                  <TextField
+                    type="date"
+                    size="small"
+                    label="Bitiş"
+                    value={tempFilters.editDateTo}
+                    onChange={(e) => setTempFilters({...tempFilters, editDateTo: e.target.value})}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                  />
+                </Stack>
+              </Box>
+            </Box>
           </Stack>
         </DialogContent>
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Button 
             onClick={() => {
-              setTempFilters([]);
-              setAdvancedFilters([]);
+              const emptyFilters = {
+                categories: [],
+                advisors: [],
+                statuses: [],
+                services: [],
+                countries: [],
+                trustpilot: null,
+                googleReview: null,
+                satisfactionSurvey: null,
+                guaranteeSent: null,
+                rpt: null,
+                salesDateFrom: "",
+                salesDateTo: "",
+                registerDateFrom: "",
+                registerDateTo: "",
+                editDateFrom: "",
+                editDateTo: "",
+                categoryOperator: "içinde" as const,
+                advisorOperator: "içinde" as const,
+                statusOperator: "içinde" as const,
+                serviceOperator: "içinde" as const,
+                countryOperator: "içinde" as const,
+              };
+              setTempFilters(emptyFilters);
+              setAdvancedFilters(emptyFilters);
+              setFilterLogic("VE");
+              setTempFilterLogic("VE");
               setFilterDialogOpen(false);
             }}
             sx={{ textTransform: "none" }}
@@ -754,7 +1687,8 @@ export default function CustomersPage() {
           </Button>
           <Button 
             onClick={() => {
-              setAdvancedFilters([...tempFilters]);
+              setAdvancedFilters({...tempFilters});
+              setFilterLogic(tempFilterLogic);
               setFilterDialogOpen(false);
             }}
             variant="contained"

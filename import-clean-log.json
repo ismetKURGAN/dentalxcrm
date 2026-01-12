@@ -1,0 +1,77 @@
+{
+  "startTime": "2025-12-21T22:37:47.401Z",
+  "totalLines": 723,
+  "validRecords": 241,
+  "imported": 228,
+  "skipped": 13,
+  "errors": [],
+  "duplicates": [
+    {
+      "name": "Artur Jaskovics",
+      "phone": "+447440332076",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Faakhritdin Beknazarov",
+      "phone": "+998901853753",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Gulmira Diusheeva",
+      "phone": "+31687901824",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Meerim Karybaeva",
+      "phone": "+31687901824",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Samantha Churchill",
+      "phone": "+447970126944",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Arsen Shehi",
+      "phone": "+447444683675",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alicja Demkiw",
+      "phone": "+447876113757",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Horacio Jose Azinheira Agostinho",
+      "phone": "+359888514342",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Viktoriia Prade",
+      "phone": "+380506173286",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ivan Spas",
+      "phone": "+48501227347",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Antonia Marinova",
+      "phone": "+380635016338",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mateusz Rutana",
+      "phone": "+359889145609",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Leha Muslah",
+      "phone": "+447562253945",
+      "reason": "Telefon numarası zaten mevcut"
+    }
+  ],
+  "missingUsers": [],
+  "endTime": "2025-12-21T22:37:47.473Z"
+}

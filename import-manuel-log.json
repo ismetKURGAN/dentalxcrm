@@ -1,0 +1,1211 @@
+{
+  "startTime": "2025-12-21T17:45:10.190Z",
+  "totalLines": 723,
+  "validRecords": 241,
+  "imported": 1,
+  "skipped": 240,
+  "errors": [],
+  "duplicates": [
+    {
+      "name": "Roma Urboniene",
+      "phone": "+4400000000",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Tarvo Kiis",
+      "phone": "+358406798604",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Somayeh Adavi",
+      "phone": "+447496776313",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Arash Bakian Dogaheh",
+      "phone": "+447442893150",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Wiliiam John Oakes",
+      "phone": "+447712194191",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Joanne karcz",
+      "phone": "+447707144759",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alison Wright",
+      "phone": "+447740985034",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Aki Kangas",
+      "phone": "+358414461573",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "John Rose",
+      "phone": "+447554961555",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Saifullah Bakhshi",
+      "phone": "+4915755330528",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Philip Bell",
+      "phone": "+447759519741",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zamir Dzhumakeev",
+      "phone": "+996221161666",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ashraf Karimi Douraki",
+      "phone": "+447862207115",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zaref Borhan",
+      "phone": "+447411766636",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Syeda Fayeka Begum",
+      "phone": "+358453175522",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Olha Paliuha",
+      "phone": "+447427214128",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Miroslaw karcz",
+      "phone": "+447521174892",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Csaba Kiss",
+      "phone": "+447428172800",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Markku Vuorentausta",
+      "phone": "+358400570700",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Genadĳs Krasovskis",
+      "phone": "+37126856622",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Stephen Wright",
+      "phone": "+447462898390",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Natalia Nikolaeva",
+      "phone": "+447897532556",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ingrida Urbonaite",
+      "phone": "+447429129618",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Michelle Morgan",
+      "phone": "+447471808569",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mavlyuda Islamova",
+      "phone": "+998000000000",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dildora Uralova",
+      "phone": "+998915954342",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Emanuel Vio Hap",
+      "phone": "+40757143902",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Sorinel Anghel",
+      "phone": "+440000000001",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Gabriela Anghel",
+      "phone": "+447407460824",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Cristopher Walker",
+      "phone": "+447931855242",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alexander Forrest Meechan",
+      "phone": "+447469195991",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Patrick Rose",
+      "phone": "+447908249589",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Didar Barlykkazy (Uaqut Travel)",
+      "phone": "+77000729501",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jackie speed",
+      "phone": "+447548888094",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Rafal Marzec",
+      "phone": "+447707898512",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Catherine Kelly Moore",
+      "phone": "+447543177994",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zakir Hossain",
+      "phone": "+447955852993",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Willie Keir",
+      "phone": "+447810042480",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Laura Cowan",
+      "phone": "+447952284471",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Daniela Raddatz",
+      "phone": "+491703598088",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Olena Savina",
+      "phone": "+380506683508",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Abdul Raouf Sheikh",
+      "phone": "+447828321443",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Katarzyna Bohorodych",
+      "phone": "+48581254118",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Patrycja Szczycinska",
+      "phone": "+48573422291",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Aleksandr Laciov",
+      "phone": "+4915770413393",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Denis Galajda",
+      "phone": "+37126888323",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Pavlov Valerii",
+      "phone": "+380675896682",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Iryna Sokirko",
+      "phone": "+447442485947",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Regiane Agostinho",
+      "phone": "+41111111111",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Kateryna Ovsiannikova",
+      "phone": "+380686387175",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Volodymyr Radio",
+      "phone": "+380633340775",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Poran Mansory",
+      "phone": "+46737043053",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Christelle",
+      "phone": "+32495935745",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Tammy Chattaway",
+      "phone": "+447871714636",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mark Williams",
+      "phone": "+447730899310",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jodie Ann William",
+      "phone": "+447739899310",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Teresa Krawczynska",
+      "phone": "+48518661337",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ralf Raddatz",
+      "phone": "+491703598045",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Bogdan Moshovskiy",
+      "phone": "+48578121576",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "OLGA VINOGRADOVA",
+      "phone": "+77013552312",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Fleuriaud Nicolas",
+      "phone": "+33666776061",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Bartosz Wojciech Iwanski",
+      "phone": "+48522155550",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marzena Rozycka",
+      "phone": "+48755487755",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dobromir Zdravkov Balabanov",
+      "phone": "+359547812201187",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Maksymilian Skrzypek",
+      "phone": "+447984417147",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jake John Griffiths",
+      "phone": "+447368953076",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mohamed Lazhar Manaoui",
+      "phone": "+33760384219",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Shahnaz Quraishi",
+      "phone": "+19528180348",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "valera naletov",
+      "phone": "+380972734033",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Oleksandr Morozov",
+      "phone": "+447782189270",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zoicaş Anişoara",
+      "phone": "+40769322366",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mindaugas Balezentis",
+      "phone": "+4796722682",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Oleksandr Vereshchanin",
+      "phone": "+4916095035799",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Florence Monique",
+      "phone": "+33785911290",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Oleksandr Panasenko",
+      "phone": "+380952183725",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Nur Abdulla Omar",
+      "phone": "+4473665228",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mihaela Raileanu Lacramioara",
+      "phone": "+40725686144",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dobromir Zdravkov Balabanov",
+      "phone": "+359876374526",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Titrade Elena Daniela",
+      "phone": "+393713422620",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Rita Jankuniene",
+      "phone": "+447562789907",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Boutahar Moustapha",
+      "phone": "+33651919925",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Steve",
+      "phone": "+33689150093",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Artur Iwan",
+      "phone": "+48721863777",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Antonia Marinova",
+      "phone": "+359214478995421",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Konstantin Ostrovskiy",
+      "phone": "+37253757062",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "NATALIIA DERKACH",
+      "phone": "+380508615020",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "IVAN KERECHANYN",
+      "phone": "+38000000000",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dorota Sielatycka -Traczyk",
+      "phone": "+48600198851",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Caroline Anne",
+      "phone": "+44743703308",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dair Yohann",
+      "phone": "+33111111113",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Donna Mitchell",
+      "phone": "+447771855563",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Elena Bodushka",
+      "phone": "+359821542138122",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Slimani Djahida",
+      "phone": "+33111111112",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Madjid Slimani",
+      "phone": "+33111111111",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Vayde Raimova",
+      "phone": "+32490489242",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jean Pierre Mazur",
+      "phone": "+33682692073",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jonathan Colompar",
+      "phone": "+32485621717",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mr Rahmani Jemri",
+      "phone": "+33768098751",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Saltanat Matkulova",
+      "phone": "+77019000557",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Lina Ahmed Abow",
+      "phone": "+447903128992",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Nikita Markulov",
+      "phone": "+447775341622",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Joanne Lesley Webber",
+      "phone": "+447572289418",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Robert Jerinic",
+      "phone": "+385958169801",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alexej Erak",
+      "phone": "+380989537889",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marina Erak",
+      "phone": "+447599101439",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Bernadett Muste",
+      "phone": "+442551027845",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Olga Krizanovska",
+      "phone": "+447394094069",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Anastasiia Talinen Sinditskaia",
+      "phone": "+4917647386378",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Izabela Magdalena Siek",
+      "phone": "+48603508231",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ludmila Ipatova",
+      "phone": "+447701019205",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marius Gheorghe Muste",
+      "phone": "+448511125125",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Georgeta Dragoman",
+      "phone": "+447539746836",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Sergey Mihaylik",
+      "phone": "+380974532939",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ouali Yacine",
+      "phone": "+33336148000",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Rustam Isayev",
+      "phone": "+447438249570",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "RESHAD VEIIEV",
+      "phone": "+447503866775",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Eduard Yafaev",
+      "phone": "+420776422602",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Elena Erahtina",
+      "phone": "+491704605291",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Anatoliy Polishuk",
+      "phone": "+380664631586",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ola Rutana (Aleksandra Justyna Chacinska)",
+      "phone": "+48513515913",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Celine Bidan",
+      "phone": "+3363453453",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Tomasz Pietraszuk",
+      "phone": "+48796712258",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Adrian Perdjon",
+      "phone": "+48602670961",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Daniela Liliana",
+      "phone": "+447887276809",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Kausar Parveen",
+      "phone": "+447758815290",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ewa Marta Zolnierczyk Zamojski",
+      "phone": "+48725769175",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Csaba Kiss (Charlie)",
+      "phone": "+447428172807",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zdrojewska Romualda",
+      "phone": "+4917657796931",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Monika Weglinska",
+      "phone": "+48501473923",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Maciej Rachuba",
+      "phone": "+48998080000",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Grzegorz Weglinski",
+      "phone": "+48595656666",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "El Messaoudi Jalal",
+      "phone": "+333361486",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Paloma Buchin Monnier",
+      "phone": "+33651543556",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zanfirache Ionut Tıberıu",
+      "phone": "+40757461981",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Egor Ushkarov",
+      "phone": "+996770790126",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Justyna Sliwa",
+      "phone": "+48668379542",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jaroslaw Kolodziejski",
+      "phone": "+447440332076",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Artur Jaskovics",
+      "phone": "+447440332076",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Artur Bohorodycz",
+      "phone": "+48609759709",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Rafal Jedrzejczyk",
+      "phone": "+48517600570",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Faiza Hassan Mahmud",
+      "phone": "+4792129098",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Kaies Faidhulla Abdulla",
+      "phone": "+4520286475",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mari Stela",
+      "phone": "+40774409256",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Urszula Kołodziejska",
+      "phone": "+48504212129",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Liliana Dabija",
+      "phone": "+40756640593",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jaspir Singh Bains",
+      "phone": "+447913951398",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Michal Mietek",
+      "phone": "+48692826442",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Stanciu Alexandra Maria",
+      "phone": "+40730572642",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marzena Rozycka",
+      "phone": "+48535770205",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dalbir Singh Bains",
+      "phone": "+447488964415",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ella Imeridze",
+      "phone": "+380679804658",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mohammd Mumtaz Choudhry",
+      "phone": "+353894634037",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Nataliia Zub",
+      "phone": "+380935643904",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Fazilat Beknazarova",
+      "phone": "+998901853753",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Faakhritdin Beknazarov",
+      "phone": "+998901853753",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Katarzyna Wadych",
+      "phone": "+48501722495",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Asadbek Mukhammadjonov",
+      "phone": "+48571447011",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mohammed Esa Sarwary",
+      "phone": "+447577993430",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Agnieszka Spas",
+      "phone": "+48501227347",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Tariq Bouhamidi",
+      "phone": "+33769923261",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Bogdan Ionut Rotarciuc",
+      "phone": "+40722863327",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Vitali Luhin",
+      "phone": "+375297484948",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Lonela Liliana Chitu",
+      "phone": "+407230065",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marin Dan",
+      "phone": "+40744643605",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Shaiy Shambetova",
+      "phone": "+31687901824",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Gulmira Diusheeva",
+      "phone": "+31687901824",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Meerim Karybaeva",
+      "phone": "+31687901824",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marius Cornel Vasile",
+      "phone": "+40723006569",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Moldovan Calin",
+      "phone": "+40743608368",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Cheryl Ann Clancy",
+      "phone": "+447970126944",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Samantha Churchill",
+      "phone": "+447970126944",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Vjollca Shehi",
+      "phone": "+447444683675",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Arsen Shehi",
+      "phone": "+447444683675",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dariusz Hnatyk",
+      "phone": "+447876113757",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alicja Demkiw",
+      "phone": "+447876113757",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ignat Atasanov Techev",
+      "phone": "+41799575414",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Arnold Albert",
+      "phone": "+351967639189",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Albert Ilona Erzsebet",
+      "phone": "+35196763918990",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Hamid Ahmad Osmani",
+      "phone": "+447980946871",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Tamaz Bzekalava",
+      "phone": "+4915758689825",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Manuel Pajot",
+      "phone": "+33788120226",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Cazacu Liliana",
+      "phone": "+40728078554",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Natalia Dangeanu",
+      "phone": "+4012523",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Senada İmamovic",
+      "phone": "+436607366607",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Chiro Donjan Elpis Eliodor",
+      "phone": "+40752106532",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Anatoly Boyko",
+      "phone": "+353894382880",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mohamed Touijri",
+      "phone": "+32493245130",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Sergey Troyan",
+      "phone": "+375296947674",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Valya Boneva",
+      "phone": "+359888514342",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Horacio Jose Azinheira Agostinho",
+      "phone": "+359888514342",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Teodora Ivanova",
+      "phone": "+359876175096",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Vladyslava Bukina",
+      "phone": "+380506173286",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Viktoriia Prade",
+      "phone": "+380506173286",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ivan Bodushki",
+      "phone": "+359896855525",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Elena Bodushka",
+      "phone": "+359523156",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marzenna Sylwet",
+      "phone": "+48502201038",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ivan Spas",
+      "phone": "+48501227347",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Rosen Petrov",
+      "phone": "+359875334244",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Kelvin Quek",
+      "phone": "+14168930086",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Dario Tamborrini",
+      "phone": "+447449533378",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mark Antony Boorman",
+      "phone": "+447969084279",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Khalid Iqbal",
+      "phone": "+447308609024",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Vadim Kutsmyda",
+      "phone": "+380635016338",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Antonia Marinova",
+      "phone": "+380635016338",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Valentin Georgiev Marinov",
+      "phone": "+447421704342",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Baldo Manuel",
+      "phone": "+32498122920",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Nina Panimash",
+      "phone": "+380963065151",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Bobi Bozhiyka Vlashka Georgieva",
+      "phone": "+359878776174",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Luiz Lula Filho",
+      "phone": "+447949891001",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Oussama Errouchi",
+      "phone": "+32487359952",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Yassin Abdalla",
+      "phone": "+447508853179",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mbaye Cisse",
+      "phone": "+33641544662",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zakaria Moukite",
+      "phone": "+33634534532",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Gillienne Jennifer Mavuba",
+      "phone": "+33623777780",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alexandrina Grigorova",
+      "phone": "+359889145609",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Mateusz Rutana",
+      "phone": "+359889145609",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Keith Dixon",
+      "phone": "+48535455644",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Katarzyna Golos",
+      "phone": "+447734262760",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Syed Shahzad Ali",
+      "phone": "+353862439254",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marius Gheorghe Muste",
+      "phone": "+447311788024",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Eric Bonnardel",
+      "phone": "+33782845243",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "David Samba Seale",
+      "phone": "+33778408963",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Kevin Legrand",
+      "phone": "+32466239965",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Karim Tiam",
+      "phone": "+33623136906",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Daniel Golos",
+      "phone": "+48694709596",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Marcin Brzozowski",
+      "phone": "+48452957377",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Robert Paul Bradley",
+      "phone": "+447544967048",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Alen Anticevic",
+      "phone": "+385955133016",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Jakub Kozuch",
+      "phone": "+48691886661",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Sadullo Mansurov",
+      "phone": "+996702263324",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Wojtek Zamojski",
+      "phone": "+48725969175",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Ivelina Cholakova",
+      "phone": "+359896330326",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Zoubida El Asri",
+      "phone": "+32484022825",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "David Andrew Edge",
+      "phone": "+447526213265",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Emil Ciprian Grigoras",
+      "phone": "+447446956542",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Anna Krasinska",
+      "phone": "+48603508230",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "David Phillip",
+      "phone": "+447562253945",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Leha Muslah",
+      "phone": "+447562253945",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "Tomas Ivanko",
+      "phone": "+447923562982",
+      "reason": "Telefon numarası zaten mevcut"
+    },
+    {
+      "name": "John Stoves",
+      "phone": "+31645348647",
+      "reason": "Telefon numarası zaten mevcut"
+    }
+  ],
+  "endTime": "2025-12-21T17:45:10.241Z"
+}

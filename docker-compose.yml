@@ -11,6 +11,7 @@ services:
       - "4001:3000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+      - "evo.dentalxturkey.com:host-gateway"
     command: npm run dev
     restart: always
 
