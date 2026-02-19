@@ -165,9 +165,10 @@ export default function AppointmentsPage() {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
+      const res = await fetch("/api/crm-sqlite?page=1&limit=500", { cache: "no-store" });
       if (!res.ok) return;
-      const data = await res.json();
+      const response = await res.json();
+      const data = response.data || response; // Pagination response format
 
       setAllCustomers(data || []);
 
@@ -175,23 +176,11 @@ export default function AppointmentsPage() {
       const mapped: any[] = [];
       
       data.forEach((c: any) => {
-        // Status bilgisini düzelt - hem eski (string) hem yeni (object) formatı destekle
-        let statusValue = '';
-        let advisorValue = '';
-        let categoryValue = '';
-        let serviceValue = '';
-        
-        if (typeof c.status === 'object' && c.status !== null) {
-          statusValue = c.status.status || '';
-          advisorValue = c.status.consultant || '';
-          categoryValue = c.status.category || '';
-          serviceValue = c.status.services || c.service || '';
-        } else if (typeof c.status === 'string') {
-          statusValue = c.status;
-          advisorValue = c.advisor || '';
-          categoryValue = c.category || '';
-          serviceValue = c.service || '';
-        }
+        // SQLite API artık düz string değerler döndürüyor
+        const statusValue = c.status || '';
+        const advisorValue = c.advisor || '';
+        const categoryValue = c.category || '';
+        const serviceValue = c.service || '';
         
         // Sadece "Satış" veya "Satış Kapalı" durumundaki müşterileri al
         if (statusValue === "Satış" || statusValue === "Satış Kapalı") {
