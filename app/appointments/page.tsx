@@ -165,7 +165,7 @@ export default function AppointmentsPage() {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/crm-sqlite?page=1&limit=500", { cache: "no-store" });
+      const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
       if (!res.ok) return;
       const response = await res.json();
       const data = response.data || response; // Pagination response format
