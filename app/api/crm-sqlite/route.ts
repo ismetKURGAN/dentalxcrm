@@ -43,17 +43,40 @@ export async function GET(request: NextRequest) {
         }
       };
       
-      const parsed = customers.map((c: any) => ({
-        ...c,
-        personal: safeParse(c.personal, {}),
-        status: safeParse(c.status, {}),
-        reminder: safeParse(c.reminder, {}),
-        payment: safeParse(c.payment, {}),
-        sales: safeParse(c.sales, {}),
-        calls: safeParse(c.calls, []),
-        files: safeParse(c.files, []),
-        history: safeParse(c.history, []),
-      }));
+      const parsed = customers.map((c: any, idx: number) => {
+        // data kolonundan tüm veriyi parse et
+        const fullData = safeParse(c.data, {});
+        
+        if (idx === 0) {
+          console.log('DEBUG c.status:', typeof c.status, c.status);
+          console.log('DEBUG fullData.status:', typeof fullData.status, fullData.status);
+        }
+        
+        // Eğer status bir obje ise, içinden string değerleri çıkar
+        const statusObj = typeof fullData.status === 'object' && fullData.status !== null ? fullData.status : {};
+        const statusStr = c.status || statusObj.status || '';
+        const advisorStr = c.advisor || statusObj.consultant || '';
+        const serviceStr = c.service || statusObj.services || '';
+        
+        // fullData'dan status, advisor, service dışındaki tüm alanları al
+        const {status: _, advisor: __, service: ___, ...restFullData} = fullData;
+        
+        return {
+          ...restFullData,
+          // Düz kolonlardan gelen değerlerle override et (daha hızlı sorgu için)
+          id: c.id,
+          email: c.email || fullData.email,
+          name: c.name || fullData.name,
+          phone: c.phone || fullData.phone,
+          advisor: advisorStr, // Zaten c.advisor || statusObj.consultant
+          category: c.category || fullData.category,
+          service: serviceStr, // Zaten c.service || statusObj.services  
+          status: statusStr, // Zaten c.status || statusObj.status
+          country: c.country || fullData.country,
+          createdAt: c.createdAt || fullData.createdAt,
+          updatedAt: c.updatedAt || fullData.updatedAt,
+        };
+      });
       
       db.close();
       return withCors(NextResponse.json(parsed), request);
@@ -81,17 +104,35 @@ export async function GET(request: NextRequest) {
       }
     };
     
-    const parsed = customers.map((c: any) => ({
-      ...c,
-      personal: safeParse(c.personal, {}),
-      status: safeParse(c.status, {}),
-      reminder: safeParse(c.reminder, {}),
-      payment: safeParse(c.payment, {}),
-      sales: safeParse(c.sales, {}),
-      calls: safeParse(c.calls, []),
-      files: safeParse(c.files, []),
-      history: safeParse(c.history, []),
-    }));
+    const parsed = customers.map((c: any) => {
+      // data kolonundan tüm veriyi parse et
+      const fullData = safeParse(c.data, {});
+      
+      // Eğer status bir obje ise, içinden string değerleri çıkar
+      const statusObj = typeof fullData.status === 'object' && fullData.status !== null ? fullData.status : {};
+      const statusStr = c.status || statusObj.status || '';
+      const advisorStr = c.advisor || statusObj.consultant || '';
+      const serviceStr = c.service || statusObj.services || '';
+      
+      // fullData'dan status, advisor, service dışındaki tüm alanları al
+      const {status: _, advisor: __, service: ___, ...restFullData} = fullData;
+      
+      return {
+        ...restFullData,
+        // Düz kolonlardan gelen değerlerle override et (daha hızlı sorgu için)
+        id: c.id,
+        email: c.email || fullData.email,
+        name: c.name || fullData.name,
+        phone: c.phone || fullData.phone,
+        advisor: advisorStr, // Zaten c.advisor || statusObj.consultant
+        category: c.category || fullData.category,
+        service: serviceStr, // Zaten c.service || statusObj.services
+        status: statusStr, // Zaten c.status || statusObj.status
+        country: c.country || fullData.country,
+        createdAt: c.createdAt || fullData.createdAt,
+        updatedAt: c.updatedAt || fullData.updatedAt,
+      };
+    });
     
     db.close();
     
