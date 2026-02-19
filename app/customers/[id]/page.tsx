@@ -412,7 +412,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           setHotelOptions(hotelNames.sort());
         }
         
-        const res = await fetch("/api/crm?all=true", { cache: "no-store" });
+        const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           const found = data.find(
@@ -1088,7 +1088,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         sales: customer.sales,
       };
 
-      const res = await fetch("/api/crm", {
+      const res = await fetch("/api/crm-sqlite", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -1988,14 +1988,14 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         </Stack>
         <Typography fontWeight={600}>{t("customerDetail.history.systemSample")}</Typography>
         <Grid container spacing={2} mt={1}>
-          <Grid xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Paper sx={{ p: 1, bgcolor: "#fee2e2" }}>
               <Typography variant="caption" color="error">
                 {t("customerDetail.history.old")}
               </Typography>
             </Paper>
           </Grid>
-          <Grid xs={6}>
+          <Grid size={{ xs: 6 }}>
             <Paper sx={{ p: 1, bgcolor: "#dcfce7" }}>
               <Typography variant="caption" color="success">
                 {t("customerDetail.history.new")}
@@ -2344,7 +2344,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                     setSnackbar({
                       open: true,
                       message: "⚠️ Önce hizmet seçmelisiniz! Teklif aşamalarına geçmek için hizmet alanı zorunludur.",
-                      severity: "warning"
+                      severity: "error"
                     });
                     return;
                   }

@@ -102,7 +102,7 @@ export default function SettingsHubPage() {
                   return true;
                 })
                 .map((item) => (
-                <Grid key={item.label} item xs={12} sm={6} md={4}>
+                <Grid key={item.label} size={{ xs: 12, sm: 6, md: 4 }}>
                   <Card
                     variant="outlined"
                     sx={{

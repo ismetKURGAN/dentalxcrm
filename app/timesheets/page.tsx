@@ -132,7 +132,7 @@ export default function TimesheetsPage() {
         sx={{ px: { xs: 0, md: 2 }, pb: 4, justifyContent: { xs: "flex-start", lg: "flex-start" } }}
       >
         {users.map((u) => (
-          <Grid key={u.id} xs={12} sm={6} md={6} lg={4} sx={{ display: "flex", justifyContent: "center" }}>
+          <Grid key={u.id} size={{ xs: 12, sm: 6, md: 6, lg: 4 }} sx={{ display: "flex", justifyContent: "center" }}>
             <Card
               variant="outlined"
               sx={{
@@ -199,7 +199,7 @@ export default function TimesheetsPage() {
         ))}
 
         {!loading && users.length === 0 && (
-          <Grid xs={12}>
+          <Grid size={{ xs: 12 }}>
             <Box
               sx={{
                 p: 4,

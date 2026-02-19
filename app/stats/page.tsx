@@ -150,7 +150,7 @@ export default function StatsPage() {
     try {
       setLoading(true);
       const [crmRes, usersRes, campaignsRes, categoriesRes] = await Promise.all([
-        fetch("/api/crm?all=true", { cache: "no-store" }),
+        fetch("/api/crm-sqlite?all=true", { cache: "no-store" }),
         fetch("/api/users", { cache: "no-store" }),
         fetch("/api/campaigns", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
@@ -364,7 +364,7 @@ export default function StatsPage() {
     // Hiyerarşik sıraya göre sırala
     return Object.values(map).sort((a, b) => {
       if (a.parentCategory !== b.parentCategory) {
-        return a.parentCategory.localeCompare(b.parentCategory);
+        return (a.parentCategory || '').localeCompare(b.parentCategory || '');
       }
       
       // Aynı topParent içinde hiyerarşik sıralama

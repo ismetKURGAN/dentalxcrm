@@ -534,14 +534,14 @@ export default function SegmentsPage() {
                             <Paper sx={{ p: 3, borderRadius: 2 }}>
                                 <Typography variant="subtitle1" fontWeight="bold" mb={2}>Segment Bilgileri</Typography>
                                 <Grid container spacing={2}>
-                                    <Grid xs={12}>
+                                    <Grid size={{ xs: 12 }}>
                                         <TextField 
                                             label="Başlık" fullWidth size="small" 
                                             value={editSegment.title} 
                                             onChange={(e) => setEditSegment({...editSegment, title: e.target.value})}
                                         />
                                     </Grid>
-                                    <Grid xs={12} md={6}>
+                                    <Grid size={{ xs: 12, md: 6 }}>
                                         <FormControl fullWidth size="small">
                                             <InputLabel>Dil</InputLabel>
                                             <Select 
@@ -553,7 +553,7 @@ export default function SegmentsPage() {
                                             </Select>
                                         </FormControl>
                                     </Grid>
-                                    <Grid xs={12} md={6}>
+                                    <Grid size={{ xs: 12, md: 6 }}>
                                         <FormControl fullWidth size="small">
                                             <InputLabel>Koşul Bağlacı</InputLabel>
                                             <Select 

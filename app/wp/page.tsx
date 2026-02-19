@@ -45,8 +45,8 @@ export default function WpPage() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  const [selectedChat, setSelectedChat] = useState(MOCK_CHATS[0]);
-  const [messages, setMessages] = useState(MOCK_MESSAGES);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [draft, setDraft] = useState("");
   const [search, setSearch] = useState("");
 
@@ -63,7 +63,7 @@ export default function WpPage() {
     );
   }
 
-  const filteredChats = MOCK_CHATS.filter((c) =>
+  const filteredChats = [].filter((c: any) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.id.toString().includes(search)
   );
@@ -225,16 +225,16 @@ export default function WpPage() {
           {/* Sohbet listesi */}
           <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
             <List disablePadding>
-              {filteredChats.map((chat) => {
+              {filteredChats.map((chat: any) => {
                 const isActive = chat.id === selectedChat.id;
                 return (
                   <ListItem
                     key={chat.id}
-                    button
                     onClick={() => setSelectedChat(chat)}
                     sx={{
                       px: 2,
                       py: 1.5,
+                      cursor: "pointer",
                       bgcolor: isActive ? "#202c33" : "#111b21",
                       "&:hover": { bgcolor: "#202c33" },
                     }}

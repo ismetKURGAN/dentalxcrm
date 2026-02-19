@@ -222,7 +222,7 @@ export default function LabelsSettingsPage() {
       headerName: "Kategori",
       flex: 1,
       minWidth: 220,
-      valueGetter: (params) => categoryMap.get(params.value as string) || params.value,
+      valueGetter: (params: any) => categoryMap.get(params.value as string) || params.value,
     },
     {
       field: "advisors",
@@ -328,11 +328,9 @@ export default function LabelsSettingsPage() {
                     setSelectOpen(true);
                     setTempCategoryId(editing.categoryId);
                   }}
-                  onClose={(e, reason) => {
-                    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
-                      setSelectOpen(false);
-                      setTempCategoryId("");
-                    }
+                  onClose={() => {
+                    setSelectOpen(false);
+                    setTempCategoryId("");
                   }}
                   label="Kategori"
                   value={tempCategoryId}

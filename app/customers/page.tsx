@@ -139,7 +139,7 @@ export default function CustomersPage() {
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" as "success" | "error" });
   const [statusObjects, setStatusObjects] = useState<{id: number; tr: string; en: string}[]>([]);
   const [serviceObjects, setServiceObjects] = useState<{id: number; tr: string; en: string}[]>([]);
   const [serviceNames, setServiceNames] = useState<string[]>(CRM_SERVICES);
@@ -281,7 +281,7 @@ export default function CustomersPage() {
     try {
       if (!isMountedRef.current) return;
       setLoading(true);
-      const res = await fetch(`/api/crm?page=${pageNum}&limit=${pageSize}`, { cache: "no-store" });
+      const res = await fetch(`/api/crm-sqlite?page=${pageNum}&limit=${pageSize}`, { cache: "no-store" });
       if (res.ok) {
         const response = await res.json();
         const data = response.data || response; // Yeni format: {data, pagination} veya eski format: array
@@ -426,7 +426,7 @@ export default function CustomersPage() {
         setSnackbar({ 
           open: true, 
           message: "⚠️ Önce hizmet seçmelisiniz! Teklif aşamalarına geçmek için hizmet alanı zorunludur.",
-          severity: "warning"
+          severity: "error"
         });
         return;
       }
@@ -468,7 +468,7 @@ export default function CustomersPage() {
         updateData[field] = value;
       }
       
-      const res = await fetch("/api/crm", {
+      const res = await fetch("/api/crm-sqlite", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),
@@ -477,7 +477,7 @@ export default function CustomersPage() {
       if (res.ok) {
         // API'den güncel veriyi çek
         await fetchCustomers();
-        setSnackbar({ open: true, message: t("customers.snackbar.updated") });
+        setSnackbar({ open: true, message: t("customers.snackbar.updated"), severity: "success" });
       } else {
         // Hata olursa geri al
         await fetchCustomers();
@@ -513,7 +513,7 @@ export default function CustomersPage() {
       delete (customerData as any).service;
       delete (customerData as any).registerDate;
       
-      const res = await fetch("/api/crm", {
+      const res = await fetch("/api/crm-sqlite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(customerData),
@@ -523,7 +523,7 @@ export default function CustomersPage() {
         await fetchCustomers();
         setOpen(false);
         setNewCustomer({ name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: "", country: "", registerDate: "" });
-        setSnackbar({ open: true, message: t("customers.snackbar.created") });
+        setSnackbar({ open: true, message: t("customers.snackbar.created"), severity: "success" });
       } else if (res.status === 409) {
         // Mükerrer müşteri hatası
         const data = await res.json();
@@ -541,10 +541,10 @@ export default function CustomersPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t("customers.confirm.delete"))) return;
     try {
-      const res = await fetch(`/api/crm?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/crm-sqlite?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         setRows((prev) => prev.filter((row) => row.id !== id));
-        setSnackbar({ open: true, message: t("customers.snackbar.deleted") });
+        setSnackbar({ open: true, message: t("customers.snackbar.deleted"), severity: "success" });
       }
     } catch (error) {
       alert("Hata oluştu");
@@ -999,7 +999,7 @@ export default function CustomersPage() {
             width: { xs: '100%', sm: 260 },
           }}
         />
-        <IconButton onClick={fetchCustomers} sx={{ ml: { xs: 0, sm: 0.5 } }}>
+        <IconButton onClick={() => fetchCustomers(1)} sx={{ ml: { xs: 0, sm: 0.5 } }}>
           <RefreshIcon />
         </IconButton>
       </Paper>

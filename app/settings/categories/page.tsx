@@ -917,11 +917,9 @@ export default function CategoriesSettingsPage() {
                     setSelectOpen(true);
                     setTempParentId(form.parentId);
                   }}
-                  onClose={(e, reason) => {
-                    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
-                      setSelectOpen(false);
-                      setTempParentId(null);
-                    }
+                  onClose={() => {
+                    setSelectOpen(false);
+                    setTempParentId(null);
                   }}
                   value={tempParentId || ""}
                   onChange={(e) => {
