@@ -38,12 +38,10 @@ function formatPercent(n: number): string {
 }
 
 const TOP_PARENT_CATEGORIES = [
-  "Website",
   "Landing Page",
   "Şirket Hattı",
   "Meta",
   "TikTok",
-  "Referans",
   "Acente",
   "Kurum İçi",
   "WhatClinic",
@@ -52,6 +50,18 @@ const TOP_PARENT_CATEGORIES = [
   "Konsültasyon",
   "Snapchat",
 ];
+
+type Category = {
+  id: string;
+  name: string;
+  topParent: string;
+  parentId: string | null;
+  leadFormId?: string;
+  firstContact?: boolean;
+  global?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 type StatusGroup = "offer" | "sale" | "cancel" | "other";
 
@@ -80,6 +90,9 @@ type AggRow = {
   offer: number;
   sale: number;
   cancel: number;
+  categoryId?: string;
+  level?: number;
+  parentCategoryId?: string | null;
 };
 
 function groupStatusFromValue(statusValue: any, customer?: Customer): StatusGroup {
@@ -123,6 +136,7 @@ export default function StatsPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [categoriesData, setCategoriesData] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Filters
@@ -135,10 +149,11 @@ export default function StatsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [crmRes, usersRes, campaignsRes] = await Promise.all([
-        fetch("/api/crm", { cache: "no-store" }),
+      const [crmRes, usersRes, campaignsRes, categoriesRes] = await Promise.all([
+        fetch("/api/crm?all=true", { cache: "no-store" }),
         fetch("/api/users", { cache: "no-store" }),
         fetch("/api/campaigns", { cache: "no-store" }),
+        fetch("/api/categories", { cache: "no-store" }),
       ]);
 
       if (crmRes.ok) {
@@ -152,6 +167,10 @@ export default function StatsPage() {
       if (campaignsRes.ok) {
         const data = await campaignsRes.json();
         setCampaigns(Array.isArray(data) ? data : []);
+      }
+      if (categoriesRes.ok) {
+        const data = await categoriesRes.json();
+        setCategoriesData(Array.isArray(data) ? data : []);
       }
     } catch (e) {
       console.error("İstatistikler yüklenemedi", e);
@@ -189,13 +208,14 @@ export default function StatsPage() {
   );
 
   const categories = useMemo(() => {
-    const list = customers
-      .filter((c) =>
-        parentFilter ? resolveParentCategory(c) === parentFilter : true
-      )
-      .map((c) => c.category || "Diğer");
-    return Array.from(new Set(list)).sort();
-  }, [customers, parentFilter]);
+    // Kategorileri hiyerarşik olarak al
+    const filtered = categoriesData.filter(cat => 
+      parentFilter ? cat.topParent === parentFilter : true
+    );
+    
+    // Kategori isimlerini döndür
+    return filtered.map(cat => cat.name).sort();
+  }, [categoriesData, parentFilter]);
 
   const advisors = useMemo(() => {
     // Danışman filtre seçenekleri: sadece sistemde kayıtlı kullanıcı adları
@@ -264,22 +284,41 @@ export default function StatsPage() {
     return Object.values(map).sort((a, b) => b.total - a.total);
   }, [filtered, users]);
 
+  // Helper to get category level
+  const getCategoryLevel = (catId: string, allCats: Category[]): number => {
+    const cat = allCats.find(c => c.id === catId);
+    if (!cat || !cat.parentId) return 0;
+    return 1 + getCategoryLevel(cat.parentId, allCats);
+  };
+
+  // Helper to get full category path for sorting
+  const getCategoryPath = (catId: string, allCats: Category[]): string => {
+    const cat = allCats.find(c => c.id === catId);
+    if (!cat) return '';
+    if (!cat.parentId) return cat.name;
+    return getCategoryPath(cat.parentId, allCats) + ' > ' + cat.name;
+  };
+
   const byCategory: AggRow[] = useMemo(() => {
     const map: Record<string, AggRow> = {};
     
-    // Önce kampanyalardan tüm kategorileri al ve başlangıç değerleri oluştur
-    campaigns.forEach((campaign) => {
-      const cat = campaign.name || campaign.title;
+    // Önce kategorilerden tüm kategorileri al ve başlangıç değerleri oluştur
+    categoriesData.forEach((category) => {
+      const cat = category.name;
       if (!cat) return;
       
-      const parent = campaign.topParent || campaign.parent || resolveParentCategory({ category: cat } as Customer);
-      const key = `${parent}:::${cat}`;
+      const parent = category.topParent;
+      const level = getCategoryLevel(category.id, categoriesData);
+      const key = category.id;
       
       if (!map[key]) {
         map[key] = {
           key,
           parentCategory: parent,
           category: cat,
+          categoryId: category.id,
+          parentCategoryId: category.parentId,
+          level,
           total: 0,
           offer: 0,
           sale: 0,
@@ -290,15 +329,24 @@ export default function StatsPage() {
     
     // Müşterileri say
     filtered.forEach((c) => {
-      const cat = c.category || "Diğer";
+      const catName = c.category || "Diğer";
       const parent = resolveParentCategory(c);
-      const key = `${parent}:::${cat}`;
+      
+      // Kategori adından ID bul
+      const matchingCat = categoriesData.find(cat => 
+        cat.name === catName && cat.topParent === parent
+      );
+      
+      const key = matchingCat ? matchingCat.id : `${parent}:::${catName}`;
       
       if (!map[key]) {
         map[key] = {
           key,
           parentCategory: parent,
-          category: cat,
+          category: catName,
+          categoryId: matchingCat?.id,
+          parentCategoryId: matchingCat?.parentId || null,
+          level: matchingCat ? getCategoryLevel(matchingCat.id, categoriesData) : 0,
           total: 0,
           offer: 0,
           sale: 0,
@@ -313,16 +361,18 @@ export default function StatsPage() {
       if (g === "cancel") map[key].cancel += 1;
     });
     
-    // Kampanya sırasına göre sırala
-    const categoryOrder = campaigns.map(c => c.name || c.title);
+    // Hiyerarşik sıraya göre sırala
     return Object.values(map).sort((a, b) => {
-      const indexA = categoryOrder.indexOf(a.category);
-      const indexB = categoryOrder.indexOf(b.category);
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-      return indexA - indexB;
+      if (a.parentCategory !== b.parentCategory) {
+        return a.parentCategory.localeCompare(b.parentCategory);
+      }
+      
+      // Aynı topParent içinde hiyerarşik sıralama
+      const pathA = a.categoryId ? getCategoryPath(a.categoryId, categoriesData) : a.category || '';
+      const pathB = b.categoryId ? getCategoryPath(b.categoryId, categoriesData) : b.category || '';
+      return pathA.localeCompare(pathB);
     });
-  }, [filtered, campaigns]);
+  }, [filtered, categoriesData, users]);
 
   const byAdvisor: AggRow[] = useMemo(() => {
     const map: Record<string, AggRow> = {};
@@ -354,6 +404,7 @@ export default function StatsPage() {
   const maxParentTotal = byParent.reduce((m, r) => Math.max(m, r.total), 0) || 1;
 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedCategoryIds, setExpandedCategoryIds] = useState<Set<string>>(new Set());
 
   const toggleCategory = (parent: string) => {
     setExpandedCategories(prev => {
@@ -362,6 +413,18 @@ export default function StatsPage() {
         newSet.delete(parent);
       } else {
         newSet.add(parent);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleCategoryById = (categoryId: string) => {
+    setExpandedCategoryIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
       }
       return newSet;
     });
@@ -448,6 +511,114 @@ export default function StatsPage() {
             Yenile
           </Button>
         </Stack>
+      </Stack>
+
+      {/* Özet İstatistikler */}
+      <Stack direction="row" spacing={2} mb={2.5}>
+        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  Toplam Lead
+                </Typography>
+                <Typography variant="h4" fontWeight={700} mt={0.5}>
+                  {filtered.length.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" color="success.main" mt={0.5}>
+                  %100
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#e3f2fd', p: 1, borderRadius: 1 }}>
+                <TrendingUpIcon sx={{ color: '#1976d2' }} />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  Teklif
+                </Typography>
+                <Typography variant="h4" fontWeight={700} mt={0.5}>
+                  {totals.offer.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" color="primary.main" mt={0.5}>
+                  %{filtered.length ? formatPercent((totals.offer / filtered.length) * 100) : '0.0'}
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#fff3e0', p: 1, borderRadius: 1 }}>
+                <TrendingUpIcon sx={{ color: '#f57c00' }} />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  Satış
+                </Typography>
+                <Typography variant="h4" fontWeight={700} mt={0.5} color="success.main">
+                  {totals.sale.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" color="success.main" mt={0.5}>
+                  %{filtered.length ? formatPercent((totals.sale / filtered.length) * 100) : '0.0'}
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#e8f5e9', p: 1, borderRadius: 1 }}>
+                <TrendingUpIcon sx={{ color: '#2e7d32' }} />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  İptal
+                </Typography>
+                <Typography variant="h4" fontWeight={700} mt={0.5} color="error.main">
+                  {totals.cancel.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" color="error.main" mt={0.5}>
+                  %{filtered.length ? formatPercent((totals.cancel / filtered.length) * 100) : '0.0'}
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#ffebee', p: 1, borderRadius: 1 }}>
+                <TrendingDownIcon sx={{ color: '#c62828' }} />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
+          <CardContent>
+            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+              <Box>
+                <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                  Dönüşüm Oranı
+                </Typography>
+                <Typography variant="h4" fontWeight={700} mt={0.5}>
+                  %{totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : '0.0'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" mt={0.5}>
+                  Teklif → Satış
+                </Typography>
+              </Box>
+              <Box sx={{ bgcolor: '#f3e5f5', p: 1, borderRadius: 1 }}>
+                <TrendingUpIcon sx={{ color: '#7b1fa2' }} />
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
       </Stack>
 
       {/* Filtreler - gizli */}
@@ -723,37 +894,72 @@ export default function StatsPage() {
                       </TableCell>
                     </TableRow>
 
-                    {isExpanded && childCategories.map((cat) => {
-                      const catOfferPct = cat.total ? formatPercent((cat.offer / cat.total) * 100) : "0.0";
-                      const catSalePct = cat.total ? formatPercent((cat.sale / cat.total) * 100) : "0.0";
-                      const catCancelPct = cat.total ? formatPercent((cat.cancel / cat.total) * 100) : "0.0";
+                    {isExpanded && (() => {
+                      // Render hierarchical categories
+                      const renderCategory = (cat: AggRow, depth: number = 0): React.ReactNode[] => {
+                        const catOfferPct = cat.total ? formatPercent((cat.offer / cat.total) * 100) : "0.0";
+                        const catSalePct = cat.total ? formatPercent((cat.sale / cat.total) * 100) : "0.0";
+                        const catCancelPct = cat.total ? formatPercent((cat.cancel / cat.total) * 100) : "0.0";
+                        
+                        const children = cat.categoryId 
+                          ? childCategories.filter(c => c.parentCategoryId === cat.categoryId)
+                          : [];
+                        const hasChildren = children.length > 0;
+                        const isCatExpanded = cat.categoryId ? expandedCategoryIds.has(cat.categoryId) : false;
+                        const paddingLeft = 4 + (depth * 3);
 
-                      return (
-                        <TableRow key={cat.key} sx={{ bgcolor: "#fafbfc" }}>
-                          <TableCell sx={{ pl: 8 }}>
-                            <Typography variant="body2" color="text.secondary">
-                              {cat.category}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">{cat.total}</Typography>
-                            <Typography variant="caption" color="text.secondary">%100</Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">{cat.offer}</Typography>
-                            <Typography variant="caption" color="text.secondary">%{catOfferPct}</Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">{cat.sale}</Typography>
-                            <Typography variant="caption" color="text.secondary">%{catSalePct}</Typography>
-                          </TableCell>
-                          <TableCell align="center">
-                            <Typography variant="body2">{cat.cancel}</Typography>
-                            <Typography variant="caption" color="text.secondary">%{catCancelPct}</Typography>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                        const rows: React.ReactNode[] = [
+                          <TableRow key={cat.key} sx={{ bgcolor: depth === 0 ? "#fafbfc" : "#f5f5f5" }}>
+                            <TableCell sx={{ pl: paddingLeft }}>
+                              <Stack direction="row" alignItems="center" spacing={0.5}>
+                                {hasChildren && (
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => cat.categoryId && toggleCategoryById(cat.categoryId)}
+                                    sx={{ p: 0.25 }}
+                                  >
+                                    {isCatExpanded ? <KeyboardArrowDownIcon fontSize="small" /> : <KeyboardArrowRightIcon fontSize="small" />}
+                                  </IconButton>
+                                )}
+                                {!hasChildren && <Box sx={{ width: 24 }} />}
+                                <Typography variant="body2" color="text.secondary" sx={{ fontWeight: depth === 0 ? 500 : 400 }}>
+                                  {cat.category}
+                                </Typography>
+                              </Stack>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography variant="body2">{cat.total}</Typography>
+                              <Typography variant="caption" color="text.secondary">%100</Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography variant="body2">{cat.offer}</Typography>
+                              <Typography variant="caption" color="text.secondary">%{catOfferPct}</Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography variant="body2">{cat.sale}</Typography>
+                              <Typography variant="caption" color="text.secondary">%{catSalePct}</Typography>
+                            </TableCell>
+                            <TableCell align="center">
+                              <Typography variant="body2">{cat.cancel}</Typography>
+                              <Typography variant="caption" color="text.secondary">%{catCancelPct}</Typography>
+                            </TableCell>
+                          </TableRow>
+                        ];
+
+                        // Recursively render children if expanded
+                        if (isCatExpanded && hasChildren) {
+                          children.forEach(child => {
+                            rows.push(...renderCategory(child, depth + 1));
+                          });
+                        }
+
+                        return rows;
+                      };
+
+                      // Only render top-level categories (those without parentCategoryId)
+                      const topLevelCategories = childCategories.filter(c => !c.parentCategoryId);
+                      return topLevelCategories.flatMap(cat => renderCategory(cat, 0));
+                    })()}
                   </React.Fragment>
                 );
               })}

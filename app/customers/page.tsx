@@ -208,8 +208,11 @@ export default function CustomersPage() {
   // Arama state'i
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Sayfa başına satır sayısı
-  const [pageSize, setPageSize] = useState(50);
+  // Pagination state'leri
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [pageSize, setPageSize] = useState(100);
 
   // --- Durumları Çek ---
   const fetchStatuses = async () => {
@@ -273,14 +276,24 @@ export default function CustomersPage() {
     return serviceTr;
   };
 
-  // --- Verileri Çek ---
-  const fetchCustomers = async () => {
+  // --- Verileri Çek (Pagination Destekli) ---
+  const fetchCustomers = async (pageNum: number = page) => {
     try {
       if (!isMountedRef.current) return;
       setLoading(true);
-      const res = await fetch("/api/crm", { cache: "no-store" });
+      const res = await fetch(`/api/crm?page=${pageNum}&limit=${pageSize}`, { cache: "no-store" });
       if (res.ok) {
-        const data = await res.json();
+        const response = await res.json();
+        const data = response.data || response; // Yeni format: {data, pagination} veya eski format: array
+        const pagination = response.pagination;
+        
+        // Pagination bilgilerini güncelle
+        if (pagination) {
+          setTotalPages(pagination.totalPages);
+          setTotalRecords(pagination.total);
+          setPage(pagination.page);
+        }
+        
         // Acenta = Danışman ile aynı, filtreleme yok
         let filteredData = data;
 
@@ -315,7 +328,13 @@ export default function CustomersPage() {
           };
         });
         if (!isMountedRef.current) return;
-        setRows(formatted);
+        
+        // Eğer sayfa 1'den büyükse, mevcut verilere ekle (Load More)
+        if (pageNum > 1) {
+          setRows(prev => [...prev, ...formatted]);
+        } else {
+          setRows(formatted);
+        }
       }
     } catch (err) {
       console.error("Hata:", err);
@@ -327,7 +346,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     isMountedRef.current = true;
-    fetchCustomers();
+    fetchCustomers(1); // İlk sayfa
     fetchStatuses();
     fetchServices();
 
@@ -349,15 +368,29 @@ export default function CustomersPage() {
 
     fetchAdvisors();
 
-    // Kategori listesi: campaigns API'den çek
+    // Kategori listesi: categories API'den çek (hiyerarşik yapıyı düzleştir)
     const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/campaigns", { cache: "no-store" });
+        const res = await fetch("/api/categories", { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
-        const names = (data || [])
-          .map((c: any) => c.name || c.title)
-          .filter(Boolean);
+        
+        // Hiyerarşik yapıyı düz listeye çevir
+        const flattenCategories = (cats: any[], prefix = ''): string[] => {
+          let result: string[] = [];
+          for (const cat of cats) {
+            const title = cat.title || cat.name || '';
+            if (title) {
+              result.push(title);
+            }
+            if (cat.children && cat.children.length > 0) {
+              result = result.concat(flattenCategories(cat.children, title));
+            }
+          }
+          return result;
+        };
+        
+        const names = flattenCategories(data || []);
         setCategoryOptions(names);
       } catch (e) {
         console.error("Kategori listesi yüklenemedi", e);
@@ -476,10 +509,8 @@ export default function CustomersPage() {
         (customerData as any).createdAt = new Date(newCustomer.registerDate).toISOString();
       }
       
-      // Gereksiz alanları temizle
-      delete (customerData as any).advisor;
+      // Gereksiz alanları temizle (advisor ve category'yi silme - hem üst seviyede hem status içinde olmalı)
       delete (customerData as any).service;
-      delete (customerData as any).category;
       delete (customerData as any).registerDate;
       
       const res = await fetch("/api/crm", {
@@ -1017,6 +1048,30 @@ export default function CustomersPage() {
         </Paper>
       )}
 
+      {/* Load More Butonu */}
+      {!isMobile && page < totalPages && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+          <Button
+            variant="outlined"
+            size="large"
+            onClick={() => {
+              const nextPage = page + 1;
+              fetchCustomers(nextPage);
+            }}
+            disabled={loading}
+            sx={{
+              textTransform: 'none',
+              px: 4,
+              py: 1.5,
+              borderRadius: 2,
+              fontWeight: 600
+            }}
+          >
+            {loading ? 'Yüklüyor...' : `Daha Fazla Göster (${rows.length} / ${totalRecords})`}
+          </Button>
+        </Box>
+      )}
+
       {/* KART GÖRÜNÜMÜ - Mobil */}
       {isMobile && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
@@ -1120,6 +1175,30 @@ export default function CustomersPage() {
                 Toplam {filteredRows.length} müşteri gösteriliyor
               </Typography>
             </Paper>
+          )}
+          
+          {/* Load More Butonu - Mobil */}
+          {page < totalPages && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <Button
+                variant="outlined"
+                fullWidth
+                size="large"
+                onClick={() => {
+                  const nextPage = page + 1;
+                  fetchCustomers(nextPage);
+                }}
+                disabled={loading}
+                sx={{
+                  textTransform: 'none',
+                  py: 1.5,
+                  borderRadius: 2,
+                  fontWeight: 600
+                }}
+              >
+                {loading ? 'Yüklüyor...' : `Daha Fazla Göster (${rows.length} / ${totalRecords})`}
+              </Button>
+            </Box>
           )}
         </Box>
       )}

@@ -53,12 +53,10 @@ import { useI18n } from "../../components/I18nProvider";
 
 // Sabit üst kategoriler (Level 1)
 const TOP_PARENTS = [
-  "Website",
   "Landing Page",
   "Şirket Hattı",
   "Meta",
   "TikTok",
-  "Referans",
   "Acente",
   "Kurum İçi",
   "WhatClinic",
@@ -371,6 +369,75 @@ export default function CategoriesSettingsPage() {
     firstContact: false,
     global: false,
   });
+
+  // Dropdown expanded groups state
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Meta"]));
+  
+  // Control Select open state manually
+  const [selectOpen, setSelectOpen] = useState(false);
+  
+  // Temporary selection state for dropdown
+  const [tempParentId, setTempParentId] = useState<string | null>(null);
+
+  // Build hierarchical category list for dropdown grouped by topParent
+  const buildCategoryOptions = useMemo(() => {
+    const options: Array<{ value: string; label: string; level: number; topParent: string; isDivider?: boolean; isExpanded?: boolean }> = [];
+    
+    // Helper to get level
+    const getLevel = (cat: Category, allCats: Category[], depth = 0): number => {
+      if (!cat.parentId) return depth;
+      const parent = allCats.find(c => c.id === cat.parentId);
+      if (!parent) return depth;
+      return getLevel(parent, allCats, depth + 1);
+    };
+    
+    // Helper to get full path for sorting
+    const getPath = (cat: Category, allCats: Category[]): string => {
+      if (!cat.parentId) return cat.name;
+      const parent = allCats.find(c => c.id === cat.parentId);
+      if (!parent) return cat.name;
+      return getPath(parent, allCats) + ' > ' + cat.name;
+    };
+    
+    // Group by topParent
+    TOP_PARENTS.forEach(topParent => {
+      const catsInGroup = categories.filter(c => c.topParent === topParent);
+      const isExpanded = expandedGroups.has(topParent);
+      
+      // Add divider for this group (show all groups, even empty ones)
+      options.push({
+        value: `divider-${topParent}`,
+        label: topParent,
+        level: -1,
+        topParent,
+        isDivider: true,
+        isExpanded
+      });
+      
+      // Only show categories if group is expanded and has categories
+      if (isExpanded && catsInGroup.length > 0) {
+        // Sort categories within this group by hierarchy
+        const sorted = [...catsInGroup].sort((a, b) => {
+          const pathA = getPath(a, categories);
+          const pathB = getPath(b, categories);
+          return pathA.localeCompare(pathB);
+        });
+        
+        sorted.forEach(cat => {
+          const level = getLevel(cat, categories);
+          const indent = '  '.repeat(level);
+          options.push({
+            value: cat.id,
+            label: indent + cat.name,
+            level,
+            topParent: cat.topParent
+          });
+        });
+      }
+    });
+    
+    return options;
+  }, [categories, expandedGroups]);
 
   useEffect(() => {
     fetchCategories();
@@ -805,136 +872,283 @@ export default function CategoriesSettingsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 1 }}>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 2, borderBottom: "1px solid #E5E7EB" }}>
           <Box>
-            <Typography variant="h6" fontWeight={600}>
-              {editing ? "Kategori Düzenle" : "Yeni Kategori Ekle"}
+            <Typography variant="h6" fontWeight={600} sx={{ fontSize: "1.125rem" }}>
+              Yeni Kategori Ekle
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {editing ? "Kategori bilgilerini güncelleyin." : "Yeni kategori oluşturun."}
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: "0.875rem" }}>
+              Yeni kategorinizi burada oluşturun. İşlem tamamlandığında kaydet'e tıklayın.
             </Typography>
           </Box>
-          <IconButton size="small" onClick={handleCloseDialog}>
+          <IconButton size="small" onClick={handleCloseDialog} sx={{ color: "text.secondary" }}>
             <CloseIcon />
           </IconButton>
         </DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2.5} sx={{ mt: 1 }}>
+        <DialogContent sx={{ px: 3, py: 3 }}>
+          <Stack spacing={3}>
             {/* Kategori Adı */}
             <Box>
-              <Typography variant="subtitle2" fontWeight={600} mb={0.5}>
+              <Typography variant="body2" fontWeight={600} mb={1} sx={{ fontSize: "0.875rem" }}>
                 Kategori Adı
               </Typography>
               <TextField
                 fullWidth
-                size="small"
                 placeholder="Kategori Adı"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'white',
+                  }
+                }}
               />
             </Box>
 
-            {/* Üst Kategori Grubu (Level 1) */}
+            {/* Üst Kategori Seçimi */}
             <Box>
-              <Typography variant="subtitle2" fontWeight={600} mb={0.5}>
-                Üst Kategori Grubu
-              </Typography>
-              <FormControl fullWidth size="small">
-                <Select
-                  value={form.topParent}
-                  onChange={(e) => setForm({ ...form, topParent: e.target.value, parentId: null })}
-                >
-                  {TOP_PARENTS.map(tp => (
-                    <MenuItem key={tp} value={tp}>{tp}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Typography variant="caption" color="text.secondary">
-                Meta, TikTok, Acente gibi ana grup
-              </Typography>
-            </Box>
-
-            {/* Üst Kategori (Level 2+) */}
-            <Box>
-              <Typography variant="subtitle2" fontWeight={600} mb={0.5}>
+              <Typography variant="body2" fontWeight={600} mb={1} sx={{ fontSize: "0.875rem" }}>
                 Üst Kategori (Opsiyonel)
               </Typography>
-              <TreeSelect
-                categories={categories}
-                topParent={form.topParent}
-                value={form.parentId}
-                onChange={(id) => setForm({ ...form, parentId: id })}
-                excludeId={editing?.id}
-              />
+              <FormControl fullWidth>
+                <Select
+                  open={selectOpen}
+                  onOpen={() => {
+                    setSelectOpen(true);
+                    setTempParentId(form.parentId);
+                  }}
+                  onClose={(e, reason) => {
+                    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+                      setSelectOpen(false);
+                      setTempParentId(null);
+                    }
+                  }}
+                  value={tempParentId || ""}
+                  onChange={(e) => {
+                    setTempParentId(e.target.value || null);
+                  }}
+                  displayEmpty
+                  sx={{
+                    bgcolor: 'white',
+                    '& .MuiSelect-select': {
+                      color: form.parentId ? 'text.primary' : 'text.secondary',
+                      fontFamily: 'monospace',
+                      fontSize: '0.875rem',
+                    }
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        maxHeight: 450,
+                        '& .MuiMenuItem-root': {
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'pre',
+                        }
+                      }
+                    },
+                    autoFocus: false
+                  }}
+                >
+                  <MenuItem value="">
+                    <Typography variant="body2" color="text.secondary">Üst kategori yok (En üst seviye)</Typography>
+                  </MenuItem>
+                  {buildCategoryOptions
+                    .filter(opt => !editing || opt.value !== editing.id)
+                    .map(opt => {
+                      if (opt.isDivider) {
+                        return (
+                          <MenuItem 
+                            key={opt.value}
+                            autoFocus={false}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const newExpanded = new Set(expandedGroups);
+                              if (newExpanded.has(opt.topParent)) {
+                                newExpanded.delete(opt.topParent);
+                              } else {
+                                newExpanded.add(opt.topParent);
+                              }
+                              setExpandedGroups(newExpanded);
+                            }}
+                            sx={{ 
+                              fontWeight: 700, 
+                              bgcolor: '#f5f5f5',
+                              color: '#1976d2',
+                              fontSize: '0.8rem',
+                              py: 0.5,
+                              borderTop: '1px solid #e0e0e0',
+                              borderBottom: '1px solid #e0e0e0',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: '#e3f2fd'
+                              },
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5
+                            }}
+                          >
+                            {opt.isExpanded ? '▼' : '▶'} {opt.label}
+                          </MenuItem>
+                        );
+                      }
+                      return (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </MenuItem>
+                      );
+                    })}
+                  
+                  {/* Confirmation Button */}
+                  <MenuItem
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      
+                      // Apply the temporary selection
+                      if (tempParentId) {
+                        const selectedCat = categories.find(c => c.id === tempParentId);
+                        if (selectedCat) {
+                          setForm({ ...form, parentId: tempParentId, topParent: selectedCat.topParent });
+                        }
+                      } else {
+                        setForm({ ...form, parentId: null });
+                      }
+                      
+                      setSelectOpen(false);
+                      setTempParentId(null);
+                    }}
+                    sx={{
+                      position: 'sticky',
+                      bottom: 0,
+                      bgcolor: '#f5f5f5',
+                      borderTop: '1px solid #e0e0e0',
+                      justifyContent: 'flex-end',
+                      py: 0.75,
+                      px: 2,
+                      '&:hover': {
+                        bgcolor: '#f5f5f5'
+                      }
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        bgcolor: '#4caf50',
+                        color: 'white',
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        '&:hover': {
+                          bgcolor: '#45a049'
+                        }
+                      }}
+                    >
+                      ✓ Onayla
+                    </Box>
+                  </MenuItem>
+                </Select>
+              </FormControl>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontSize: "0.75rem" }}>
+                Boş bırakırsanız, kategori en üst seviyede oluşturulur.
+              </Typography>
             </Box>
 
+
             {/* İlk İletişim */}
-            <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "#F9FAFB" }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.firstContact}
-                    onChange={(e) => setForm({ ...form, firstContact: e.target.checked })}
-                    size="small"
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={600}>İlk İletişim</Typography>
-                    <Typography variant="caption" color="text.secondary">Bu kategori için iletişim tanımlayın</Typography>
-                  </Box>
-                }
-                sx={{ m: 0, width: "100%", justifyContent: "space-between" }}
-                labelPlacement="start"
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}>
+              <Box>
+                <Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.875rem" }}>
+                  İlk İletişim
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+                  Bu kategori için iletişim tanımlayın
+                </Typography>
+              </Box>
+              <Switch
+                checked={form.firstContact}
+                onChange={(e) => setForm({ ...form, firstContact: e.target.checked })}
               />
-            </Paper>
+            </Box>
 
             {/* Lead Form ID */}
             <Box>
-              <Typography variant="subtitle2" fontWeight={600} mb={0.5}>
+              <Typography variant="body2" fontWeight={600} mb={1} sx={{ fontSize: "0.875rem" }}>
                 Lead Form ID
               </Typography>
               <TextField
                 fullWidth
-                size="small"
                 placeholder="Lead Form ID"
                 value={form.leadFormId}
                 onChange={(e) => setForm({ ...form, leadFormId: e.target.value })}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    bgcolor: 'white',
+                  }
+                }}
               />
-              <Typography variant="caption" color="text.secondary">
-                Facebook Lead Form ID'yi manuel olarak girebilirsiniz.
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontSize: "0.75rem" }}>
+                Facebook entegrasyonu aktif değil. Lead Form ID'yi manuel olarak girebilirsiniz.
               </Typography>
             </Box>
 
             {/* Global */}
-            <Paper variant="outlined" sx={{ p: 1.5, bgcolor: "#F9FAFB" }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.global}
-                    onChange={(e) => setForm({ ...form, global: e.target.checked })}
-                    size="small"
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={600}>Global</Typography>
-                    <Typography variant="caption" color="text.secondary">Bu kategori global olarak kullanılsın mı?</Typography>
-                  </Box>
-                }
-                sx={{ m: 0, width: "100%", justifyContent: "space-between" }}
-                labelPlacement="start"
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}>
+              <Box>
+                <Typography variant="body2" fontWeight={600} sx={{ fontSize: "0.875rem" }}>
+                  Global
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
+                  Bu kategori global olarak kullanılsın mı?
+                </Typography>
+              </Box>
+              <Switch
+                checked={form.global}
+                onChange={(e) => setForm({ ...form, global: e.target.checked })}
               />
-            </Paper>
+            </Box>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2 }}>
-          <Button onClick={handleCloseDialog} variant="outlined">İptal</Button>
+        <DialogActions sx={{ px: 3, py: 2.5, borderTop: "1px solid #E5E7EB", gap: 1 }}>
+          <Button 
+            onClick={handleCloseDialog} 
+            variant="outlined"
+            sx={{ 
+              flex: 1,
+              textTransform: "none",
+              fontWeight: 500,
+              borderColor: "#D1D5DB",
+              color: "text.primary",
+              "&:hover": {
+                borderColor: "#9CA3AF",
+                bgcolor: "#F9FAFB"
+              }
+            }}
+          >
+            İptal
+          </Button>
           <Button
             onClick={handleSave}
             variant="contained"
-            disabled={loading || !form.name.trim() || !form.topParent}
-            sx={{ bgcolor: "#3b82f6", "&:hover": { bgcolor: "#2563eb" } }}
+            disabled={loading || !form.name.trim()}
+            sx={{ 
+              flex: 1,
+              textTransform: "none",
+              fontWeight: 600,
+              bgcolor: "#000", 
+              "&:hover": { bgcolor: "#1F2937" },
+              "&:disabled": { bgcolor: "#E5E7EB", color: "#9CA3AF" }
+            }}
           >
             Kaydet
           </Button>

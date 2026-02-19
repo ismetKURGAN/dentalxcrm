@@ -31,10 +31,26 @@ import type { LabelConfig } from "../../api/settings/labels/route";
 interface CampaignNode {
   id: string;
   title: string;
+  name?: string;
   type?: string;
   topParent?: string;
+  parent?: string;
   parentId?: string;
 }
+
+interface Category {
+  id: string;
+  name: string;
+  topParent: string;
+  parentId: string | null;
+  leadFormId?: string;
+  firstContact?: boolean;
+  global?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// TOP_PARENTS artık campaigns API'sinden dinamik olarak çekiliyor
 
 interface UserItem {
   id: number;
@@ -60,8 +76,23 @@ const LANGUAGE_OPTIONS = [
 export default function LabelsSettingsPage() {
   const [labels, setLabels] = useState<LabelConfig[]>([]);
   const [campaigns, setCampaigns] = useState<CampaignNode[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectOpen, setSelectOpen] = useState(false);
+  const [tempCategoryId, setTempCategoryId] = useState<string>("");
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Meta"]));
+
+  // Kampanyalardan dinamik olarak topParent listesi oluştur
+  const TOP_PARENTS = useMemo(() => {
+    const parents = new Set<string>();
+    campaigns.forEach((c) => {
+      const topParent = c.topParent || c.parent;
+      if (topParent) parents.add(topParent);
+    });
+    // Alfabetik sırala
+    return Array.from(parents).sort((a, b) => a.localeCompare(b));
+  }, [campaigns]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<LabelConfig | null>(null);
@@ -70,9 +101,10 @@ export default function LabelsSettingsPage() {
     const loadAll = async () => {
       setLoading(true);
       try {
-        const [labelsRes, campaignsRes, usersRes] = await Promise.all([
+        const [labelsRes, campaignsRes, categoriesRes, usersRes] = await Promise.all([
           fetch("/api/settings/labels", { cache: "no-store" }),
           fetch("/api/campaigns", { cache: "no-store" }),
+          fetch("/api/categories", { cache: "no-store" }),
           fetch("/api/users", { cache: "no-store" }),
         ]);
 
@@ -83,6 +115,10 @@ export default function LabelsSettingsPage() {
         if (campaignsRes.ok) {
           const data = await campaignsRes.json();
           setCampaigns(data || []);
+        }
+        if (categoriesRes.ok) {
+          const data = await categoriesRes.json();
+          setCategories(data || []);
         }
         if (usersRes.ok) {
           const data = await usersRes.json();
@@ -98,15 +134,21 @@ export default function LabelsSettingsPage() {
 
   const categoryMap = useMemo(() => {
     const map = new Map<string, string>();
-    campaigns.forEach((c) => {
+    
+    // Helper to get full path
+    const getPath = (cat: Category): string => {
+      if (!cat.parentId) return `${cat.topParent} / ${cat.name}`;
+      const parent = categories.find(c => c.id === cat.parentId);
+      if (!parent) return `${cat.topParent} / ${cat.name}`;
+      return getPath(parent) + ` / ${cat.name}`;
+    };
+    
+    categories.forEach((c) => {
       if (!c || !c.id) return;
-      const parts: string[] = [];
-      if (c.topParent) parts.push(c.topParent);
-      if (c.title) parts.push(c.title);
-      map.set(c.id, parts.join(" / ") || c.title || c.id);
+      map.set(c.id, getPath(c));
     });
     return map;
-  }, [campaigns]);
+  }, [categories]);
 
   const advisorNames = useMemo(
     () => users.map((u) => u.name).filter(Boolean),
@@ -281,17 +323,181 @@ export default function LabelsSettingsPage() {
               <FormControl fullWidth size="small">
                 <InputLabel>Kategori</InputLabel>
                 <Select
+                  open={selectOpen}
+                  onOpen={() => {
+                    setSelectOpen(true);
+                    setTempCategoryId(editing.categoryId);
+                  }}
+                  onClose={(e, reason) => {
+                    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+                      setSelectOpen(false);
+                      setTempCategoryId("");
+                    }
+                  }}
                   label="Kategori"
-                  value={editing.categoryId}
-                  onChange={(e) => setEditing({ ...editing, categoryId: e.target.value as string })}
+                  value={tempCategoryId}
+                  onChange={(e) => setTempCategoryId(e.target.value as string)}
+                  displayEmpty
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        maxHeight: 450,
+                        '& .MuiMenuItem-root': {
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          whiteSpace: 'pre',
+                        }
+                      }
+                    },
+                    autoFocus: false
+                  }}
                 >
-                  {campaigns
-                    .filter((c) => c.type === "category")
-                    .map((c) => (
-                      <MenuItem key={c.id} value={c.id}>
-                        {categoryMap.get(c.id) || c.title}
-                      </MenuItem>
-                    ))}
+                  <MenuItem value="">
+                    <em>Kategori Seçiniz</em>
+                  </MenuItem>
+                  
+                  {(() => {
+                    const getLevel = (cat: Category): number => {
+                      if (!cat.parentId) return 0;
+                      const parent = categories.find(c => c.id === cat.parentId);
+                      if (!parent) return 0;
+                      return 1 + getLevel(parent);
+                    };
+                    
+                    const getPath = (cat: Category): string => {
+                      if (!cat.parentId) return cat.name;
+                      const parent = categories.find(c => c.id === cat.parentId);
+                      if (!parent) return cat.name;
+                      return getPath(parent) + ' > ' + cat.name;
+                    };
+                    
+                    const options: Array<{ value: string; label: string; level: number; topParent: string; isDivider?: boolean; isExpanded?: boolean }> = [];
+                    
+                    TOP_PARENTS.forEach(topParent => {
+                      const catsInGroup = categories.filter(c => c.topParent === topParent);
+                      const isExpanded = expandedGroups.has(topParent);
+                      
+                      options.push({
+                        value: `divider-${topParent}`,
+                        label: topParent,
+                        level: -1,
+                        topParent,
+                        isDivider: true,
+                        isExpanded
+                      });
+                      
+                      if (isExpanded && catsInGroup.length > 0) {
+                        const sorted = [...catsInGroup].sort((a, b) => {
+                          const pathA = getPath(a);
+                          const pathB = getPath(b);
+                          return pathA.localeCompare(pathB);
+                        });
+                        
+                        sorted.forEach(cat => {
+                          const level = getLevel(cat);
+                          const indent = '  '.repeat(level);
+                          options.push({
+                            value: cat.id,
+                            label: indent + cat.name,
+                            level,
+                            topParent: cat.topParent
+                          });
+                        });
+                      }
+                    });
+                    
+                    return options.map(opt => {
+                      if (opt.isDivider) {
+                        return (
+                          <MenuItem 
+                            key={opt.value}
+                            autoFocus={false}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const newExpanded = new Set(expandedGroups);
+                              if (newExpanded.has(opt.topParent)) {
+                                newExpanded.delete(opt.topParent);
+                              } else {
+                                newExpanded.add(opt.topParent);
+                              }
+                              setExpandedGroups(newExpanded);
+                            }}
+                            sx={{ 
+                              fontWeight: 700, 
+                              bgcolor: '#f5f5f5',
+                              color: '#1976d2',
+                              fontSize: '0.8rem',
+                              py: 0.5,
+                              borderTop: '1px solid #e0e0e0',
+                              borderBottom: '1px solid #e0e0e0',
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: '#e3f2fd'
+                              },
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 0.5
+                            }}
+                          >
+                            {opt.isExpanded ? '▼' : '▶'} {opt.label}
+                          </MenuItem>
+                        );
+                      }
+                      return (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </MenuItem>
+                      );
+                    });
+                  })()}
+                  
+                  <MenuItem
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setEditing({ ...editing, categoryId: tempCategoryId });
+                      setSelectOpen(false);
+                      setTempCategoryId("");
+                    }}
+                    sx={{
+                      position: 'sticky',
+                      bottom: 0,
+                      bgcolor: '#f5f5f5',
+                      borderTop: '1px solid #e0e0e0',
+                      justifyContent: 'flex-end',
+                      py: 0.75,
+                      px: 2,
+                      '&:hover': {
+                        bgcolor: '#f5f5f5'
+                      }
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        bgcolor: '#4caf50',
+                        color: 'white',
+                        px: 2,
+                        py: 0.75,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        '&:hover': {
+                          bgcolor: '#45a049'
+                        }
+                      }}
+                    >
+                      ✓ Onayla
+                    </Box>
+                  </MenuItem>
                 </Select>
               </FormControl>
 

@@ -13,36 +13,37 @@ const INTERNAL_BASE_URL =
 // 1. Waha (WhatsApp API) için istekleri, mevcut Next.js proxy'si üzerinden geçiyoruz
 // (app/api/waha/[...path]/route.ts). Böylece token ve bağlantı ayarları tek yerde yönetilir.
 
-// 2. Danışman Ayarları
-// Her danışmanın kendi WhatsApp hattı ve Waha oturum adı.
-// Şimdilik tüm oturumlar "default" olarak kalabilir, ileride her kullanıcıya ayrı session açılabilir.
-type ConsultantConfig = {
-  phone: string;       // Danışmanın kendi WhatsApp hattı (905xx... formatında)
-  wahaSession: string; // Waha session adı (örn: "default", "sadik", "buse" ...)
-};
-
-const CONSULTANTS: Record<string, ConsultantConfig> = {
-  "Sadık":  { phone: "905321234567", wahaSession: "default" },
-  "Buse":   { phone: "905331234567", wahaSession: "default" },
-  "Admin":  { phone: "905070814738", wahaSession: "default" },
-  "Sonege": { phone: "905000000000", wahaSession: "default" },
-  "Connor": { phone: "445000000000", wahaSession: "default" },
-  "Lejla":  { phone: "445000000001", wahaSession: "default" },
-};
-
 const DB_PATH = path.join(process.cwd(), "db.json");
+const USERS_PATH = path.join(process.cwd(), "users.json");
 
-function getDefaultWhatsappSession(): string {
+function getAdminWhatsappSession(): string {
   try {
     const settingsPath = path.join(process.cwd(), "settings.json");
-    if (!fs.existsSync(settingsPath)) return "default";
+    if (!fs.existsSync(settingsPath)) return "admin";
     const raw = fs.readFileSync(settingsPath, "utf-8");
     const json = JSON.parse(raw);
-    const ws = json.whatsappSettings || {};
-    return ws.defaultSession || "default";
+    const evoSettings = json.whatsappSettingsEvolution || {};
+    return evoSettings.instance || "admin";
   } catch (e) {
-    console.error("whatsappSettings.defaultSession okunamadı", e);
-    return "default";
+    console.error("Admin instance okunamadı, 'admin' kullanılıyor", e);
+    return "admin";
+  }
+}
+
+function getConsultantPhone(consultantName: string): string | null {
+  try {
+    if (!fs.existsSync(USERS_PATH)) return null;
+    const raw = fs.readFileSync(USERS_PATH, "utf-8");
+    const users = JSON.parse(raw) as Array<{ name?: string; phone?: string }>;
+    
+    const user = users.find(
+      (u) => u.name && u.name.toLowerCase() === consultantName.toLowerCase()
+    );
+    
+    return user?.phone || null;
+  } catch (e) {
+    console.error("Kullanıcı telefonu okunamadı:", e);
+    return null;
   }
 }
 
@@ -79,12 +80,12 @@ export async function GET() {
           const customerName = c.name || c.personal?.name || "Bilinmiyor";
           const rawCustomerPhone = c.personal?.phone || c.phone;
 
-          const consultantName = c.status?.consultant || "Admin";
-          const consultantCfg = CONSULTANTS[consultantName];
+          const consultantName = c.status?.consultant || c.advisor || "Admin";
+          const rawPhone = getConsultantPhone(consultantName);
 
-          if (consultantCfg) {
-            const targetPhone = normalizePhone(consultantCfg.phone);
-            const session = consultantCfg.wahaSession || getDefaultWhatsappSession();
+          if (rawPhone) {
+            const targetPhone = normalizePhone(rawPhone);
+            const session = getAdminWhatsappSession(); // Admin session kullan
 
             if (targetPhone) {
               // --- WHATSAPP GÖNDERME ---
@@ -92,18 +93,18 @@ export async function GET() {
                 `🧑‍💼 Danışman: ${consultantName}\n` +
                 `👤 Müşteri: ${customerName}\n` +
                 `📱 Müşteri Tel: ${rawCustomerPhone || "-"}\n` +
-                `📝 Not: ${c.reminder.notes}\n` +
+                `📝 Not: ${c.reminder.notes || "-"}\n` +
                 `⏰ Saat: ${new Date(c.reminder.datetime).toLocaleTimeString('tr-TR')}`;
 
-              // Waha API'ye İstek At (Arka planda, await etmeden de atabiliriz ama log için bekleyelim)
+              // Admin session üzerinden danışmana mesaj gönder
               sendWhatsApp(session, targetPhone, message);
 
-              logs.push(`Mesaj gönderildi (danışmana): ${consultantName} -> ${targetPhone}`);
+              logs.push(`Hatırlatma gönderildi (admin session -> ${consultantName}): ${targetPhone}`);
             } else {
               logs.push(`Danışman telefonu geçersiz: ${consultantName}`);
             }
           } else {
-            logs.push(`Danışman config bulunamadı: ${consultantName}`);
+            logs.push(`Danışman telefonu bulunamadı: ${consultantName}`);
           }
 
           // 3. "Gönderildi" Olarak İşaretle (Tekrar göndermemek için)

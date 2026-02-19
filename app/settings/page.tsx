@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useAuth } from "../components/AuthProvider";
 import { useI18n } from "../components/I18nProvider";
 
-type SettingsItem = { label: string; desc: string; href: string; adminOnly?: boolean };
+type SettingsItem = { label: string; desc: string; href: string; adminOnly?: boolean; superAdminOnly?: boolean };
 
 const sections: { title: string; items: SettingsItem[] }[] = [
   {
@@ -64,8 +64,8 @@ const sections: { title: string; items: SettingsItem[] }[] = [
     items: [
       { label: "Facebook Entegrasyonu", desc: "Facebook lead formlarını CRM'e bağlayın.", href: "#" },
       { label: "Zapier / Diğer", desc: "Dış servislerle entegrasyonlarınızı yönetin.", href: "#" },
-      { label: "Web Formları", desc: "Web sitenizde kullanacağınız formları yönetin.", href: "#" },
-      { label: "Kampanyalar / Kategoriler", desc: "Lead Form ID'lerini kaynak ve kampanya kategorileriyle eşleştirin.", href: "/settings/campaigns", adminOnly: true },
+      { label: "Web Formları", desc: "Web sitenizde kullanacağınız embed formları oluşturun.", href: "/settings/embed" },
+      { label: "Kampanyalar / Kategoriler (ESKİ)", desc: "Eski kampanya sistemi - Sadece SuperAdmin.", href: "/settings/campaigns", superAdminOnly: true },
     ],
   },
 ];
@@ -74,6 +74,7 @@ export default function SettingsHubPage() {
   const { user } = useAuth();
   const { t } = useI18n();
   const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin");
+  const isSuperAdmin = user?.roles?.includes("SuperAdmin");
   return (
     <Box sx={{ width: "100%", height: "100%" }}>
       <Box sx={{ mb: 4 }}>
@@ -85,50 +86,113 @@ export default function SettingsHubPage() {
         </Typography>
       </Box>
 
-      <Grid container spacing={4}>
+      <Stack spacing={4}>
         {sections.map((section) => (
-          <Grid key={section.title} item xs={12} md={6}>
-            <Box sx={{ mb: 1.5 }}>
-              <Typography variant="subtitle1" fontWeight={600}>
+          <Box key={section.title}>
+            <Box sx={{ mb: 2, pb: 1, borderBottom: '2px solid #e0e0e0' }}>
+              <Typography variant="h6" fontWeight={700} color="primary.main">
                 {section.title}
               </Typography>
             </Box>
-            <Grid container spacing={2}>
+            <Grid container spacing={2} sx={{ maxWidth: '100%' }}>
               {section.items
-                .filter((item) => !item.adminOnly || isAdmin)
+                .filter((item) => {
+                  if (item.superAdminOnly) return isSuperAdmin;
+                  if (item.adminOnly) return isAdmin;
+                  return true;
+                })
                 .map((item) => (
-                <Grid key={item.label} item xs={12} md={6}>
+                <Grid key={item.label} item xs={12} sm={6} md={4}>
                   <Card
                     variant="outlined"
                     sx={{
-                      borderRadius: 3,
-                      boxShadow: "0 8px 24px rgba(15,23,42,0.04)",
-                      height: "100%",
+                      borderRadius: 2,
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                      height: '100%',
+                      minHeight: 160,
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+                        transform: 'translateY(-2px)',
+                        borderColor: 'primary.main',
+                      },
+                      border: '1px solid #e0e0e0',
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                   >
                     <CardActionArea
                       component={item.href === "#" ? "div" : Link}
                       href={item.href === "#" ? undefined : item.href}
-                      sx={{ height: "100%" }}
+                      sx={{ 
+                        height: "100%",
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'stretch',
+                        justifyContent: 'flex-start',
+                      }}
+                      disabled={item.href === "#"}
                     >
-                      <CardContent sx={{ py: 2, px: 2.5 }}>
-                        <Stack spacing={0.5}>
-                          <Typography variant="subtitle2" fontWeight={600}>
-                            {item.label}
+                      <CardContent sx={{ 
+                        py: 2.5, 
+                        px: 2.5,
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
+                        '&:last-child': {
+                          pb: 2.5,
+                        },
+                      }}>
+                        <Typography 
+                          variant="subtitle2" 
+                          fontWeight={700}
+                          sx={{
+                            fontSize: '0.95rem',
+                            lineHeight: 1.3,
+                            color: item.href === "#" ? 'text.disabled' : 'text.primary',
+                            mb: 1,
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          color="text.secondary"
+                          sx={{
+                            fontSize: '0.75rem',
+                            lineHeight: 1.4,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                          }}
+                        >
+                          {item.desc}
+                        </Typography>
+                        {item.href === "#" && isSuperAdmin && (
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: 'warning.main',
+                              fontWeight: 600,
+                              fontSize: '0.7rem',
+                              mt: 1,
+                            }}
+                          >
+                            Yakında
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {item.desc}
-                          </Typography>
-                        </Stack>
+                        )}
                       </CardContent>
                     </CardActionArea>
                   </Card>
                 </Grid>
               ))}
             </Grid>
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Stack>
     </Box>
   );
 }

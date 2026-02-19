@@ -106,7 +106,11 @@ export default function Sidebar() {
         ? [{ text: "Randevular", textKey: "sidebar.appointments", icon: <CalendarMonthIcon />, path: "/appointments" }]
         : []
     ),
-    { text: "WHATSAPP", textKey: "sidebar.header.whatsapp", type: "header" },
+    ...(
+      (canSeeChats || isAdmin)
+        ? [{ text: "WHATSAPP", textKey: "sidebar.header.whatsapp", type: "header" }]
+        : []
+    ),
     ...(
       canSeeChats
         ? [{ text: "Sohbetler", textKey: "sidebar.chats", icon: <WhatsAppIcon color="success" />, path: "/whatsapp" }]

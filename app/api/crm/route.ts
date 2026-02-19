@@ -7,6 +7,7 @@ import type { LabelConfig } from "../settings/labels/route";
 const DB_PATH = path.join(process.cwd(), "db.json");
 const CAMPAIGNS_DB_PATH = path.join(process.cwd(), "campaigns.json");
 const LABELS_PATH = path.join(process.cwd(), "labels.json");
+const AUTOMATION_CATEGORIES_PATH = path.join(process.cwd(), "data", "categories.json");
 
 // --- YARDIMCI FONKSİYONLAR ---
 
@@ -75,15 +76,36 @@ function findActiveLabelForCategory(categoryId?: string | null): LabelConfig | n
 
   // Önce doğrudan leaf categoryId için bak
   if (labelMap.has(categoryId)) {
+    console.log("[CRM] Etiket bulundu (doğrudan eşleşme):", labelMap.get(categoryId)!.title, "categoryId:", categoryId);
     return labelMap.get(categoryId)!;
   }
 
-  // Sonra kampanya ağacında yukarı doğru çıkarak parentId / topParent için etiket ara
+  // Birleşik kategori haritası oluştur (önce otomasyon kategorileri, sonra campaigns)
+  const combinedCategoryMap = new Map<string, any>();
+  
+  // Otomasyon kategorilerini ekle (data/categories.json)
+  try {
+    const automationCategoriesPath = path.join(process.cwd(), "data", "categories.json");
+    if (fs.existsSync(automationCategoriesPath)) {
+      const automationCategories = JSON.parse(fs.readFileSync(automationCategoriesPath, "utf-8"));
+      for (const c of automationCategories as any[]) {
+        if (c && typeof c.id === "string") {
+          combinedCategoryMap.set(c.id, c);
+        }
+      }
+    }
+  } catch (e) {
+    console.error("Otomasyon kategorileri okunamadı", e);
+  }
+  
+  // Campaigns'i ekle (campaigns.json)
   const campaigns = getCampaignsSafe();
-  const campaignMap = new Map<string, any>();
   for (const c of campaigns as any[]) {
     if (c && typeof c.id === "string") {
-      campaignMap.set(c.id, c);
+      // Otomasyon kategorisinde yoksa ekle
+      if (!combinedCategoryMap.has(c.id)) {
+        combinedCategoryMap.set(c.id, c);
+      }
     }
   }
 
@@ -92,7 +114,7 @@ function findActiveLabelForCategory(categoryId?: string | null): LabelConfig | n
 
   while (currentId && !visited.has(currentId)) {
     visited.add(currentId);
-    const camp = campaignMap.get(currentId);
+    const camp = combinedCategoryMap.get(currentId);
     if (!camp) break;
 
     const parentId: string | undefined = camp.parentId;
@@ -100,11 +122,13 @@ function findActiveLabelForCategory(categoryId?: string | null): LabelConfig | n
 
     // Önce parentId için etiket var mı bak
     if (parentId && labelMap.has(parentId)) {
+      console.log("[CRM] Etiket bulundu (parent eşleşme):", labelMap.get(parentId)!.title, "parentId:", parentId);
       return labelMap.get(parentId)!;
     }
 
     // Sonra topParent için etiket var mı bak
     if (topParent && labelMap.has(topParent)) {
+      console.log("[CRM] Etiket bulundu (topParent eşleşme):", labelMap.get(topParent)!.title, "topParent:", topParent);
       return labelMap.get(topParent)!;
     }
 
@@ -162,18 +186,90 @@ function getCampaignsSafe() {
   }
 }
 
+// Otomasyon kategorilerini oku (data/categories.json)
+function getAutomationCategoriesSafe() {
+  try {
+    if (!fs.existsSync(AUTOMATION_CATEGORIES_PATH)) {
+      return [];
+    }
+    const raw = fs.readFileSync(AUTOMATION_CATEGORIES_PATH, "utf-8");
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("data/categories.json okunamadı", e);
+    return [];
+  }
+}
+
+// Kategori hiyerarşisini oluştur (parent'ları takip ederek)
+function buildCategoryHierarchy(category: any) {
+  if (!category) return null;
+  
+  const allCategories = [...getAutomationCategoriesSafe(), ...getCampaignsSafe()];
+  const hierarchy: string[] = [];
+  let current = category;
+  
+  // Maksimum 10 seviye (sonsuz döngü önlemi)
+  for (let i = 0; i < 10 && current; i++) {
+    const categoryName = current.name || current.title || '';
+    if (categoryName) {
+      hierarchy.unshift(categoryName); // Başa ekle
+    }
+    
+    // Parent'ı bul
+    if (current.parentId) {
+      current = allCategories.find((c: any) => c.id === current.parentId);
+    } else {
+      break;
+    }
+  }
+  
+  return {
+    fullPath: hierarchy.join(' > '),
+    topParent: category.topParent || category.parent || '',
+    level1: hierarchy[0] || category.topParent || category.parent || '',
+    level2: hierarchy[1] || '',
+    level3: hierarchy[2] || '',
+    level4: hierarchy[3] || '',
+    level5: hierarchy[4] || hierarchy[hierarchy.length - 1] || '',
+    leafCategory: hierarchy[hierarchy.length - 1] || category.name || category.title || ''
+  };
+}
+
 function findCampaignByLeadFormId(leadFormId?: string | null) {
   if (!leadFormId) return null;
-  const items = getCampaignsSafe();
-  return (
-    items.find(
-      (c: any) =>
-        c &&
-        typeof c.leadFormId === "string" &&
-        c.leadFormId.trim() !== "" &&
-        c.leadFormId === leadFormId
-    ) || null
+  
+  // Önce otomasyon kategorilerinde ara (data/categories.json) - öncelikli
+  const automationCategories = getAutomationCategoriesSafe();
+  const automationMatch = automationCategories.find(
+    (c: any) =>
+      c &&
+      typeof c.leadFormId === "string" &&
+      c.leadFormId.trim() !== "" &&
+      c.leadFormId !== "0" &&
+      c.leadFormId === leadFormId
   );
+  
+  if (automationMatch) {
+    console.log("[CRM] Lead Form ID eşleşmesi bulundu (otomasyon kategorileri):", automationMatch.name, "leadFormId:", leadFormId);
+    return automationMatch;
+  }
+  
+  // Bulunamazsa campaigns.json'da ara (geriye uyumluluk için)
+  const items = getCampaignsSafe();
+  const campaignMatch = items.find(
+    (c: any) =>
+      c &&
+      typeof c.leadFormId === "string" &&
+      c.leadFormId.trim() !== "" &&
+      c.leadFormId !== "0" &&
+      c.leadFormId === leadFormId
+  );
+  
+  if (campaignMatch) {
+    console.log("[CRM] Lead Form ID eşleşmesi bulundu (campaigns):", campaignMatch.name || campaignMatch.title, "leadFormId:", leadFormId);
+  }
+  
+  return campaignMatch || null;
 }
 
 function getCustomers() {
@@ -518,7 +614,8 @@ async function sendAdvisorLeadNotificationIfPossible(customer: any) {
       return;
     }
 
-    const instanceName = advisor.session; // yoksa /api/wp/messages kendi default instance'ını kullanacak
+    // Evolution'daki "admin" session'ını kullan
+    const instanceName = "admin";
 
     const customerName = customer.name || customer.personal?.name || "-";
     const customerPhone =
@@ -598,13 +695,43 @@ function pickAdvisorForNewLead(): string | undefined {
 
 // --- API METOTLARI ---
 
-// GET: Hepsini Getir
+// GET: Hepsini Getir (Pagination destekli)
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "100", 10);
+    const noPagination = searchParams.get("all") === "true"; // ?all=true ile tüm veriyi al
+
     const customers = getCustomers();
     // Tarihe göre sırala (En yeni en üstte)
     customers.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    return withCors(NextResponse.json(customers), request);
+
+    // Pagination olmadan tüm veriyi döndür
+    if (noPagination) {
+      return withCors(NextResponse.json(customers), request);
+    }
+
+    // Pagination uygula
+    const total = customers.length;
+    const totalPages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const paginatedCustomers = customers.slice(start, end);
+
+    const response = {
+      data: paginatedCustomers,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    };
+
+    return withCors(NextResponse.json(response), request);
   } catch (error) {
     return withCors(
       NextResponse.json({ error: "Veri okunamadı" }, { status: 500 }),
@@ -623,8 +750,14 @@ export async function POST(request: Request) {
     const incomingEmail = (body.email || body.personal?.email || "").trim().toLowerCase();
     const incomingPhone = (body.phone || body.personal?.phone || "").replace(/\D/g, ""); // Sadece rakamlar
     
+    // Zapier'den gelen leadFormId üzerinden kampanya/kategori eşlemesi
+    // Tercihen nested body.personal.facebook.leadFormId, ama bazı Zap konfigürasyonlarında
+    // "personal.facebook.leadFormId" düz key olarak da gelebilir; ikisini de destekleyelim.
+    const flatLeadFormId = (body as any)["personal.facebook.leadFormId"];
+    const incomingLeadFormId = body?.personal?.facebook?.leadFormId ?? flatLeadFormId;
+    
     // Zapier/lead mi yoksa manuel ekleme mi kontrol et
-    const isFromZapier = body.source === "zapier" || body.source === "facebook" || body.personal?.facebook?.leadFormId;
+    const isFromZapier = body.source === "zapier" || body.source === "facebook" || !!incomingLeadFormId;
     
     if (incomingEmail || incomingPhone) {
       const duplicate = customers.find((c: any) => {
@@ -685,11 +818,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Zapier'den gelen leadFormId üzerinden kampanya/kategori eşlemesi
-    // Tercihen nested body.personal.facebook.leadFormId, ama bazı Zap konfigürasyonlarında
-    // "personal.facebook.leadFormId" düz key olarak da gelebilir; ikisini de destekleyelim.
-    const flatLeadFormId = (body as any)["personal.facebook.leadFormId"];
-    const incomingLeadFormId = body?.personal?.facebook?.leadFormId ?? flatLeadFormId;
     const matchedCampaign = findCampaignByLeadFormId(incomingLeadFormId);
 
     // Kategoriye göre aktif etiket bul (varsa)
@@ -709,7 +837,15 @@ export async function POST(request: Request) {
 
     // Status alanını düzgün şekilde ayarla - default "Yeni Form"
     const incomingStatus = typeof body.status === "string" ? body.status : (body.status?.status || "Yeni Form");
-    const incomingCategory = matchedCampaign?.title || body.category || '';
+    
+    // Kategori hiyerarşisini oluştur
+    const categoryHierarchy = matchedCampaign ? buildCategoryHierarchy(matchedCampaign) : null;
+    
+    // Kategori bilgilerini al
+    const categoryName = categoryHierarchy?.leafCategory || matchedCampaign?.name || matchedCampaign?.title || body.category || '';
+    const topParentName = categoryHierarchy?.topParent || matchedCampaign?.topParent || matchedCampaign?.parent || '';
+    
+    const incomingCategory = categoryName;
     const incomingServices = body.service || body.services || '';
 
     const newCustomer = {
@@ -717,15 +853,18 @@ export async function POST(request: Request) {
       advisor,
       // Kampanya eşleşmesi varsa kategori ve üst kategori bilgilerini yaz
       category: incomingCategory,
-      parentCategory: matchedCampaign?.parent || body.parentCategory,
-      categoryLevel1: matchedCampaign?.parent,
-      categoryLevel2: (matchedCampaign as any)?.level2,
-      categoryLevel3: (matchedCampaign as any)?.level3,
-      categoryLevel4: (matchedCampaign as any)?.level4,
-      categoryLevel5: (matchedCampaign as any)?.level5 || matchedCampaign?.title,
+      parentCategory: topParentName || body.parentCategory,
+      categoryLevel1: categoryHierarchy?.level1 || topParentName,
+      categoryLevel2: categoryHierarchy?.level2 || '',
+      categoryLevel3: categoryHierarchy?.level3 || '',
+      categoryLevel4: categoryHierarchy?.level4 || '',
+      categoryLevel5: categoryHierarchy?.level5 || categoryName,
+      categoryFullPath: categoryHierarchy?.fullPath || categoryName,
       id: Date.now(), // Benzersiz ID
       // Eğer body'de createdAt varsa onu kullan (manuel ekleme), yoksa şimdiki zamanı kullan
       createdAt: body.createdAt || new Date().toISOString(),
+      // Manuel eklenen müşterilere otomatik karşılama mesajı gönderme
+      noAutoWelcome: !isFromZapier,
       // Status objesini doğru formatta oluştur
       status: {
         consultant: advisor || '',

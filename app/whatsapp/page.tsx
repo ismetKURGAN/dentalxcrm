@@ -9,7 +9,7 @@ export default function WhatsAppPage() {
   const { user } = useAuth();
   const { t } = useI18n();
 
-  const allowedRoles = ["Admin", "Danışman", "Operasyon", "SuperAdmin"];
+  const allowedRoles = ["Admin", "Danışman", "Operasyon", "SuperAdmin", "Acenta"];
   const canAccess = user?.roles?.some((r) => allowedRoles.includes(r)) ?? false;
 
   const [tab, setTab] = useState(0);

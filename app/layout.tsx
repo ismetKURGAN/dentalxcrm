@@ -8,7 +8,7 @@ import { I18nProvider } from "./components/I18nProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MoonCRM",
+  title: "DentalXCrm",
   description: "Customer Relationship Management",
 };
 

@@ -225,7 +225,7 @@ type CustomerState = {
     }[];
   };
   calls: { id: number; title: string; date: string; notes: string }[];
-  files: { id: number; name: string; size: string; uploadedAt: string }[];
+  files: { id: number; name: string; size: string; uploadedAt: string; url?: string }[];
   history: {
     id: number;
     title: string;
@@ -412,7 +412,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           setHotelOptions(hotelNames.sort());
         }
         
-        const res = await fetch("/api/crm", { cache: "no-store" });
+        const res = await fetch("/api/crm?all=true", { cache: "no-store" });
         if (res.ok) {
           const data = await res.json();
           const found = data.find(
@@ -1713,12 +1713,24 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
       return;
     }
 
-    const newFiles = selectedFiles.map((file, index) => ({
-      id: Date.now() + index,
-      name: file.name,
-      size: `${(file.size / 1024).toFixed(2)} KB`,
-      uploadedAt: new Date().toLocaleString("tr-TR"),
-    }));
+    // Convert files to base64 data URLs
+    const filePromises = selectedFiles.map((file, index) => {
+      return new Promise<any>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          resolve({
+            id: Date.now() + index,
+            name: file.name,
+            size: `${(file.size / 1024).toFixed(2)} KB`,
+            uploadedAt: new Date().toLocaleString("tr-TR"),
+            url: e.target?.result as string, // Store the base64 data URL
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const newFiles = await Promise.all(filePromises);
 
     const updatedCustomer = {
       ...customer,
@@ -1905,9 +1917,12 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
+                          } else {
+                            alert('Bu dosya indirilemez. Dosya içeriği kaydedilmemiş. Lütfen dosyayı yeniden yükleyin.');
                           }
                         }}
                         title="İndir"
+                        disabled={!file.url}
                       >
                         <DownloadIcon fontSize="small" />
                       </IconButton>

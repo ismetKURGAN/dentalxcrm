@@ -64,7 +64,7 @@ interface Campaign {
 
 export default function CampaignSettingsPage() {
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin");
+  const isSuperAdmin = user?.roles?.includes("SuperAdmin");
   const { t } = useI18n();
 
   const [items, setItems] = useState<Campaign[]>([]);
@@ -201,12 +201,12 @@ export default function CampaignSettingsPage() {
   };
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isSuperAdmin) {
       load();
     }
-  }, [isAdmin]);
+  }, [isSuperAdmin]);
 
-  if (!isAdmin) {
+  if (!isSuperAdmin) {
     return (
       <Box sx={{ p: 3 }}>
         <Typography variant="h5" fontWeight="bold" gutterBottom>
