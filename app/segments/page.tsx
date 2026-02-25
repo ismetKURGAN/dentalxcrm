@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { 
   Box, Typography, Button, Card, CardContent, Grid, Chip, LinearProgress,
   Dialog, DialogTitle, DialogContent, DialogActions, TextField, Stack, IconButton,
@@ -12,13 +12,14 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PeopleIcon from "@mui/icons-material/People";
-import EditIcon from "@mui/icons-material/Edit"; // Kalem İkonu
-import DeleteIcon from "@mui/icons-material/Delete"; // Silme İkonu
-import AddIcon from "@mui/icons-material/Add"; // Ekle İkonu
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
 import EmailIcon from "@mui/icons-material/Email";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CloseIcon from "@mui/icons-material/Close";
 import SaveIcon from "@mui/icons-material/Save";
+import { ThemeModeContext } from "../components/ThemeRegistry";
 
 // --- TİPLER VE SAHTE VERİLER ---
 
@@ -122,6 +123,7 @@ async function sendWahaMessage(session: string, phone: string, text: string) {
 }
 
 export default function SegmentsPage() {
+    const { mode } = useContext(ThemeModeContext);
     const [segments, setSegments] = useState<Segment[]>([]);
     const [customers, setCustomers] = useState<any[]>([]);
     const [loadingCustomers, setLoadingCustomers] = useState(false);
@@ -154,7 +156,7 @@ export default function SegmentsPage() {
 
                 const [segRes, custRes, wahaRes] = await Promise.all([
                     fetch("/api/segments", { cache: "no-store" }),
-                    fetch("/api/crm", { cache: "no-store" }),
+                    fetch("/api/crm-sqlite?all=true", { cache: "no-store" }),
                     fetch("/api/settings/whatsapp", { cache: "no-store" }),
                 ]);
 
@@ -166,8 +168,9 @@ export default function SegmentsPage() {
                 }
 
                 if (custRes.ok) {
-                    const data = await custRes.json();
-                    setCustomers(data);
+                    const response = await custRes.json();
+                    const data = Array.isArray(response) ? response : (response.data || response);
+                    setCustomers(Array.isArray(data) ? data : []);
                 }
 
                 if (wahaRes.ok) {
@@ -264,19 +267,17 @@ export default function SegmentsPage() {
     const getFieldValue = (c: any, field: string): string => {
         switch (field) {
             case "Kategoriler":
-                return c.category || "";
+                return (c.category || "").toString();
             case "Durumlar":
-                // Status obje veya string olabilir
-                if (typeof c.status === "object" && c.status !== null) {
-                    return c.status.status || "";
-                }
-                return c.status || "";
+                return (c.status || "").toString();
             case "Hizmetler":
-                return c.service || "";
+                return (c.service || "").toString();
             case "Danışman":
-                return c.advisor || "";
+                return (c.advisor || "").toString();
             case "Kaynak":
-                return c.category || "";
+                return (c.parentCategory || c.category || "").toString();
+            case "Oluşturma Tarihi":
+                return (c.createdAt || "").toString();
             default:
                 return "";
         }
@@ -397,14 +398,14 @@ export default function SegmentsPage() {
     };
 
     return (
-        <Box>
-            <Typography variant="h5" fontWeight="bold" mb={3} color="#111827">Pazarlama Segmentleri</Typography>
+        <Box sx={{ p: { xs: 1.5, md: 2 }, bgcolor: mode === "dark" ? "#1E1B3E" : "#F3F4F6", minHeight: "100vh" }}>
+            <Typography variant="h5" fontWeight="bold" mb={3} sx={{ color: mode === "dark" ? "#FFFFFF" : "#111827" }}>Pazarlama Segmentleri</Typography>
 
             <Paper sx={{ p: 2, mb: 2, borderRadius: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
-                    sx={{ textTransform: 'none' }}
+                    sx={{ textTransform: 'none', fontWeight: 600 }}
                     onClick={() => {
                         const now = Date.now();
                         setEditSegment({
@@ -423,19 +424,19 @@ export default function SegmentsPage() {
                 </Button>
                 <TextField
                     size="small"
-                    placeholder="Search..."
-                    sx={{ width: 260, bgcolor: '#F9FAFB', borderRadius: 1 }}
+                    placeholder="Ara..."
+                    sx={{ width: 260, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#F9FAFB", borderRadius: 1 }}
                 />
             </Paper>
 
-            <Paper sx={{ borderRadius: 2, boxShadow: 1 }}>
-                <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #E5E7EB' }}>
+            <Paper sx={{ borderRadius: 2 }}>
+                <Box sx={{ px: 2, py: 1.5, borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.2)" : "1px solid #E5E7EB" }}>
                     <Typography variant="subtitle1" fontWeight="bold">Segmentler</Typography>
                 </Box>
 
                 <Box sx={{ width: '100%', overflowX: 'auto' }}>
                     <Box sx={{ minWidth: 900 }}>
-                        <Stack direction="row" sx={{ px: 2, py: 1, bgcolor: '#F9FAFB', borderBottom: '1px solid #E5E7EB', fontSize: '0.8rem', fontWeight: 600, color: '#6B7280' }}>
+                        <Stack direction="row" sx={{ px: 2, py: 1, bgcolor: mode === "dark" ? "#2D2757" : "#F9FAFB", borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.2)" : "1px solid #E5E7EB", fontSize: '0.8rem', fontWeight: 600, color: mode === "dark" ? "rgba(255,255,255,0.7)" : "#6B7280" }}>
                             <Box sx={{ width: 80 }}>ID</Box>
                             <Box sx={{ flex: 1 }}>Başlık</Box>
                             <Box sx={{ width: 140 }}>Müşteri Sayısı</Box>
@@ -451,12 +452,12 @@ export default function SegmentsPage() {
                                     key={seg.id}
                                     direction="row"
                                     alignItems="center"
-                                    sx={{ px: 2, py: 1.25, borderBottom: '1px solid #F3F4F6', '&:hover': { bgcolor: '#F9FAFB' } }}
+                                    sx={{ px: 2, py: 1.25, borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.1)" : "1px solid #F3F4F6", '&:hover': { bgcolor: mode === "dark" ? "#322C5E" : "#F9FAFB" } }}
                                 >
-                                    <Box sx={{ width: 80, fontSize: '0.8rem', color: '#6B7280' }}>{seg.id}</Box>
+                                    <Box sx={{ width: 80, fontSize: '0.8rem', color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6B7280" }}>{seg.id}</Box>
                                     <Box sx={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>{seg.title}</Box>
                                     <Box sx={{ width: 140, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                        <PeopleIcon sx={{ fontSize: 16, color: '#6B7280' }} />
+                                        <PeopleIcon sx={{ fontSize: 16, color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6B7280" }} />
                                         <Typography variant="body2" fontWeight="bold">
                                             {loadingCustomers ? 'Yükleniyor...' : count}
                                         </Typography>
@@ -522,12 +523,12 @@ export default function SegmentsPage() {
 
             {/* --- SEGMENT DÜZENLEME MODALI --- */}
             <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)} fullWidth maxWidth="lg">
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f8f9fa', borderBottom: '1px solid #eee' }}>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.2)" : "1px solid #eee" }}>
                     <Typography variant="h6" fontWeight="bold">Segment Düzenle</Typography>
                     <IconButton onClick={() => setIsEditOpen(false)}><CloseIcon /></IconButton>
                 </DialogTitle>
                 
-                <DialogContent sx={{ bgcolor: '#f8f9fa', p: 3 }}>
+                <DialogContent sx={{ p: 3 }}>
                     {editSegment && (
                         <Stack spacing={3}>
                             {/* KISIM 1: GENEL BİLGİLER */}
@@ -633,7 +634,7 @@ export default function SegmentsPage() {
                         </Stack>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ bgcolor: '#f8f9fa', p: 2, borderTop: '1px solid #eee' }}>
+                <DialogActions sx={{ p: 2, borderTop: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.2)" : "1px solid #eee" }}>
                     <Button onClick={() => setIsEditOpen(false)} color="inherit">İptal</Button>
                     <Button onClick={handleSaveSegment} variant="contained" startIcon={<SaveIcon />}>
                         Kaydet
@@ -725,7 +726,7 @@ export default function SegmentsPage() {
                             onChange={(e) => setEmailIntervalSec(Number(e.target.value) || 0)}
                         />
 
-                        <Paper sx={{ p: 3, bgcolor: '#F9FAFB', borderRadius: 2, textAlign: 'center', color: '#6B7280', fontSize: '0.9rem' }}>
+                        <Paper sx={{ p: 3, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#F9FAFB", borderRadius: 2, textAlign: 'center', color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6B7280", fontSize: '0.9rem' }}>
                             Önizleme için bir şablon seçin
                         </Paper>
                     </Stack>

@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import type { LabelConfig } from "../settings/labels/route";
+import { getAllCustomersFull, getCustomerById, upsertCustomer, deleteCustomer, findDuplicate } from "../lib/sqlite-customers";
 
 // Veri dosyasının yolu
-const DB_PATH = path.join(process.cwd(), "db.json");
 const CAMPAIGNS_DB_PATH = path.join(process.cwd(), "campaigns.json");
 const LABELS_PATH = path.join(process.cwd(), "labels.json");
 const AUTOMATION_CATEGORIES_PATH = path.join(process.cwd(), "data", "categories.json");
@@ -272,18 +272,7 @@ function findCampaignByLeadFormId(leadFormId?: string | null) {
   return campaignMatch || null;
 }
 
-function getCustomers() {
-  try {
-    if (!fs.existsSync(DB_PATH)) {
-      fs.writeFileSync(DB_PATH, "[]", "utf-8");
-      return [];
-    }
-    const fileData = fs.readFileSync(DB_PATH, "utf-8");
-    return JSON.parse(fileData);
-  } catch (error) {
-    return [];
-  }
-}
+// getCustomers artık SQLite'dan okuyor (getAllCustomersFull)
 
 // --- OTOMATIK KARŞILAMA MESAJI ---
 
@@ -656,9 +645,7 @@ async function sendAdvisorLeadNotificationIfPossible(customer: any) {
   }
 }
 
-function saveCustomers(data: any[]) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
+// saveCustomers kaldırıldı — artık doğrudan SQLite'a yazılıyor (upsertCustomer)
 
 function pickAdvisorForNewLead(): string | undefined {
   try {
@@ -703,9 +690,8 @@ export async function GET(request: Request) {
     const limit = parseInt(searchParams.get("limit") || "100", 10);
     const noPagination = searchParams.get("all") === "true"; // ?all=true ile tüm veriyi al
 
-    const customers = getCustomers();
-    // Tarihe göre sırala (En yeni en üstte)
-    customers.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const customers = getAllCustomersFull();
+    // SQLite zaten createdAt DESC sıralı döndürüyor
 
     // Pagination olmadan tüm veriyi döndür
     if (noPagination) {
@@ -744,15 +730,12 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const customers = getCustomers();
 
-    // Mükerrer kontrolü: Email veya telefon eşleşmesi
+    // Mükerrer kontrolü (SQLite)
     const incomingEmail = (body.email || body.personal?.email || "").trim().toLowerCase();
-    const incomingPhone = (body.phone || body.personal?.phone || "").replace(/\D/g, ""); // Sadece rakamlar
+    const incomingPhone = (body.phone || body.personal?.phone || "").replace(/\D/g, "");
     
     // Zapier'den gelen leadFormId üzerinden kampanya/kategori eşlemesi
-    // Tercihen nested body.personal.facebook.leadFormId, ama bazı Zap konfigürasyonlarında
-    // "personal.facebook.leadFormId" düz key olarak da gelebilir; ikisini de destekleyelim.
     const flatLeadFormId = (body as any)["personal.facebook.leadFormId"];
     const incomingLeadFormId = body?.personal?.facebook?.leadFormId ?? flatLeadFormId;
     
@@ -760,32 +743,14 @@ export async function POST(request: Request) {
     const isFromZapier = body.source === "zapier" || body.source === "facebook" || !!incomingLeadFormId;
     
     if (incomingEmail || incomingPhone) {
-      const duplicate = customers.find((c: any) => {
-        const existingEmail = (c.email || c.personal?.email || "").trim().toLowerCase();
-        const existingPhone = (c.phone || c.personal?.phone || "").replace(/\D/g, "");
-        
-        // Email eşleşmesi (boş değilse)
-        if (incomingEmail && existingEmail && incomingEmail === existingEmail) {
-          return true;
-        }
-        // Telefon eşleşmesi (boş değilse ve en az 6 rakam varsa)
-        if (incomingPhone.length >= 6 && existingPhone.length >= 6) {
-          // Son 9 rakamı karşılaştır (ülke kodu farklılıklarını tolere et)
-          const incomingLast9 = incomingPhone.slice(-9);
-          const existingLast9 = existingPhone.slice(-9);
-          if (incomingLast9 === existingLast9) {
-            return true;
-          }
-        }
-        return false;
-      });
+      const duplicate = findDuplicate(incomingEmail, body.phone || body.personal?.phone || "");
 
       if (duplicate) {
         const duplicateInfo = {
           existingId: duplicate.id,
-          existingName: duplicate.name || duplicate.personal?.name,
-          existingEmail: duplicate.email || duplicate.personal?.email,
-          existingPhone: duplicate.phone || duplicate.personal?.phone,
+          existingName: duplicate.name,
+          existingEmail: duplicate.email,
+          existingPhone: duplicate.phone,
           incomingName: body.name || body.personal?.name,
           incomingEmail: incomingEmail,
           incomingPhone: body.phone || body.personal?.phone,
@@ -794,7 +759,6 @@ export async function POST(request: Request) {
         console.log("[CRM] Mükerrer müşteri tespit edildi:", JSON.stringify(duplicateInfo, null, 2));
         
         if (isFromZapier) {
-          // Zapier/lead için sadece logla, hata döndürme
           console.log("[CRM] Zapier lead mükerrer - kayıt atlandı");
           return withCors(
             NextResponse.json({ 
@@ -805,7 +769,6 @@ export async function POST(request: Request) {
             request
           );
         } else {
-          // Manuel ekleme için hata döndür
           return withCors(
             NextResponse.json({ 
               error: "duplicate", 
@@ -905,8 +868,8 @@ export async function POST(request: Request) {
       newCustomer.personal.facebook.campaignName = matchedCampaign.title;
     }
 
-    customers.push(newCustomer);
-    saveCustomers(customers);
+    // SQLite'a kaydet
+    upsertCustomer(newCustomer);
 
     // Yeni lead için otomatik WhatsApp karşılama mesajı
     // Öncelik: Etiket bazlı özel mesaj; yoksa kampanya dilinden türetilen şablon
@@ -940,13 +903,10 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json();
-    let customers = getCustomers();
+    const existingCustomer = getCustomerById(body.id);
 
-    const index = customers.findIndex((c: any) => c.id == body.id);
-
-    if (index > -1) {
-      // Mevcut müşteriyi al
-      const existingCustomer = customers[index];
+    if (existingCustomer) {
+      let updatedCustomer;
       
       // Eğer body'de advisor, service, category gibi düz alanlar varsa
       // bunları status objesine dönüştür
@@ -954,9 +914,15 @@ export async function PUT(request: Request) {
           body.category !== undefined || body.status !== undefined) {
         
         // Mevcut status objesini koru
+        // Status obje veya string olabilir — her iki durumda da advisor/category/service bilgisini koru
         const currentStatus = typeof existingCustomer.status === 'object' 
           ? existingCustomer.status 
-          : { consultant: '', category: '', services: '', status: '' };
+          : { 
+              consultant: existingCustomer.advisor || '', 
+              category: existingCustomer.category || '', 
+              services: existingCustomer.service || '', 
+              status: existingCustomer.status || '' 
+            };
         
         // Yeni status objesi oluştur
         const newStatus = {
@@ -978,22 +944,23 @@ export async function PUT(request: Request) {
         }
         
         // Güncellemeyi yap
-        customers[index] = { 
+        updatedCustomer = { 
           ...existingCustomer, 
           ...cleanBody,
           status: { ...currentStatus, ...newStatus, ...(typeof body.status === 'object' ? body.status : {}) },
-          // Düz alanları da güncelle (müşteri listesi için)
           advisor: newStatus.consultant,
           category: newStatus.category,
           service: newStatus.services
         };
       } else {
         // Normal güncelleme
-        customers[index] = { ...existingCustomer, ...body };
+        updatedCustomer = { ...existingCustomer, ...body };
       }
       
-      saveCustomers(customers);
-      return withCors(NextResponse.json(customers[index]), request);
+      // SQLite'a kaydet
+      upsertCustomer(updatedCustomer);
+
+      return withCors(NextResponse.json(updatedCustomer), request);
     } else {
       return withCors(
         NextResponse.json({ error: "Müşteri bulunamadı" }, { status: 404 }),
@@ -1016,10 +983,8 @@ export async function DELETE(request: Request) {
 
     if (!id) return withCors(NextResponse.json({ error: "ID gerekli" }, { status: 400 }), request);
 
-    let customers = getCustomers();
-    
-    // Silinecek müşteriyi bul
-    const customerToDelete = customers.find((c: any) => c.id == id);
+    // Silinecek müşteriyi bul (SQLite)
+    const customerToDelete = getCustomerById(id);
     
     if (!customerToDelete) {
       return withCors(NextResponse.json({ error: "Müşteri bulunamadı" }, { status: 404 }), request);
@@ -1032,7 +997,7 @@ export async function DELETE(request: Request) {
       deletedBy: request.headers.get('x-user-email') || 'unknown'
     };
     
-    // deleted-customers.json'a ekle
+    // deleted-customers.json'a ekle (soft delete)
     const deletedPath = path.join(process.cwd(), "deleted-customers.json");
     let deletedCustomers: any[] = [];
     
@@ -1040,16 +1005,14 @@ export async function DELETE(request: Request) {
       const deletedData = fs.readFileSync(deletedPath, "utf-8");
       deletedCustomers = JSON.parse(deletedData);
     } catch (e) {
-      // Dosya yoksa veya boşsa, boş array
       deletedCustomers = [];
     }
     
     deletedCustomers.push(deletedCustomer);
     fs.writeFileSync(deletedPath, JSON.stringify(deletedCustomers, null, 2), "utf-8");
     
-    // Ana listeden sil
-    customers = customers.filter((c: any) => c.id != id);
-    saveCustomers(customers);
+    // SQLite'dan sil
+    deleteCustomer(id);
     
     return withCors(NextResponse.json({ success: true, message: "Müşteri deleted-customers.json'a taşındı" }), request);
   } catch (error) {

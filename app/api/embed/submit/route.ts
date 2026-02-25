@@ -1,26 +1,10 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { findDuplicate, upsertCustomer } from "../../lib/sqlite-customers";
 
-const DB_PATH = path.join(process.cwd(), "db.json");
 const CAMPAIGNS_PATH = path.join(process.cwd(), "campaigns.json");
 const AUTOMATION_CATEGORIES_PATH = path.join(process.cwd(), "data", "categories.json");
-
-function getCustomers() {
-  try {
-    if (!fs.existsSync(DB_PATH)) {
-      fs.writeFileSync(DB_PATH, "[]", "utf-8");
-      return [];
-    }
-    return JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveCustomers(data: any[]) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
 
 function findCategoryByFormId(formId: string) {
   // Önce otomasyon kategorilerinde ara
@@ -79,29 +63,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const customers = getCustomers();
-
-    // Mükerrer kontrolü
+    // Mükerrer kontrolü (SQLite)
     const incomingPhone = (phone || "").replace(/\D/g, "");
     const incomingEmail = (email || "").trim().toLowerCase();
 
     if (incomingPhone.length >= 6 || incomingEmail) {
-      const duplicate = customers.find((c: any) => {
-        const existingPhone = (c.phone || c.personal?.phone || "").replace(/\D/g, "");
-        const existingEmail = (c.email || c.personal?.email || "").trim().toLowerCase();
-
-        if (incomingEmail && existingEmail && incomingEmail === existingEmail) {
-          return true;
-        }
-        if (incomingPhone.length >= 6 && existingPhone.length >= 6) {
-          const incomingLast9 = incomingPhone.slice(-9);
-          const existingLast9 = existingPhone.slice(-9);
-          if (incomingLast9 === existingLast9) {
-            return true;
-          }
-        }
-        return false;
-      });
+      const duplicate = findDuplicate(incomingEmail, phone);
 
       if (duplicate) {
         console.log("[Embed] Mükerrer müşteri:", name, phone);
@@ -184,9 +151,8 @@ export async function POST(request: Request) {
       }
     } catch (crmError) {
       console.error("[Embed] CRM API hatası, doğrudan kayıt:", crmError);
-      // CRM API başarısız olursa doğrudan kaydet
-      customers.push(newCustomer);
-      saveCustomers(customers);
+      // CRM API başarısız olursa doğrudan SQLite'a kaydet
+      upsertCustomer(newCustomer);
       return withCors(
         NextResponse.json({ success: true, id: newCustomer.id }, { status: 201 })
       );

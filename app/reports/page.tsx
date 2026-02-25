@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Box,
   Paper,
@@ -12,6 +12,11 @@ import {
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import { useI18n } from "../components/I18nProvider";
+import { ThemeModeContext } from "../components/ThemeRegistry";
+
+function trLower(s: string): string {
+  return s.replace(/İ/g, 'i').replace(/I/g, 'ı').toLowerCase();
+}
 
 const OFFER_KEYWORDS = ["Teklif"]; // Teklif statüleri
 const SALE_KEYWORDS = ["Satış"]; // Satış statüleri
@@ -19,15 +24,16 @@ const CANCEL_KEYWORDS = ["Satış İptal", "Randevu İptal", "İptal"]; // İpta
 
 function groupStatus(status: string | undefined) {
   if (!status) return "other";
-  const s = status.toLowerCase();
-  if (OFFER_KEYWORDS.some((k) => s.includes(k.toLowerCase()))) return "offer";
-  if (SALE_KEYWORDS.some((k) => s.includes(k.toLowerCase()))) return "sale";
-  if (CANCEL_KEYWORDS.some((k) => s.includes(k.toLowerCase()))) return "cancel";
+  const s = trLower(status);
+  if (CANCEL_KEYWORDS.some((k) => s.includes(trLower(k)))) return "cancel";
+  if (SALE_KEYWORDS.some((k) => s.includes(trLower(k)))) return "sale";
+  if (OFFER_KEYWORDS.some((k) => s.includes(trLower(k)))) return "offer";
   return "other";
 }
 
 export default function ReportsPage() {
   const { t } = useI18n();
+  const { mode } = useContext(ThemeModeContext);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState({ totalContacts: 0, totalSales: 0, offerRate: 0, saleRate: 0, cancelRate: 0 });
@@ -35,34 +41,22 @@ export default function ReportsPage() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/crm", { cache: "no-store" });
+      const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
       if (!res.ok) return;
-      const data = await res.json();
+      const response = await res.json();
+      const data = Array.isArray(response) ? response : (response.data || response);
 
       const byAdvisor: Record<string, { total: number; offer: number; sale: number; cancel: number }> = {};
 
       data.forEach((c: any) => {
-        // Danışman bilgisini al (status objesinden veya direkt advisor alanından)
-        let adv = "";
-        if (typeof c.status === 'object' && c.status !== null) {
-          adv = c.status.consultant || c.advisor || t("reports.advisor.defaultAdvisor");
-        } else {
-          adv = c.advisor || t("reports.advisor.defaultAdvisor");
-        }
+        const adv = (c.advisor || "").toString().trim() || t("reports.advisor.defaultAdvisor");
         
         if (!byAdvisor[adv]) {
           byAdvisor[adv] = { total: 0, offer: 0, sale: 0, cancel: 0 };
         }
         byAdvisor[adv].total += 1;
         
-        // Status değerini al
-        let statusValue = "";
-        if (typeof c.status === 'object' && c.status !== null) {
-          statusValue = c.status.status || "";
-        } else if (typeof c.status === 'string') {
-          statusValue = c.status;
-        }
-        
+        const statusValue = (c.status || "").toString();
         const g = groupStatus(statusValue);
         if (g === "offer") byAdvisor[adv].offer += 1;
         if (g === "sale") byAdvisor[adv].sale += 1;
@@ -139,8 +133,8 @@ export default function ReportsPage() {
             px: 1.5,
             py: 0.75,
             borderRadius: 999,
-            bgcolor: "#EEF2FF",
-            color: "#3730A3",
+            bgcolor: mode === "dark" ? "rgba(99,102,241,0.15)" : "#EEF2FF",
+            color: mode === "dark" ? "#A5B4FC" : "#3730A3",
             fontSize: "0.8rem",
             fontWeight: 600,
           }}
@@ -157,7 +151,7 @@ export default function ReportsPage() {
         <Chip
           label={params.value}
           size="small"
-          sx={{ bgcolor: "#EFF6FF", color: "#1D4ED8", fontWeight: 600, borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(59,130,246,0.15)" : "#EFF6FF", color: mode === "dark" ? "#93C5FD" : "#1D4ED8", fontWeight: 600, borderRadius: 999 }}
         />
       ),
     },
@@ -169,7 +163,7 @@ export default function ReportsPage() {
         <Chip
           label={params.value}
           size="small"
-          sx={{ bgcolor: "#F5F3FF", color: "#6D28D9", borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(139,92,246,0.15)" : "#F5F3FF", color: mode === "dark" ? "#C4B5FD" : "#6D28D9", borderRadius: 999 }}
         />
       ),
     },
@@ -181,7 +175,7 @@ export default function ReportsPage() {
         <Chip
           label={`${params.value}%`}
           size="small"
-          sx={{ bgcolor: "#ECFDF3", color: "#15803D", borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(16,185,129,0.15)" : "#ECFDF3", color: mode === "dark" ? "#6EE7B7" : "#15803D", borderRadius: 999 }}
         />
       ),
     },
@@ -193,7 +187,7 @@ export default function ReportsPage() {
         <Chip
           label={params.value}
           size="small"
-          sx={{ bgcolor: "#DCFCE7", color: "#166534", borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(22,163,74,0.15)" : "#DCFCE7", color: mode === "dark" ? "#4ADE80" : "#166534", borderRadius: 999 }}
         />
       ),
     },
@@ -205,7 +199,7 @@ export default function ReportsPage() {
         <Chip
           label={`${params.value}%`}
           size="small"
-          sx={{ bgcolor: "#ECFDF3", color: "#15803D", borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(16,185,129,0.15)" : "#ECFDF3", color: mode === "dark" ? "#6EE7B7" : "#15803D", borderRadius: 999 }}
         />
       ),
     },
@@ -217,7 +211,7 @@ export default function ReportsPage() {
         <Chip
           label={params.value}
           size="small"
-          sx={{ bgcolor: "#FEF2F2", color: "#B91C1C", borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(239,68,68,0.15)" : "#FEF2F2", color: mode === "dark" ? "#FCA5A5" : "#B91C1C", borderRadius: 999 }}
         />
       ),
     },
@@ -229,14 +223,14 @@ export default function ReportsPage() {
         <Chip
           label={`${params.value}%`}
           size="small"
-          sx={{ bgcolor: "#FEF2F2", color: "B91C1C", borderRadius: 999 }}
+          sx={{ bgcolor: mode === "dark" ? "rgba(239,68,68,0.15)" : "#FEF2F2", color: mode === "dark" ? "#FCA5A5" : "#B91C1C", borderRadius: 999 }}
         />
       ),
     },
   ];
 
   return (
-    <Box sx={{ width: "100%", height: "100%", p: 2.5, bgcolor: "#F3F4F6" }}>
+    <Box sx={{ width: "100%", height: "100%", p: { xs: 1.5, md: 2 }, bgcolor: mode === "dark" ? "#1E1B3E" : "#F3F4F6" }}>
       {/* ÜST ÖZET KARTLAR */}
       <Stack spacing={2} mb={3}>
         <Typography variant="h5" fontWeight="bold">
@@ -350,7 +344,6 @@ export default function ReportsPage() {
           height: 650,
           width: "100%",
           borderRadius: 2,
-          boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
           overflow: "hidden",
         }}
       >
@@ -362,22 +355,38 @@ export default function ReportsPage() {
           pageSizeOptions={[10, 25, 50]}
           sx={{
             border: "none",
+            fontSize: "0.8rem",
+            bgcolor: "transparent",
+            color: mode === "dark" ? "#FFFFFF" : "inherit",
+            "& .MuiDataGrid-main": { bgcolor: "transparent" },
+            "& .MuiDataGrid-virtualScroller": { bgcolor: "transparent" },
             "& .MuiDataGrid-columnHeaders": {
-              bgcolor: "#F9FAFB",
-              color: "#111827",
+              bgcolor: mode === "dark" ? "#2D2757" : "#F9FAFB",
+              color: mode === "dark" ? "rgba(255,255,255,0.9)" : "#374151",
               fontWeight: 700,
               letterSpacing: 0.2,
+              borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid #E5E7EB",
+            },
+            "& .MuiDataGrid-row": {
+              bgcolor: mode === "dark" ? "#252047" : "transparent",
+              "&:nth-of-type(even)": { bgcolor: mode === "dark" ? "#2A2450" : "transparent" },
+              "&:hover": { bgcolor: mode === "dark" ? "#322C5E" : "#F9FAFB" },
             },
             "& .MuiDataGrid-cell": {
-              borderBottom: "1px solid #F3F4F6",
-              borderRight: "1px solid #E5E7EB",
+              borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.1)" : "1px solid #F3F4F6",
+              borderRight: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.08)" : "1px solid #E5E7EB",
               display: "flex",
               alignItems: "center",
+              color: mode === "dark" ? "#FFFFFF" : "inherit",
             },
-            "& .MuiDataGrid-columnHeader": {
-              borderRight: "1px solid #E5E7EB",
+            "& .MuiDataGrid-columnSeparator": { display: "none" },
+            "& .MuiDataGrid-footerContainer": {
+              bgcolor: mode === "dark" ? "#252047" : "#F9FAFB",
+              borderTop: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.25)" : undefined,
+              color: mode === "dark" ? "#FFFFFF" : undefined,
             },
-            "& .MuiDataGrid-row:hover": { bgcolor: "#F9FAFB" },
+            "& .MuiTablePagination-root": { color: mode === "dark" ? "#FFFFFF" : undefined },
+            "& .MuiDataGrid-overlay": { bgcolor: mode === "dark" ? "#1E1B3E" : undefined },
           }}
         />
       </Paper>

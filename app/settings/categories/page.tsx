@@ -905,158 +905,39 @@ export default function CategoriesSettingsPage() {
               />
             </Box>
 
-            {/* Üst Kategori Seçimi */}
+            {/* Üst Kategori Grubu (Level 1) */}
+            <Box>
+              <Typography variant="body2" fontWeight={600} mb={1} sx={{ fontSize: "0.875rem" }}>
+                Üst Kategori Grubu
+              </Typography>
+              <FormControl fullWidth>
+                <Select
+                  value={form.topParent}
+                  onChange={(e) => setForm({ ...form, topParent: e.target.value as string, parentId: null })}
+                  sx={{ bgcolor: 'white' }}
+                >
+                  {TOP_PARENTS.map(tp => (
+                    <MenuItem key={tp} value={tp}>{tp}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontSize: "0.75rem" }}>
+                Kategorinin ait olduğu ana grubu seçin (ör. Meta, Konsültasyon).
+              </Typography>
+            </Box>
+
+            {/* Üst Kategori Seçimi (Level 2+) */}
             <Box>
               <Typography variant="body2" fontWeight={600} mb={1} sx={{ fontSize: "0.875rem" }}>
                 Üst Kategori (Opsiyonel)
               </Typography>
-              <FormControl fullWidth>
-                <Select
-                  open={selectOpen}
-                  onOpen={() => {
-                    setSelectOpen(true);
-                    setTempParentId(form.parentId);
-                  }}
-                  onClose={() => {
-                    setSelectOpen(false);
-                    setTempParentId(null);
-                  }}
-                  value={tempParentId || ""}
-                  onChange={(e) => {
-                    setTempParentId(e.target.value || null);
-                  }}
-                  displayEmpty
-                  sx={{
-                    bgcolor: 'white',
-                    '& .MuiSelect-select': {
-                      color: form.parentId ? 'text.primary' : 'text.secondary',
-                      fontFamily: 'monospace',
-                      fontSize: '0.875rem',
-                    }
-                  }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        maxHeight: 450,
-                        '& .MuiMenuItem-root': {
-                          fontFamily: 'monospace',
-                          fontSize: '0.875rem',
-                          whiteSpace: 'pre',
-                        }
-                      }
-                    },
-                    autoFocus: false
-                  }}
-                >
-                  <MenuItem value="">
-                    <Typography variant="body2" color="text.secondary">Üst kategori yok (En üst seviye)</Typography>
-                  </MenuItem>
-                  {buildCategoryOptions
-                    .filter(opt => !editing || opt.value !== editing.id)
-                    .map(opt => {
-                      if (opt.isDivider) {
-                        return (
-                          <MenuItem 
-                            key={opt.value}
-                            autoFocus={false}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const newExpanded = new Set(expandedGroups);
-                              if (newExpanded.has(opt.topParent)) {
-                                newExpanded.delete(opt.topParent);
-                              } else {
-                                newExpanded.add(opt.topParent);
-                              }
-                              setExpandedGroups(newExpanded);
-                            }}
-                            sx={{ 
-                              fontWeight: 700, 
-                              bgcolor: '#f5f5f5',
-                              color: '#1976d2',
-                              fontSize: '0.8rem',
-                              py: 0.5,
-                              borderTop: '1px solid #e0e0e0',
-                              borderBottom: '1px solid #e0e0e0',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                bgcolor: '#e3f2fd'
-                              },
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 0.5
-                            }}
-                          >
-                            {opt.isExpanded ? '▼' : '▶'} {opt.label}
-                          </MenuItem>
-                        );
-                      }
-                      return (
-                        <MenuItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </MenuItem>
-                      );
-                    })}
-                  
-                  {/* Confirmation Button */}
-                  <MenuItem
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      
-                      // Apply the temporary selection
-                      if (tempParentId) {
-                        const selectedCat = categories.find(c => c.id === tempParentId);
-                        if (selectedCat) {
-                          setForm({ ...form, parentId: tempParentId, topParent: selectedCat.topParent });
-                        }
-                      } else {
-                        setForm({ ...form, parentId: null });
-                      }
-                      
-                      setSelectOpen(false);
-                      setTempParentId(null);
-                    }}
-                    sx={{
-                      position: 'sticky',
-                      bottom: 0,
-                      bgcolor: '#f5f5f5',
-                      borderTop: '1px solid #e0e0e0',
-                      justifyContent: 'flex-end',
-                      py: 0.75,
-                      px: 2,
-                      '&:hover': {
-                        bgcolor: '#f5f5f5'
-                      }
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        bgcolor: '#4caf50',
-                        color: 'white',
-                        px: 2,
-                        py: 0.75,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        '&:hover': {
-                          bgcolor: '#45a049'
-                        }
-                      }}
-                    >
-                      ✓ Onayla
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
+              <TreeSelect
+                categories={categories}
+                topParent={form.topParent}
+                value={form.parentId}
+                onChange={(id) => setForm({ ...form, parentId: id })}
+                excludeId={editing?.id}
+              />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontSize: "0.75rem" }}>
                 Boş bırakırsanız, kategori en üst seviyede oluşturulur.
               </Typography>

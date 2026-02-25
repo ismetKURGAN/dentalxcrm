@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getCustomersWithActiveReminders, upsertCustomer } from "../lib/sqlite-customers";
 
 // Uygulama içi API çağrıları için temel URL
 const INTERNAL_BASE_URL =
@@ -13,7 +14,6 @@ const INTERNAL_BASE_URL =
 // 1. Waha (WhatsApp API) için istekleri, mevcut Next.js proxy'si üzerinden geçiyoruz
 // (app/api/waha/[...path]/route.ts). Böylece token ve bağlantı ayarları tek yerde yönetilir.
 
-const DB_PATH = path.join(process.cwd(), "db.json");
 const USERS_PATH = path.join(process.cwd(), "users.json");
 
 function getAdminWhatsappSession(): string {
@@ -49,17 +49,14 @@ function getConsultantPhone(consultantName: string): string | null {
 
 export async function GET() {
   try {
-    // 1. Veritabanını Oku
-    if (!fs.existsSync(DB_PATH)) return NextResponse.json({ message: "Veritabanı yok" });
-    const fileData = fs.readFileSync(DB_PATH, "utf-8");
-    const customers = JSON.parse(fileData);
+    // 1. Sadece aktif hatırlatıcısı olan müşterileri oku (SQLite)
+    const customers = getCustomersWithActiveReminders();
 
     const now = new Date();
-    let updated = false;
     const logs: string[] = [];
 
     // 2. Müşterileri Tara
-    const updatedCustomers = customers.map((c: any) => {
+    for (const c of customers) {
       // Hatırlatıcı kontrolü:
       // - Reminder objesi var mı?
       // - Açık mı (enabled)?
@@ -74,7 +71,7 @@ export async function GET() {
       ) {
         const reminderTime = new Date(c.reminder.datetime);
         
-        // Eğer şu anki zaman, hatırlatma zamanından büyük veya eşitse (veya 1-2 dakika fark varsa)
+        // Eğer şu anki zaman, hatırlatma zamanından büyük veya eşitse
         if (now >= reminderTime) {
           // Danışmana gidecek hatırlatma (müşteriye değil)
           const customerName = c.name || c.personal?.name || "Bilinmiyor";
@@ -85,10 +82,9 @@ export async function GET() {
 
           if (rawPhone) {
             const targetPhone = normalizePhone(rawPhone);
-            const session = getAdminWhatsappSession(); // Admin session kullan
+            const session = getAdminWhatsappSession();
 
             if (targetPhone) {
-              // --- WHATSAPP GÖNDERME ---
               const message = `🔔 *HATIRLATMA*\n\n` +
                 `🧑‍💼 Danışman: ${consultantName}\n` +
                 `👤 Müşteri: ${customerName}\n` +
@@ -96,9 +92,7 @@ export async function GET() {
                 `📝 Not: ${c.reminder.notes || "-"}\n` +
                 `⏰ Saat: ${new Date(c.reminder.datetime).toLocaleTimeString('tr-TR')}`;
 
-              // Admin session üzerinden danışmana mesaj gönder
               sendWhatsApp(session, targetPhone, message);
-
               logs.push(`Hatırlatma gönderildi (admin session -> ${consultantName}): ${targetPhone}`);
             } else {
               logs.push(`Danışman telefonu geçersiz: ${consultantName}`);
@@ -107,24 +101,14 @@ export async function GET() {
             logs.push(`Danışman telefonu bulunamadı: ${consultantName}`);
           }
 
-          // 3. "Gönderildi" Olarak İşaretle (Tekrar göndermemek için)
-          // 'sent: true' özelliğini ekliyoruz
-          updated = true;
-          return {
+          // 3. "Gönderildi" Olarak İşaretle — SQLite'a kaydet
+          const updatedCustomer = {
             ...c,
-            reminder: {
-              ...c.reminder,
-              sent: true // Bu işaret sayesinde bir daha gönderilmez
-            }
+            reminder: { ...c.reminder, sent: true }
           };
+          upsertCustomer(updatedCustomer);
         }
       }
-      return c;
-    });
-
-    // 3. Değişiklik Varsa Kaydet
-    if (updated) {
-      fs.writeFileSync(DB_PATH, JSON.stringify(updatedCustomers, null, 2), "utf-8");
     }
 
     return NextResponse.json({ success: true, logs });

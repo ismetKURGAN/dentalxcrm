@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -49,6 +49,7 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
 import { useI18n, translateValue } from "../components/I18nProvider";
 import { useAuth } from "../components/AuthProvider";
+import { ThemeModeContext } from "../components/ThemeRegistry";
 
 // =================== TAM LİSTELER ===================
 
@@ -120,15 +121,15 @@ const CRM_STATUSES = [
 ];
 
 // Renk Fonksiyonu
-const getStatusColor = (status: any) => {
+const getStatusColor = (status: any, isDark = false) => {
   // Status bir obje ise string'e çevir
   const statusStr = typeof status === 'string' ? status : (status?.status || String(status || ''));
   
-  if (statusStr?.includes("Olumlu") || statusStr?.includes("Randevu") || statusStr?.includes("Satış")) return { bg: "#ECFDF3", color: "#16A34A" };
-  if (statusStr?.includes("Teklif")) return { bg: "#FFF3E0", color: "#EF6C00" };
-  if (statusStr?.includes("Olumsuz") || statusStr?.includes("İptal") || statusStr?.includes("Spam")) return { bg: "#FEF2F2", color: "#DC2626" };
-  if (statusStr?.includes("Yeni")) return { bg: "#E3F2FD", color: "#1E88E5" };
-  return { bg: "#F5F5F5", color: "#616161" };
+  if (statusStr?.includes("Olumlu") || statusStr?.includes("Randevu") || statusStr?.includes("Satış")) return { bg: isDark ? "rgba(22, 163, 74, 0.15)" : "#ECFDF3", color: isDark ? "#4ADE80" : "#16A34A" };
+  if (statusStr?.includes("Teklif")) return { bg: isDark ? "rgba(239, 108, 0, 0.15)" : "#FFF3E0", color: isDark ? "#FB923C" : "#EF6C00" };
+  if (statusStr?.includes("Olumsuz") || statusStr?.includes("İptal") || statusStr?.includes("Spam")) return { bg: isDark ? "rgba(220, 38, 38, 0.15)" : "#FEF2F2", color: isDark ? "#F87171" : "#DC2626" };
+  if (statusStr?.includes("Yeni")) return { bg: isDark ? "rgba(30, 136, 229, 0.15)" : "#E3F2FD", color: isDark ? "#60A5FA" : "#1E88E5" };
+  return { bg: isDark ? "rgba(255,255,255,0.05)" : "#F5F5F5", color: isDark ? "rgba(255,255,255,0.6)" : "#616161" };
 };
 
 export default function CustomersPage() {
@@ -136,6 +137,7 @@ export default function CustomersPage() {
   const { t, language } = useI18n();
   const { user } = useAuth();
   const theme = useTheme();
+  const { mode } = useContext(ThemeModeContext);
   const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -207,6 +209,7 @@ export default function CustomersPage() {
   
   // Arama state'i
   const [searchQuery, setSearchQuery] = useState("");
+  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Pagination state'leri
   const [page, setPage] = useState(1);
@@ -277,11 +280,48 @@ export default function CustomersPage() {
   };
 
   // --- Verileri Çek (Pagination Destekli) ---
-  const fetchCustomers = async (pageNum: number = page) => {
+  const fetchCustomers = async (pageNum: number = page, search?: string, filters?: typeof advancedFilters) => {
     try {
       if (!isMountedRef.current) return;
       setLoading(true);
-      const res = await fetch(`/api/crm-sqlite?page=${pageNum}&limit=${pageSize}`, { cache: "no-store" });
+      let url = `/api/crm-sqlite?page=${pageNum}&limit=${pageSize}`;
+      const searchTerm = search !== undefined ? search : searchQuery;
+      if (searchTerm.trim()) {
+        url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+      }
+      
+      // Rol bazlı danışman filtresi (server-side)
+      const roles = Array.isArray(user?.roles) ? user.roles : [];
+      if ((roles.includes("Danışman") || roles.includes("Acenta")) && !roles.includes("Admin") && !roles.includes("Yönetici")) {
+        if (user?.name) {
+          url += `&advisor=${encodeURIComponent(user.name)}`;
+        }
+      }
+      
+      // Gelişmiş filtreleri server-side'a gönder
+      const af = filters || advancedFilters;
+      if (af.statuses.length > 0) {
+        url += `&statuses=${encodeURIComponent(af.statuses.join(','))}`;
+        if (af.statusOperator === "içinde değil") url += `&statusOp=notIn`;
+      }
+      if (af.advisors.length > 0) {
+        url += `&advisors=${encodeURIComponent(af.advisors.join(','))}`;
+        if (af.advisorOperator === "içinde değil") url += `&advisorOp=notIn`;
+      }
+      if (af.categories.length > 0) {
+        url += `&categories=${encodeURIComponent(af.categories.join(','))}`;
+        if (af.categoryOperator === "içinde değil") url += `&categoryOp=notIn`;
+      }
+      if (af.services.length > 0) {
+        url += `&services=${encodeURIComponent(af.services.join(','))}`;
+        if (af.serviceOperator === "içinde değil") url += `&serviceOp=notIn`;
+      }
+      if (af.countries.length > 0) {
+        url += `&countries=${encodeURIComponent(af.countries.join(','))}`;
+        if (af.countryOperator === "içinde değil") url += `&countryOp=notIn`;
+      }
+      
+      const res = await fetch(url, { cache: "no-store" });
       if (res.ok) {
         const response = await res.json();
         const data = response.data || response; // Yeni format: {data, pagination} veya eski format: array
@@ -300,18 +340,17 @@ export default function CustomersPage() {
         const formatted = filteredData.map((c: any) => {
           const createdDate = new Date(c.createdAt);
           
-          // Status bilgisini düzelt - hem eski (string) hem yeni (object) formatı destekle
-          let advisor = '';
-          let status = '';
-          let service = '';
+          // API'den zaten düz field'lar geliyor (advisor, status, service)
+          // Ama eski kaynaklarla uyumluluk için object formatını da destekle
+          let advisor = c.advisor || ''; // API'den direkt geliyor
+          let status = c.status || '';
+          let service = c.service || '';
           
-          if (typeof c.status === 'object' && c.status !== null) {
+          // Eğer hala obje formatında veri varsa (eski sistem)
+          if (typeof c.status === 'object' && c.status !== null && !c.advisor) {
             advisor = c.status.consultant || '';
             status = c.status.status || '';
             service = c.status.services || c.service || '';
-          } else if (typeof c.status === 'string') {
-            status = c.status;
-            service = c.service || '';
           }
           
           return {
@@ -368,30 +407,23 @@ export default function CustomersPage() {
 
     fetchAdvisors();
 
-    // Kategori listesi: categories API'den çek (hiyerarşik yapıyı düzleştir)
+    // Kategori listesi: categories API + campaigns fallback
     const fetchCategories = async () => {
       try {
-        const res = await fetch("/api/categories", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = await res.json();
-        
-        // Hiyerarşik yapıyı düz listeye çevir
-        const flattenCategories = (cats: any[], prefix = ''): string[] => {
-          let result: string[] = [];
-          for (const cat of cats) {
-            const title = cat.title || cat.name || '';
-            if (title) {
-              result.push(title);
-            }
-            if (cat.children && cat.children.length > 0) {
-              result = result.concat(flattenCategories(cat.children, title));
-            }
-          }
-          return result;
-        };
-        
-        const names = flattenCategories(data || []);
-        setCategoryOptions(names);
+        const catNames = new Set<string>();
+        const [catRes, campRes] = await Promise.all([
+          fetch("/api/categories", { cache: "no-store" }),
+          fetch("/api/campaigns", { cache: "no-store" }),
+        ]);
+        if (catRes.ok) {
+          const cats = await catRes.json();
+          (cats as any[]).forEach((c: any) => { if (c.name) catNames.add(c.name); });
+        }
+        if (campRes.ok) {
+          const camps = await campRes.json();
+          (camps as any[]).forEach((c: any) => { const n = c.name || c.title; if (n) catNames.add(n); });
+        }
+        setCategoryOptions(Array.from(catNames).sort((a, b) => a.localeCompare(b)));
       } catch (e) {
         console.error("Kategori listesi yüklenemedi", e);
       }
@@ -468,7 +500,7 @@ export default function CustomersPage() {
         updateData[field] = value;
       }
       
-      const res = await fetch("/api/crm-sqlite", {
+      const res = await fetch("/api/crm", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updateData),
@@ -513,7 +545,7 @@ export default function CustomersPage() {
       delete (customerData as any).service;
       delete (customerData as any).registerDate;
       
-      const res = await fetch("/api/crm-sqlite", {
+      const res = await fetch("/api/crm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(customerData),
@@ -541,7 +573,7 @@ export default function CustomersPage() {
   const handleDelete = async (id: number) => {
     if (!confirm(t("customers.confirm.delete"))) return;
     try {
-      const res = await fetch(`/api/crm-sqlite?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/crm?id=${id}`, { method: "DELETE" });
       if (res.ok) {
         setRows((prev) => prev.filter((row) => row.id !== id));
         setSnackbar({ open: true, message: t("customers.snackbar.deleted"), severity: "success" });
@@ -583,13 +615,13 @@ export default function CustomersPage() {
         
         return (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: "#111827" }}>
+            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: mode === "dark" ? "#FFFFFF" : "#111827" }}>
               {`${day}.${month}.${year}`}
             </Typography>
-            <Typography sx={{ fontSize: "0.8rem", color: "#6b7280" }}>
+            <Typography sx={{ fontSize: "0.8rem", color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6b7280" }}>
               -
             </Typography>
-            <Typography sx={{ fontSize: "0.8rem", color: "#6b7280" }}>
+            <Typography sx={{ fontSize: "0.8rem", color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6b7280" }}>
               {`${hours}:${minutes}`}
             </Typography>
           </Box>
@@ -606,7 +638,7 @@ export default function CustomersPage() {
                 onChange={(e) => handleInlineUpdate(params.row.id, "advisor", e.target.value)}
                 disableUnderline
                 displayEmpty
-                sx={{ fontSize: "0.875rem", bgcolor: "white", borderRadius: 1, px: 1 }}
+                sx={{ fontSize: "0.875rem", bgcolor: mode === "dark" ? "transparent" : "white", color: mode === "dark" ? "#FFFFFF" : "inherit", borderRadius: 1, px: 1 }}
             >
                 <MenuItem value="" disabled>Seçiniz</MenuItem>
                 {advisorOptions.map((u) => (
@@ -626,9 +658,9 @@ export default function CustomersPage() {
             onClick={() => router.push(`/customers/${params.row.id}`)}
             sx={{ 
                 fontWeight: 500, 
-                color: '#1f2937', 
+                color: mode === "dark" ? "#FFFFFF" : '#1f2937', 
                 cursor: 'pointer',
-                '&:hover': { textDecoration: 'underline', color: '#2563eb' }
+                '&:hover': { textDecoration: 'underline', color: '#9F67FF' }
             }}
         >
             {params.value}
@@ -641,7 +673,7 @@ export default function CustomersPage() {
     {
         field: "category", headerName: t("customers.columns.category"), width: 220, flex: 1,
         renderCell: (params) => (
-          <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, px: 1, py: 0.5, borderRadius: 2, bgcolor: "#F3F4FF", fontSize: "0.75rem", color: "#6366F1" }}>
+          <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, px: 1, py: 0.5, borderRadius: 2, bgcolor: mode === "dark" ? "rgba(99, 102, 241, 0.15)" : "#F3F4FF", fontSize: "0.75rem", color: mode === "dark" ? "#A5B4FC" : "#6366F1" }}>
             <CategoryIcon sx={{ fontSize: 14 }} />
             {params.value || "Genel"}
           </Box>
@@ -651,7 +683,7 @@ export default function CustomersPage() {
     {
       field: "status", headerName: t("customers.columns.status"), width: 180,
       renderCell: (params) => {
-        const style = getStatusColor(params.value || "");
+        const style = getStatusColor(params.value || "", mode === "dark");
         return (
             <Autocomplete
                 size="small"
@@ -684,9 +716,12 @@ export default function CustomersPage() {
                 ListboxProps={{
                   sx: {
                     maxHeight: "400px",
+                    bgcolor: mode === "dark" ? "#2A2550" : undefined,
                     "& .MuiAutocomplete-option": {
                       fontSize: "0.7rem",
-                      borderBottom: "1px solid #F3F4F6",
+                      color: mode === "dark" ? "#FFFFFF" : undefined,
+                      borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.15)" : "1px solid #F3F4F6",
+                      "&:hover": { bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.15)" : undefined },
                       "&:last-child": {
                         borderBottom: "none"
                       }
@@ -721,14 +756,14 @@ export default function CustomersPage() {
                 }}
                 sx={{ 
                   fontSize: "0.7rem",
-                  color: params.value ? "#8B5CF6" : "#9CA3AF",
+                  color: params.value ? (mode === "dark" ? "#C4B5FD" : "#8B5CF6") : (mode === "dark" ? "rgba(255,255,255,0.4)" : "#9CA3AF"),
                   "& input": { 
                     fontSize: "0.7rem",
-                    color: params.value ? "#8B5CF6" : "#9CA3AF",
+                    color: params.value ? (mode === "dark" ? "#C4B5FD" : "#8B5CF6") : (mode === "dark" ? "rgba(255,255,255,0.4)" : "#9CA3AF"),
                     fontWeight: 500
                   },
                   "& input::placeholder": {
-                    color: "#9CA3AF",
+                    color: mode === "dark" ? "rgba(255,255,255,0.4)" : "#9CA3AF",
                     opacity: 1
                   }
                 }}
@@ -737,9 +772,12 @@ export default function CustomersPage() {
             ListboxProps={{
               sx: {
                 maxHeight: "400px",
+                bgcolor: mode === "dark" ? "#2A2550" : undefined,
                 "& .MuiAutocomplete-option": {
                   fontSize: "0.7rem",
-                  borderBottom: "1px solid #F3F4F6",
+                  color: mode === "dark" ? "#FFFFFF" : undefined,
+                  borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.15)" : "1px solid #F3F4F6",
+                  "&:hover": { bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.15)" : undefined },
                   "&:last-child": {
                     borderBottom: "none"
                   }
@@ -781,34 +819,13 @@ export default function CustomersPage() {
   ];
 
   const filteredRows = useMemo(() => {
-    if (!user) return rows;
-    const roles = Array.isArray(user.roles) ? user.roles : [];
+    // Kategoriler, danışmanlar, durumlar, hizmetler, ülkeler artık server-side filtreleniyor
+    // Rol bazlı danışman filtresi de server-side'a taşındı
+    // Burada sadece boolean ve tarih filtreleri (henüz server-side'da olmayan) uygulanıyor
     
     let filtered = rows;
     
-    // Rol bazlı filtreleme
-    if ((roles.includes("Danışman") || roles.includes("Acenta")) && !roles.includes("Admin") && !roles.includes("Yönetici")) {
-      filtered = filtered.filter((r) => r.advisor === user.name);
-    }
-    
-    // Arama filtresi (isim, telefon, email)
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((row) => {
-        const name = String(row.name || "").toLowerCase();
-        const phone = String(row.phone || "").toLowerCase();
-        const email = String(row.email || "").toLowerCase();
-        return name.includes(query) || phone.includes(query) || email.includes(query);
-      });
-    }
-    
-    // Gelişmiş filtreler
-    const hasActiveFilters = 
-      advancedFilters.categories.length > 0 ||
-      advancedFilters.advisors.length > 0 ||
-      advancedFilters.statuses.length > 0 ||
-      advancedFilters.services.length > 0 ||
-      advancedFilters.countries.length > 0 ||
+    const hasClientFilters = 
       advancedFilters.trustpilot !== null ||
       advancedFilters.googleReview !== null ||
       advancedFilters.satisfactionSurvey !== null ||
@@ -821,44 +838,9 @@ export default function CustomersPage() {
       advancedFilters.editDateFrom ||
       advancedFilters.editDateTo;
 
-    if (hasActiveFilters) {
+    if (hasClientFilters) {
       filtered = filtered.filter((row) => {
         const conditions: boolean[] = [];
-
-        // Kategori filtresi
-        if (advancedFilters.categories.length > 0) {
-          const rowCategory = String(row.category || "").toLowerCase();
-          const match = advancedFilters.categories.some(c => rowCategory.includes(c.toLowerCase()));
-          conditions.push(advancedFilters.categoryOperator === "içinde" ? match : !match);
-        }
-
-        // Danışman filtresi
-        if (advancedFilters.advisors.length > 0) {
-          const rowAdvisor = String(row.advisor || "").toLowerCase();
-          const match = advancedFilters.advisors.some(a => rowAdvisor === a.toLowerCase());
-          conditions.push(advancedFilters.advisorOperator === "içinde" ? match : !match);
-        }
-
-        // Durum filtresi
-        if (advancedFilters.statuses.length > 0) {
-          const rowStatus = String(row.status || "").toLowerCase();
-          const match = advancedFilters.statuses.some(s => rowStatus === s.toLowerCase());
-          conditions.push(advancedFilters.statusOperator === "içinde" ? match : !match);
-        }
-
-        // Hizmet filtresi
-        if (advancedFilters.services.length > 0) {
-          const rowService = String(row.service || "").toLowerCase();
-          const match = advancedFilters.services.some(s => rowService === s.toLowerCase());
-          conditions.push(advancedFilters.serviceOperator === "içinde" ? match : !match);
-        }
-
-        // Ülke filtresi
-        if (advancedFilters.countries.length > 0) {
-          const rowCountry = String(row.country || "").toLowerCase();
-          const match = advancedFilters.countries.some(c => rowCountry === c.toLowerCase());
-          conditions.push(advancedFilters.countryOperator === "içinde" ? match : !match);
-        }
 
         // Boolean filtreler (Evet/Hayır)
         if (advancedFilters.trustpilot !== null) {
@@ -887,7 +869,6 @@ export default function CustomersPage() {
         const rowSalesDate = row.salesDate ? new Date(row.salesDate) : null;
         const rowUpdatedAt = row.updatedAt ? new Date(row.updatedAt) : null;
 
-        // Kayıt Tarihi
         if (advancedFilters.registerDateFrom) {
           const fromDate = new Date(advancedFilters.registerDateFrom);
           conditions.push(rowCreatedAt ? rowCreatedAt >= fromDate : false);
@@ -897,8 +878,6 @@ export default function CustomersPage() {
           toDate.setHours(23, 59, 59, 999);
           conditions.push(rowCreatedAt ? rowCreatedAt <= toDate : false);
         }
-
-        // Satış Tarihi
         if (advancedFilters.salesDateFrom) {
           const fromDate = new Date(advancedFilters.salesDateFrom);
           conditions.push(rowSalesDate ? rowSalesDate >= fromDate : false);
@@ -908,8 +887,6 @@ export default function CustomersPage() {
           toDate.setHours(23, 59, 59, 999);
           conditions.push(rowSalesDate ? rowSalesDate <= toDate : false);
         }
-
-        // Düzenleme Tarihi
         if (advancedFilters.editDateFrom) {
           const fromDate = new Date(advancedFilters.editDateFrom);
           conditions.push(rowUpdatedAt ? rowUpdatedAt >= fromDate : false);
@@ -920,7 +897,6 @@ export default function CustomersPage() {
           conditions.push(rowUpdatedAt ? rowUpdatedAt <= toDate : false);
         }
 
-        // VE / VEYA mantığı
         if (conditions.length === 0) return true;
         return filterLogic === "VE" 
           ? conditions.every(c => c) 
@@ -929,7 +905,7 @@ export default function CustomersPage() {
     }
     
     return filtered;
-  }, [rows, user, advancedFilters, searchQuery, filterLogic]);
+  }, [rows, advancedFilters, filterLogic]);
 
   return (
     <Box
@@ -937,7 +913,7 @@ export default function CustomersPage() {
         width: "100%",
         height: "100%",
         p: { xs: 1.5, md: 2 },
-        bgcolor: "#F3F4F6",
+        bgcolor: mode === "dark" ? "#1E1B3E" : "#F3F4F6",
       }}
     >
       
@@ -991,10 +967,19 @@ export default function CustomersPage() {
           placeholder={t("customers.search.placeholder")} 
           size="small"
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={(e) => {
+            const val = e.target.value;
+            setSearchQuery(val);
+            // Debounce: 400ms sonra server-side arama yap
+            if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+            searchTimerRef.current = setTimeout(() => {
+              setPage(1);
+              fetchCustomers(1, val);
+            }, 400);
+          }}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon /></InputAdornment> }} 
           sx={{
-            bgcolor: '#F9FAFB',
+            bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : '#F9FAFB',
             borderRadius: 1,
             width: { xs: '100%', sm: 260 },
           }}
@@ -1033,16 +1018,52 @@ export default function CustomersPage() {
             sx={{
               border: "none",
               fontSize: "0.8rem",
-              "& .MuiDataGrid-columnHeaders": { bgcolor: "#F9FAFB", color: "#374151", fontWeight: 600, fontSize: "0.75rem", borderBottom: "1px solid #E5E7EB" },
+              bgcolor: "transparent",
+              color: mode === "dark" ? "#FFFFFF" : "inherit",
+              "& .MuiDataGrid-main": { bgcolor: "transparent" },
+              "& .MuiDataGrid-virtualScroller": { bgcolor: "transparent" },
+              "& .MuiDataGrid-columnHeaders": {
+                bgcolor: mode === "dark" ? "#2D2757" : "#F9FAFB",
+                color: mode === "dark" ? "rgba(255,255,255,0.9)" : "#374151",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid #E5E7EB",
+              },
+              "& .MuiDataGrid-row": {
+                bgcolor: mode === "dark" ? "#252047" : "transparent",
+                "&:nth-of-type(even)": { bgcolor: mode === "dark" ? "#2A2450" : "transparent" },
+                "&:hover": { bgcolor: mode === "dark" ? "#322C5E" : "#F9FAFB" },
+                "&.Mui-selected": { bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.2)" : undefined },
+              },
               "& .MuiDataGrid-cell": { 
-                borderBottom: "1px solid #F3F4F6", 
-                borderRight: "1px solid #F3F4F6",
+                borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.1)" : "1px solid #F3F4F6", 
+                borderRight: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.08)" : "1px solid #F3F4F6",
                 display: 'flex', 
                 alignItems: 'center', 
-                fontSize: "0.8rem" 
+                fontSize: "0.8rem",
+                color: mode === "dark" ? "#FFFFFF" : "inherit",
               },
-              "& .MuiDataGrid-row:hover": { bgcolor: "#F9FAFB" },
               "& .MuiDataGrid-columnSeparator": { display: "none" },
+              "& .MuiDataGrid-footerContainer": {
+                bgcolor: mode === "dark" ? "#252047" : undefined,
+                borderTop: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.25)" : undefined,
+                color: mode === "dark" ? "#FFFFFF" : undefined,
+              },
+              "& .MuiTablePagination-root": { color: mode === "dark" ? "#FFFFFF" : undefined },
+              "& .MuiTablePagination-selectIcon": { color: mode === "dark" ? "rgba(255,255,255,0.7)" : undefined },
+              "& .MuiCheckbox-root": { color: mode === "dark" ? "rgba(255,255,255,0.5)" : undefined },
+              "& .MuiDataGrid-overlay": { bgcolor: mode === "dark" ? "#1E1B3E" : undefined },
+              // Tüm iç select/input/autocomplete beyazlıklarını kaldır
+              ...(mode === "dark" && {
+                "& .MuiSelect-select": { color: "#FFFFFF" },
+                "& .MuiInputBase-root": { color: "#FFFFFF", bgcolor: "transparent" },
+                "& .MuiInput-root": { color: "#FFFFFF" },
+                "& .MuiInput-root:before": { borderColor: "rgba(124, 58, 237, 0.2)" },
+                "& .MuiInput-root:hover:not(.Mui-disabled):before": { borderColor: "rgba(124, 58, 237, 0.4)" },
+                "& .MuiAutocomplete-inputRoot": { color: "#FFFFFF" },
+                "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.6)" },
+                "& .MuiDataGrid-scrollbar": { "&::-webkit-scrollbar-thumb": { bgcolor: "rgba(124, 58, 237, 0.3)" } },
+              }),
             }}
           />
         </Paper>
@@ -1085,14 +1106,14 @@ export default function CustomersPage() {
             </Paper>
           ) : (
             filteredRows.slice(0, pageSize).map((row) => {
-              const statusColors = getStatusColor(row.status);
+              const statusColors = getStatusColor(row.status, mode === "dark");
               return (
                 <Card 
                   key={row.id}
                   sx={{ 
                     borderRadius: 2,
-                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-                    '&:active': { bgcolor: '#F9FAFB' }
+                    boxShadow: mode === 'dark' ? '0 1px 3px 0 rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                    '&:active': { bgcolor: mode === 'dark' ? 'rgba(124, 58, 237, 0.08)' : '#F9FAFB' }
                   }}
                   onClick={() => router.push(`/customers/${row.id}`)}
                 >
@@ -1203,23 +1224,45 @@ export default function CustomersPage() {
         </Box>
       )}
 
-      {/* MODAL - Yeni Müşteri Ekle */}
+      {/* MODAL - Yeni Müşteri Ekle (Sağ Panel) */}
       <Dialog 
         open={open} 
         onClose={() => setOpen(false)} 
-        maxWidth="sm" 
-        fullWidth
+        maxWidth={false}
+        fullWidth={false}
         PaperProps={{
-          sx: { borderRadius: 2 }
+          sx: {
+            position: 'fixed',
+            right: 0,
+            top: 0,
+            bottom: 0,
+            m: 0,
+            width: { xs: '100%', sm: 480, md: 520 },
+            maxWidth: '100vw',
+            height: '100vh',
+            maxHeight: '100vh',
+            borderRadius: 0,
+            borderLeft: mode === 'dark' ? '1px solid rgba(124, 58, 237, 0.2)' : '1px solid rgba(0,0,0,0.08)',
+          }
+        }}
+        slotProps={{
+          backdrop: {
+            sx: { backgroundColor: 'rgba(0,0,0,0.3)' }
+          }
         }}
       >
-        <DialogTitle sx={{ pb: 0.5 }}>
-          <Typography variant="h6" fontWeight={600}>Yeni Müşteri Ekle</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Yeni müşteriyi burada oluşturun. İşlem tamamlandığında kaydet'e tıklayın.
-          </Typography>
+        <DialogTitle sx={{ pb: 0.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box>
+            <Typography variant="h6" fontWeight={600}>Yeni Müşteri Ekle</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Yeni müşteriyi burada oluşturun. İşlem tamamlandığında kaydet'e tıklayın.
+            </Typography>
+          </Box>
+          <IconButton onClick={() => setOpen(false)} size="small">
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
+        <DialogContent sx={{ pt: 2, overflowY: 'auto' }}>
           <Stack spacing={2.5}>
             {/* Ad Soyad */}
             <Box>
@@ -1759,6 +1802,8 @@ export default function CustomersPage() {
               setFilterLogic("VE");
               setTempFilterLogic("VE");
               setFilterDialogOpen(false);
+              // Filtresiz yeniden çek
+              fetchCustomers(1, undefined, emptyFilters);
             }}
             sx={{ textTransform: "none" }}
           >
@@ -1766,9 +1811,12 @@ export default function CustomersPage() {
           </Button>
           <Button 
             onClick={() => {
-              setAdvancedFilters({...tempFilters});
+              const newFilters = {...tempFilters};
+              setAdvancedFilters(newFilters);
               setFilterLogic(tempFilterLogic);
               setFilterDialogOpen(false);
+              // Server-side filtre ile yeniden çek
+              fetchCustomers(1, undefined, newFilters);
             }}
             variant="contained"
             sx={{ textTransform: "none" }}

@@ -336,8 +336,21 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     const fetchData = async () => {
       if (!(params as any)?.id) return;
       try {
-        // Kullanıcıları çek ve mevcut kullanıcının rolünü belirle
-        const usersRes = await fetch("/api/users");
+        // Tüm API çağrılarını paralel yap (performans için)
+        const currentUserEmail = typeof window !== 'undefined' ? localStorage.getItem("userEmail") : null;
+        
+        const [usersRes, campaignsRes, categoriesRes, statusesRes, doctorsRes, segmentsRes, hotelsRes, customerRes] = await Promise.all([
+          fetch("/api/users"),
+          fetch("/api/campaigns"),
+          fetch("/api/categories", { cache: "no-store" }),
+          fetch("/api/statuses", { cache: "no-store" }),
+          fetch("/api/doctors"),
+          fetch("/api/segments"),
+          fetch("/api/hotels"),
+          fetch(`/api/crm-sqlite?id=${(params as any).id}`, { cache: "no-store" }),
+        ]);
+
+        // Kullanıcılar
         if (usersRes.ok) {
           const users = await usersRes.json();
           const advisors = users
@@ -346,8 +359,6 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             .filter(Boolean);
           setAdvisorOptions(advisors);
           
-          // Mevcut kullanıcının rolünü belirle (localStorage'dan email al)
-          const currentUserEmail = localStorage.getItem("userEmail");
           const currentUser = users.find((u: any) => u.email === currentUserEmail);
           if (currentUser && Array.isArray(currentUser.roles)) {
             setUserRoles(currentUser.roles);
@@ -359,42 +370,46 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           }
         }
         
-        // Kategorileri çek
-        const campaignsRes = await fetch("/api/campaigns");
-        if (campaignsRes.ok) {
-          const campaigns = await campaignsRes.json();
-          const categories = campaigns.map((c: any) => c.name).filter(Boolean);
-          setCategoryOptions(categories);
+        // Kategoriler (categories API + campaigns fallback)
+        {
+          const catNames = new Set<string>();
+          if (categoriesRes.ok) {
+            const cats = await categoriesRes.json();
+            (cats as any[]).forEach((c: any) => { if (c.name) catNames.add(c.name); });
+          }
+          if (campaignsRes.ok) {
+            const camps = await campaignsRes.json();
+            (camps as any[]).forEach((c: any) => { 
+              const n = c.name || c.title;
+              if (n) catNames.add(n); 
+            });
+          }
+          setCategoryOptions(Array.from(catNames).sort((a, b) => a.localeCompare(b)));
         }
         
-        // Hizmetleri ayarla (sabit listeden)
+        // Hizmetler
         setServiceOptions(CRM_SERVICES);
         
-        // Durumları API'den çek
-        const statusesRes = await fetch("/api/statuses", { cache: "no-store" });
+        // Durumlar
         if (statusesRes.ok) {
           const statusesData = await statusesRes.json();
-          // Yeni format: [{id, tr, en}, ...] - sadece Türkçe isimleri al
           if (Array.isArray(statusesData) && statusesData.length > 0 && typeof statusesData[0] === 'object') {
             setStatusOptions(statusesData.map((s: any) => s.tr));
           } else {
             setStatusOptions(statusesData);
           }
         } else {
-          // Hata durumunda varsayılan durumları kullan
           setStatusOptions(CRM_STATUSES);
         }
         
-        // Doktorları çek
-        const doctorsRes = await fetch("/api/doctors");
+        // Doktorlar
         if (doctorsRes.ok) {
           const doctors = await doctorsRes.json();
           const doctorNames = doctors.map((d: any) => d.name).filter(Boolean);
           setDoctorOptions(doctorNames);
         }
         
-        // Transfer firmalarını çek (segments API'den)
-        const segmentsRes = await fetch("/api/segments");
+        // Transfer firmaları
         if (segmentsRes.ok) {
           const segments = await segmentsRes.json();
           const transferCompanies = segments
@@ -404,22 +419,18 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           setTransferCompanyOptions(transferCompanies);
         }
         
-        // Otelleri çek
-        const hotelsRes = await fetch("/api/hotels");
+        // Oteller
         if (hotelsRes.ok) {
           const hotels = await hotelsRes.json();
           const hotelNames = hotels.map((h: any) => h.name).filter(Boolean);
           setHotelOptions(hotelNames.sort());
         }
         
-        const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          const found = data.find(
-            (c: any) => String(c.id) === String((params as any).id)
-          );
+        // Müşteri verisi (tek kayıt - ?id=xxx)
+        if (customerRes.ok) {
+          const found = await customerRes.json();
 
-          if (found) {
+          if (found && found.id) {
             setCustomer({
               id: found.id,
               createdAt: found.createdAt,
@@ -1088,7 +1099,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         sales: customer.sales,
       };
 
-      const res = await fetch("/api/crm-sqlite", {
+      const res = await fetch("/api/crm", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -2475,7 +2486,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           {[
             "personal",
             "status",
-            ...(customer.status.status === "Satış" ? ["sales"] : []),
+            ...((customer.status.status === "Satış" || customer.status.status === "Satış Kapalı" || (typeof customer.status.status === "string" && customer.status.status.startsWith("Satış"))) ? ["sales"] : []),
             "reminder",
             "calls",
             "payment",

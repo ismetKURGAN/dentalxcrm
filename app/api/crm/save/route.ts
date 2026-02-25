@@ -1,31 +1,19 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-
-const DB_PATH = path.join(process.cwd(), "db.json");
+import { getCustomerById, upsertCustomer } from "../../lib/sqlite-customers";
 
 export async function POST(request: Request) {
   try {
-    const { customers } = await request.json(); // React'ten gelen güncellemeler
+    const { customers } = await request.json();
     
-    // Mevcut veriyi oku
-    let allData = [];
-    if (fs.existsSync(DB_PATH)) {
-      allData = JSON.parse(fs.readFileSync(DB_PATH, "utf-8"));
-    }
-
-    // Güncellemeleri uygula
-    // Gelen listedeki her bir müşteri için, ana listedeki karşılığını bulup değiştiriyoruz
-    customers.forEach((updatedCustomer: any) => {
-      const index = allData.findIndex((c: any) => c.id === updatedCustomer.id);
-      if (index !== -1) {
-        // Sadece değişen alanları güncelle, diğerlerini koru (tarih vs.)
-        allData[index] = { ...allData[index], ...updatedCustomer };
+    // Her müşteriyi SQLite'da güncelle
+    for (const updatedCustomer of customers) {
+      // Mevcut kaydı oku, üzerine yaz
+      const existing = getCustomerById(updatedCustomer.id);
+      if (existing) {
+        const merged = { ...existing, ...updatedCustomer, updatedAt: new Date().toISOString() };
+        upsertCustomer(merged);
       }
-    });
-
-    // Dosyaya geri yaz
-    fs.writeFileSync(DB_PATH, JSON.stringify(allData, null, 2), "utf-8");
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

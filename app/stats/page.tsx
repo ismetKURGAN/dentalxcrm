@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 import {
   Box,
   Paper,
@@ -28,10 +28,16 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import { useI18n } from "../components/I18nProvider";
+import { ThemeModeContext } from "../components/ThemeRegistry";
 
 const OFFER_KEYWORDS = ["Teklif"];
 const SALE_KEYWORDS = ["Satış"];
-const CANCEL_KEYWORDS = ["Satış İptal", "Randevu İptal", "İptal"];
+const CANCEL_KEYWORDS = ["Randevu İptal", "Satış İptal", "İptal"];
+
+// Türkçe İ/i uyumlu lowercase
+function trLower(s: string): string {
+  return s.replace(/İ/g, 'i').replace(/I/g, 'ı').toLowerCase();
+}
 
 function formatPercent(n: number): string {
   return n.toFixed(1);
@@ -49,6 +55,7 @@ const TOP_PARENT_CATEGORIES = [
   "Influencer",
   "Konsültasyon",
   "Snapchat",
+  "Boş",
 ];
 
 type Category = {
@@ -96,30 +103,16 @@ type AggRow = {
 };
 
 function groupStatusFromValue(statusValue: any, customer?: Customer): StatusGroup {
-  // Önce iptal kontrolü
-  const raw =
-    typeof statusValue === "string"
-      ? statusValue
-      : statusValue?.status || "";
+  const raw = (typeof statusValue === "string" ? statusValue : statusValue?.status || "").toString();
   if (!raw) return "other";
-  const s = raw.toLowerCase();
-  if (CANCEL_KEYWORDS.some((k) => s.includes(k.toLowerCase()))) return "cancel";
+  const s = trLower(raw);
   
+  // Önce iptal kontrolü ("Randevu İptal", "Satış İptal" vs.)
+  if (CANCEL_KEYWORDS.some((k) => s.includes(trLower(k)))) return "cancel";
   // Satış kontrolü
-  if (SALE_KEYWORDS.some((k) => s.includes(k.toLowerCase()))) return "sale";
-  
-  // Teklif kontrolü: Hizmetler sekmesinde herhangi bir seçim varsa teklif sayılır
-  if (customer) {
-    const services = typeof customer.status === "object" 
-      ? customer.status?.services 
-      : customer.service;
-    if (services && services.trim() && services !== "Hizmetler") {
-      return "offer";
-    }
-  }
-  
-  // Eski yöntem: durum içinde "Teklif" kelimesi varsa
-  if (OFFER_KEYWORDS.some((k) => s.includes(k.toLowerCase()))) return "offer";
+  if (SALE_KEYWORDS.some((k) => s.includes(trLower(k)))) return "sale";
+  // Teklif kontrolü: durum içinde "teklif" geçiyorsa
+  if (OFFER_KEYWORDS.some((k) => s.includes(trLower(k)))) return "offer";
   
   return "other";
 }
@@ -133,6 +126,7 @@ function toDateOnly(iso?: string): string | null {
 
 export default function StatsPage() {
   const { t } = useI18n();
+  const { mode } = useContext(ThemeModeContext);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
@@ -157,8 +151,9 @@ export default function StatsPage() {
       ]);
 
       if (crmRes.ok) {
-        const data = await crmRes.json();
-        setCustomers(data || []);
+        const response = await crmRes.json();
+        const data = Array.isArray(response) ? response : (response.data || response);
+        setCustomers(Array.isArray(data) ? data : []);
       }
       if (usersRes.ok) {
         const data = await usersRes.json();
@@ -194,12 +189,41 @@ export default function StatsPage() {
     return match?.name || raw || "Diğer";
   };
 
+  // category adından topParent bulmak için map
+  const categoryToParentMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    categoriesData.forEach((cat) => {
+      if (cat.name && cat.topParent) {
+        map[cat.name] = cat.topParent;
+      }
+    });
+    return map;
+  }, [categoriesData]);
+
   const resolveParentCategory = (c: Customer): string => {
+    // 1) Önce parentCategory alanına bak
     const raw = (c.parentCategory || "").toString().trim();
-    const match = TOP_PARENT_CATEGORIES.find(
-      (p) => p.toLowerCase() === raw.toLowerCase()
-    );
-    return match || "Diğer";
+    if (raw) {
+      const match = TOP_PARENT_CATEGORIES.find(
+        (p) => trLower(p) === trLower(raw)
+      );
+      if (match) return match;
+    }
+    
+    // 2) parentCategory yoksa, category adından categories.json ile topParent bul
+    const catName = (c.category || "").toString().trim();
+    if (catName && categoryToParentMap[catName]) {
+      const topParent = categoryToParentMap[catName];
+      const match = TOP_PARENT_CATEGORIES.find(
+        (p) => trLower(p) === trLower(topParent)
+      );
+      if (match) return match;
+    }
+    
+    // 3) Hiç kategori yoksa "Boş"
+    if (!raw && !catName) return "Boş";
+    
+    return "Diğer";
   };
 
   const parentCategories = useMemo(
@@ -462,7 +486,7 @@ export default function StatsPage() {
   };
 
   return (
-    <Box sx={{ width: "100%", height: "100%", p: 3, bgcolor: "#f8f9fa" }}>
+    <Box sx={{ width: "100%", height: "100%", p: { xs: 1.5, md: 2 }, bgcolor: mode === "dark" ? "#1E1B3E" : "#F3F4F6" }}>
       {/* Başlık ve aksiyonlar */}
       <Stack
         direction="row"
@@ -514,111 +538,35 @@ export default function StatsPage() {
       </Stack>
 
       {/* Özet İstatistikler */}
-      <Stack direction="row" spacing={2} mb={2.5}>
-        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                  Toplam Lead
-                </Typography>
-                <Typography variant="h4" fontWeight={700} mt={0.5}>
-                  {filtered.length.toLocaleString()}
-                </Typography>
-                <Typography variant="caption" color="success.main" mt={0.5}>
-                  %100
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#e3f2fd', p: 1, borderRadius: 1 }}>
-                <TrendingUpIcon sx={{ color: '#1976d2' }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                  Teklif
-                </Typography>
-                <Typography variant="h4" fontWeight={700} mt={0.5}>
-                  {totals.offer.toLocaleString()}
-                </Typography>
-                <Typography variant="caption" color="primary.main" mt={0.5}>
-                  %{filtered.length ? formatPercent((totals.offer / filtered.length) * 100) : '0.0'}
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#fff3e0', p: 1, borderRadius: 1 }}>
-                <TrendingUpIcon sx={{ color: '#f57c00' }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                  Satış
-                </Typography>
-                <Typography variant="h4" fontWeight={700} mt={0.5} color="success.main">
-                  {totals.sale.toLocaleString()}
-                </Typography>
-                <Typography variant="caption" color="success.main" mt={0.5}>
-                  %{filtered.length ? formatPercent((totals.sale / filtered.length) * 100) : '0.0'}
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#e8f5e9', p: 1, borderRadius: 1 }}>
-                <TrendingUpIcon sx={{ color: '#2e7d32' }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                  İptal
-                </Typography>
-                <Typography variant="h4" fontWeight={700} mt={0.5} color="error.main">
-                  {totals.cancel.toLocaleString()}
-                </Typography>
-                <Typography variant="caption" color="error.main" mt={0.5}>
-                  %{filtered.length ? formatPercent((totals.cancel / filtered.length) * 100) : '0.0'}
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#ffebee', p: 1, borderRadius: 1 }}>
-                <TrendingDownIcon sx={{ color: '#c62828' }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, borderRadius: 2, border: '1px solid #e5e7eb' }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                  Dönüşüm Oranı
-                </Typography>
-                <Typography variant="h4" fontWeight={700} mt={0.5}>
-                  %{totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : '0.0'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" mt={0.5}>
-                  Teklif → Satış
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: '#f3e5f5', p: 1, borderRadius: 1 }}>
-                <TrendingUpIcon sx={{ color: '#7b1fa2' }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={2.5}>
+        {[
+          { label: 'Toplam Lead', value: filtered.length, pct: '100', color: '#6366f1', iconBg: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#e3f2fd' },
+          { label: 'Teklif', value: totals.offer, pct: filtered.length ? formatPercent((totals.offer / filtered.length) * 100) : '0.0', color: '#f59e0b', iconBg: mode === 'dark' ? 'rgba(245,158,11,0.15)' : '#fff3e0' },
+          { label: 'Satış', value: totals.sale, pct: totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : '0.0', color: '#10b981', iconBg: mode === 'dark' ? 'rgba(16,185,129,0.15)' : '#e8f5e9' },
+          { label: 'İptal', value: totals.cancel, pct: filtered.length ? formatPercent((totals.cancel / filtered.length) * 100) : '0.0', color: '#ef4444', iconBg: mode === 'dark' ? 'rgba(239,68,68,0.15)' : '#ffebee' },
+          { label: 'Dönüşüm', value: null, pct: totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : '0.0', color: '#8b5cf6', iconBg: mode === 'dark' ? 'rgba(139,92,246,0.15)' : '#f3e5f5' },
+        ].map((stat) => (
+          <Card key={stat.label} sx={{ flex: 1 }}>
+            <CardContent>
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    {stat.label}
+                  </Typography>
+                  <Typography variant="h4" fontWeight={700} mt={0.5} sx={{ color: stat.color }}>
+                    {stat.value !== null ? stat.value.toLocaleString() : `%${stat.pct}`}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" mt={0.5}>
+                    {stat.value !== null ? `%${stat.pct}` : 'Teklif → Satış'}
+                  </Typography>
+                </Box>
+                <Box sx={{ bgcolor: stat.iconBg, p: 1, borderRadius: 1 }}>
+                  <TrendingUpIcon sx={{ color: stat.color }} />
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
+        ))}
       </Stack>
 
       {/* Filtreler - gizli */}
@@ -714,119 +662,10 @@ export default function StatsPage() {
         </Stack>
       </Paper>
 
-      {/* Özet kutuları */}
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={2}
-        mb={3}
-      >
-        <Card sx={{ flex: 1, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-                  Toplam Başvuru
-                </Typography>
-                <Typography variant="h4" fontWeight={700} sx={{ mt: 1 }}>
-                  {totals.total.toLocaleString()}
-                </Typography>
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: "#22c55e", fontSize: "0.7rem" }}>
-                    Yükselen lead sayısı
-                  </Typography>
-                </Stack>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
-                  %4.3 önceki aya göre
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: "#f0f9ff", p: 1, borderRadius: 1 }}>
-                <TrendingUpIcon sx={{ color: "#3b82f6" }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-                  Toplam Teklif
-                </Typography>
-                <Typography variant="h4" fontWeight={700} sx={{ mt: 1 }}>
-                  {totals.offer.toLocaleString()}
-                </Typography>
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: "#ef4444", fontSize: "0.7rem" }}>
-                    Düşen teklif sayısı
-                  </Typography>
-                </Stack>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
-                  %-3.2 önceki aya göre
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: "#fef2f2", p: 1, borderRadius: 1 }}>
-                <TrendingDownIcon sx={{ color: "#ef4444" }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-                  Toplam Satış
-                </Typography>
-                <Typography variant="h4" fontWeight={700} sx={{ mt: 1 }}>
-                  {totals.sale.toLocaleString()}
-                </Typography>
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: "#22c55e", fontSize: "0.7rem" }}>
-                    Yükselen satış sayısı
-                  </Typography>
-                </Stack>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
-                  %13.4 kapanışa oran
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: "#f0fdf4", p: 1, borderRadius: 1 }}>
-                <TrendingUpIcon sx={{ color: "#22c55e" }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card sx={{ flex: 1, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
-          <CardContent>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem" }}>
-                  İptal Edilen
-                </Typography>
-                <Typography variant="h4" fontWeight={700} sx={{ mt: 1 }}>
-                  {totals.cancel.toLocaleString()}
-                </Typography>
-                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-                  <Typography variant="caption" sx={{ color: "#ef4444", fontSize: "0.7rem" }}>
-                    İptal edilen lead sayısı
-                  </Typography>
-                </Stack>
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.7rem" }}>
-                  %1.1 iptal oranı
-                </Typography>
-              </Box>
-              <Box sx={{ bgcolor: "#fef2f2", p: 1, borderRadius: 1 }}>
-                <TrendingDownIcon sx={{ color: "#ef4444" }} />
-              </Box>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Stack>
+      {/* Duplicate özet kartları kaldırıldı */}
 
       {/* Kaynak Türü Bazında Detaylı İstatistikler */}
-      <Paper sx={{ p: 2.5, borderRadius: 2, boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+      <Paper sx={{ p: 2.5, borderRadius: 2 }}>
         <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ mb: 2 }}>
           Kaynak Türü Bazında Detaylı İstatistikler
         </Typography>
@@ -837,12 +676,12 @@ export default function StatsPage() {
         <TableContainer>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: "#f8f9fa" }}>
-                <TableCell sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Kaynak Türü</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>İletişimler / Tüm</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Teklifler / Tüm</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>Satışlar / Tüm</TableCell>
-                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem" }}>İptal Edilen</TableCell>
+              <TableRow sx={{ bgcolor: mode === "dark" ? "#2D2757" : "#f8f9fa" }}>
+                <TableCell sx={{ fontWeight: 600, fontSize: "0.75rem", color: mode === "dark" ? "rgba(255,255,255,0.9)" : undefined }}>Kaynak Türü</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem", color: mode === "dark" ? "rgba(255,255,255,0.9)" : undefined }}>İletişimler / Tüm</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem", color: mode === "dark" ? "rgba(255,255,255,0.9)" : undefined }}>Teklifler / Tüm</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem", color: mode === "dark" ? "rgba(255,255,255,0.9)" : undefined }}>Satışlar / Tüm</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600, fontSize: "0.75rem", color: mode === "dark" ? "rgba(255,255,255,0.9)" : undefined }}>İptal Edilen</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -855,13 +694,15 @@ export default function StatsPage() {
                 };
                 const isExpanded = expandedCategories.has(parent);
                 const childCategories = byCategory.filter(c => c.parentCategory === parent);
+                const grandTotal = filtered.length || 1;
+                const totalPct = formatPercent((parentData.total / grandTotal) * 100);
                 const offerPct = parentData.total ? formatPercent((parentData.offer / parentData.total) * 100) : "0.0";
-                const salePct = parentData.total ? formatPercent((parentData.sale / parentData.total) * 100) : "0.0";
+                const salePct = parentData.offer ? formatPercent((parentData.sale / parentData.offer) * 100) : "0.0";
                 const cancelPct = parentData.total ? formatPercent((parentData.cancel / parentData.total) * 100) : "0.0";
 
                 return (
                   <React.Fragment key={parent}>
-                    <TableRow hover sx={{ bgcolor: isExpanded ? "#f8f9fa" : "transparent" }}>
+                    <TableRow hover sx={{ bgcolor: isExpanded ? (mode === "dark" ? "#2A2450" : "#f8f9fa") : "transparent" }}>
                       <TableCell>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
                           <IconButton
@@ -878,7 +719,7 @@ export default function StatsPage() {
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="body2" fontWeight={600}>{parentData.total}</Typography>
-                        <Typography variant="caption" color="text.secondary">%100</Typography>
+                        <Typography variant="caption" color="text.secondary">%{totalPct}</Typography>
                       </TableCell>
                       <TableCell align="center">
                         <Typography variant="body2" fontWeight={600}>{parentData.offer}</Typography>
@@ -897,8 +738,10 @@ export default function StatsPage() {
                     {isExpanded && (() => {
                       // Render hierarchical categories
                       const renderCategory = (cat: AggRow, depth: number = 0): React.ReactNode[] => {
+                        const parentTotal = parentData.total || 1;
+                        const catTotalPct = formatPercent((cat.total / parentTotal) * 100);
                         const catOfferPct = cat.total ? formatPercent((cat.offer / cat.total) * 100) : "0.0";
-                        const catSalePct = cat.total ? formatPercent((cat.sale / cat.total) * 100) : "0.0";
+                        const catSalePct = cat.offer ? formatPercent((cat.sale / cat.offer) * 100) : "0.0";
                         const catCancelPct = cat.total ? formatPercent((cat.cancel / cat.total) * 100) : "0.0";
                         
                         const children = cat.categoryId 
@@ -909,7 +752,7 @@ export default function StatsPage() {
                         const paddingLeft = 4 + (depth * 3);
 
                         const rows: React.ReactNode[] = [
-                          <TableRow key={cat.key} sx={{ bgcolor: depth === 0 ? "#fafbfc" : "#f5f5f5" }}>
+                          <TableRow key={cat.key} sx={{ bgcolor: depth === 0 ? (mode === "dark" ? "#2D2757" : "#fafbfc") : (mode === "dark" ? "#322C5E" : "#f5f5f5") }}>
                             <TableCell sx={{ pl: paddingLeft }}>
                               <Stack direction="row" alignItems="center" spacing={0.5}>
                                 {hasChildren && (
@@ -929,7 +772,7 @@ export default function StatsPage() {
                             </TableCell>
                             <TableCell align="center">
                               <Typography variant="body2">{cat.total}</Typography>
-                              <Typography variant="caption" color="text.secondary">%100</Typography>
+                              <Typography variant="caption" color="text.secondary">%{catTotalPct}</Typography>
                             </TableCell>
                             <TableCell align="center">
                               <Typography variant="body2">{cat.offer}</Typography>
@@ -963,6 +806,36 @@ export default function StatsPage() {
                   </React.Fragment>
                 );
               })}
+              {/* Toplam Satırı */}
+              <TableRow sx={{ bgcolor: mode === "dark" ? "#2D2757" : "#f0f0f0" }}>
+                <TableCell>
+                  <Typography variant="body2" fontWeight={700} sx={{ pl: 4.5 }}>
+                    TOPLAM
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="body2" fontWeight={700}>{totals.total}</Typography>
+                  <Typography variant="caption" color="text.secondary">%100</Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="body2" fontWeight={700}>{totals.offer}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    %{totals.total ? formatPercent((totals.offer / totals.total) * 100) : "0.0"}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="body2" fontWeight={700} sx={{ color: "#10b981" }}>{totals.sale}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    %{totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : "0.0"}
+                  </Typography>
+                </TableCell>
+                <TableCell align="center">
+                  <Typography variant="body2" fontWeight={700} sx={{ color: "#ef4444" }}>{totals.cancel}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    %{totals.total ? formatPercent((totals.cancel / totals.total) * 100) : "0.0"}
+                  </Typography>
+                </TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>

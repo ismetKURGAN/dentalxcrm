@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useContext } from "react";
 import {
   Box,
   Typography,
@@ -16,6 +16,7 @@ import {
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ViewAgendaIcon from "@mui/icons-material/ViewAgenda";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import { ThemeModeContext } from "../components/ThemeRegistry";
 
 function getInitials(name: string) {
   if (!name) return "?";
@@ -25,6 +26,7 @@ function getInitials(name: string) {
 }
 
 export default function TimesheetsPage() {
+  const { mode } = useContext(ThemeModeContext);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [strategy] = useState<"sequential" | "balanced">("sequential");
@@ -53,7 +55,7 @@ export default function TimesheetsPage() {
   const timeStr = now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <Box sx={{ width: "100%", height: "100%" }}>
+    <Box sx={{ width: "100%", height: "100%", p: { xs: 1.5, md: 2 }, bgcolor: mode === "dark" ? "#1E1B3E" : "#F3F4F6", minHeight: "100vh" }}>
       {/* Header Container with Info Cards */}
       <Box
         sx={{
@@ -62,9 +64,8 @@ export default function TimesheetsPage() {
           px: { xs: 1.5, md: 2.5 },
           pt: 2.5,
           pb: 2.5,
-          bgcolor: "#F9FAFB",
+          bgcolor: mode === "dark" ? "#252047" : "#F9FAFB",
           borderRadius: 3,
-          boxShadow: "0 12px 35px rgba(15,23,42,0.06)",
         }}
       >
         <Stack spacing={2.5}>
@@ -137,8 +138,8 @@ export default function TimesheetsPage() {
               variant="outlined"
               sx={{
                 borderRadius: 3,
-                borderColor: "#E5E7EB",
-                boxShadow: "0 18px 40px rgba(15,23,42,0.08)",
+                borderColor: mode === "dark" ? "rgba(124, 58, 237, 0.2)" : "#E5E7EB",
+                bgcolor: mode === "dark" ? "#252047" : undefined,
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
@@ -148,7 +149,7 @@ export default function TimesheetsPage() {
             >
               <CardContent sx={{ pt: 2.6, pb: 2.8, px: 2.4 }}>
                 <Stack direction="row" spacing={2.2} alignItems="center" mb={2.2}>
-                  <Avatar sx={{ bgcolor: "#1D4ED8" }}>{getInitials(u.name)}</Avatar>
+                  <Avatar sx={{ bgcolor: mode === "dark" ? "#6366f1" : "#1D4ED8" }}>{getInitials(u.name)}</Avatar>
                   <Box>
                     <Typography variant="subtitle1" fontWeight={600}>
                       {u.name}
@@ -180,16 +181,16 @@ export default function TimesheetsPage() {
                     mt: 1.4,
                     p: 1.6,
                     borderRadius: 2,
-                    bgcolor: "#ECFDF3",
+                    bgcolor: mode === "dark" ? "rgba(16, 185, 129, 0.1)" : "#ECFDF3",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
                   }}
                 >
-                  <Typography variant="caption" sx={{ color: "#15803D" }}>
+                  <Typography variant="caption" sx={{ color: mode === "dark" ? "#6EE7B7" : "#15803D" }}>
                     Müşteri ataması yapılabilir
                   </Typography>
-                  <IconButton size="small" sx={{ color: "#16A34A" }}>
+                  <IconButton size="small" sx={{ color: mode === "dark" ? "#4ADE80" : "#16A34A" }}>
                     <ViewAgendaIcon fontSize="inherit" />
                   </IconButton>
                 </Box>
@@ -205,7 +206,7 @@ export default function TimesheetsPage() {
                 p: 4,
                 textAlign: "center",
                 borderRadius: 2,
-                border: "1px dashed #E5E7EB",
+                border: mode === "dark" ? "1px dashed rgba(124, 58, 237, 0.3)" : "1px dashed #E5E7EB",
                 color: "text.secondary",
               }}
             >

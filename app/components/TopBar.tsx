@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import {
   Box,
   IconButton,
@@ -14,12 +14,17 @@ import {
   Stack,
   Typography,
   Divider,
+  Avatar,
+  useTheme,
 } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { useAuth } from "./AuthProvider";
 import { useI18n } from "./I18nProvider";
+import { ThemeModeContext } from "./ThemeRegistry";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DateCalendar } from "@mui/x-date-pickers/DateCalendar";
@@ -109,6 +114,8 @@ function CustomDay(props: CustomDayProps) {
 export default function TopBar() {
   const { user, logout } = useAuth();
   const { language, setLanguage } = useI18n();
+  const theme = useTheme();
+  const { mode } = useContext(ThemeModeContext);
   const [open, setOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [title, setTitle] = useState("");
@@ -299,214 +306,104 @@ export default function TopBar() {
     : [];
 
   return (
-    <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", mb: 2, pr: 2 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-        {/* Dil seçici */}
-        <Box sx={{ display: "flex", alignItems: "center", borderRadius: 999, border: "1px solid #e5e7eb", overflow: "hidden" }}>
-          <Button
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        px: 2.5,
+        py: 1,
+        gap: 2,
+        position: "sticky",
+        top: 0,
+        zIndex: 10,
+        backgroundColor: mode === "dark" ? "#2A2550" : "background.paper",
+        borderBottom: "1px solid",
+        borderColor: mode === "dark" ? "rgba(124, 58, 237, 0.1)" : "divider",
+        backdropFilter: "blur(10px)",
+      }}
+    >
+      {/* Sol Taraf - Boş */}
+      <Box />
+      
+      {/* Sağ Taraf - Kullanıcı Bilgileri */}
+      <Stack direction="row" spacing={1.5} alignItems="center">
+        <Tooltip title="Takvim">
+          <IconButton 
+            onClick={handleOpen} 
             size="small"
-            onClick={() => setLanguage("tr")}
-            variant={language === "tr" ? "contained" : "text"}
             sx={{
-              minWidth: 36,
-              px: 1,
-              fontSize: "0.7rem",
-              borderRadius: 0,
+              color: mode === "dark" ? "rgba(255,255,255,0.9)" : "inherit",
+              "&:hover": { bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.1)" : "action.hover" },
             }}
           >
-            TR
-          </Button>
-          <Button
-            size="small"
-            onClick={() => setLanguage("en")}
-            variant={language === "en" ? "contained" : "text"}
-            sx={{
-              minWidth: 36,
-              px: 1,
-              fontSize: "0.7rem",
-              borderRadius: 0,
-            }}
-          >
-            EN
-          </Button>
-        </Box>
-
-        {user && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <AccountCircleIcon fontSize="small" color="action" />
-            <Typography variant="body2" color="text.secondary">
-              {user.name}
-            </Typography>
-          </Box>
-        )}
-
-        <Tooltip title="Takvim / Randevular">
-          <IconButton color="primary" onClick={handleOpen}>
             <CalendarMonthIcon />
           </IconButton>
         </Tooltip>
 
-        <Tooltip title="Çıkış yap">
-          <IconButton color="error" onClick={logout}>
-            <LogoutIcon fontSize="small" />
+        <Tooltip title="Bildirimler">
+          <IconButton 
+            size="small"
+            sx={{
+              color: mode === "dark" ? "rgba(255,255,255,0.9)" : "inherit",
+              "&:hover": { bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.1)" : "action.hover" },
+            }}
+          >
+            <NotificationsIcon />
           </IconButton>
         </Tooltip>
-      </Box>
 
-      <Dialog open={open} onClose={handleClose} fullScreen>
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Typography variant="h6">Takvim</Typography>
-          <Button onClick={handleClose}>Kapat</Button>
-        </DialogTitle>
-        <DialogContent sx={{ p: 2 }}>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                gap: 3,
-                height: "calc(100vh - 140px)",
-              }}
+        <Divider orientation="vertical" flexItem sx={{ borderColor: mode === "dark" ? "rgba(124, 58, 237, 0.2)" : "divider" }} />
+
+        <Stack direction="row" spacing={1.5} alignItems="center">
+          <Avatar
+            sx={{
+              width: 32,
+              height: 32,
+              background: "linear-gradient(135deg, #7C3AED 0%, #9F67FF 100%)",
+              fontSize: "0.85rem",
+              fontWeight: 600,
+            }}
+          >
+            {user?.name?.charAt(0).toUpperCase() || "U"}
+          </Avatar>
+          <Box>
+            <Typography 
+              variant="body2" 
+              fontWeight={600}
+              sx={{ color: mode === "dark" ? "#FFFFFF" : "#11142D", lineHeight: 1.2, fontSize: "0.8rem" }}
             >
-              {/* SOL: BÜYÜK AY TAKVİMİ */}
-              <Box
-                sx={{
-                  flex: 1.3,
-                  minWidth: 420,
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                }}
-              >
-                <DateCalendar
-                  value={selectedDate}
-                  onChange={(newValue) => setSelectedDate(newValue)}
-                  slots={{ day: CustomDay as any }}
-                  slotProps={{ day: { events } as any }}
-                />
-              </Box>
+              {user?.name || "Kullanıcı"}
+            </Typography>
+            <Typography 
+              variant="caption" 
+              sx={{ color: mode === "dark" ? "rgba(255,255,255,0.8)" : "text.secondary", lineHeight: 1, fontSize: "0.65rem" }}
+            >
+              {user?.roles?.[0] || "Kullanıcı"}
+            </Typography>
+          </Box>
+        </Stack>
 
-              <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", md: "block" } }} />
+        <Tooltip title="Çıkış">
+          <IconButton 
+            onClick={logout} 
+            size="small"
+            sx={{
+              color: "#ef4444",
+              "&:hover": { bgcolor: "rgba(239, 68, 68, 0.1)" },
+            }}
+          >
+            <LogoutIcon />
+          </IconButton>
+        </Tooltip>
+      </Stack>
 
-              {/* SAĞ: SEÇİLİ GÜN İÇİN FORM + LİSTE */}
-              <Box
-                sx={{
-                  flex: 1,
-                  minWidth: 360,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                }}
-              >
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Typography variant="subtitle1" fontWeight="bold">
-                    Seçili Gün
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedDate
-                      ? format(selectedDate, "d MMMM yyyy, EEEE", { locale: undefined })
-                      : "Tarih seçilmedi"}
-                  </Typography>
-                </Stack>
-
-                <Stack direction="row" spacing={2}>
-                  <Button
-                    variant={type === "appointment" ? "contained" : "outlined"}
-                    onClick={() => setType("appointment")}
-                  >
-                    Randevu
-                  </Button>
-                  <Button
-                    variant={type === "reminder" ? "contained" : "outlined"}
-                    onClick={() => setType("reminder")}
-                  >
-                    Hatırlatıcı
-                  </Button>
-                </Stack>
-
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                  <TextField
-                    label={type === "appointment" ? "Randevu Başlığı" : "Hatırlatıcı Notu"}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    fullWidth
-                  />
-                  <TextField
-                    label="Saat"
-                    type="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ width: { xs: "100%", sm: 140 } }}
-                  />
-                </Stack>
-
-                <Button
-                  variant="contained"
-                  onClick={handleAddOrUpdate}
-                  disabled={!selectedDate || !title.trim() || !time}
-                  sx={{ alignSelf: "flex-start" }}
-                >
-                  {editingId ? "Güncelle" : "Ekle"}
-                </Button>
-
-                <Box sx={{ flexGrow: 1, mt: 1, overflowY: "auto" }}>
-                  <Typography variant="subtitle2" gutterBottom>
-                    Bu gün için randevu / hatırlatıcılar
-                  </Typography>
-                  {eventsForSelectedDay.length === 0 ? (
-                    <Typography variant="body2" color="text.secondary">
-                      Kayıt yok.
-                    </Typography>
-                  ) : (
-                    <Stack spacing={1} mt={1}>
-                      {eventsForSelectedDay.map((ev) => (
-                        <Box
-                          key={ev.id}
-                          sx={{
-                            p: 1,
-                            borderRadius: 1,
-                            bgcolor: ev.type === "appointment" ? "#E3F2FD" : "#FFF8E1",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            gap: 1,
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body2" fontWeight="bold">
-                              {ev.title}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {ev.type === "appointment" ? "Randevu" : "Hatırlatıcı"} • {ev.time}
-                            </Typography>
-                          </Box>
-                          <Stack direction="row" spacing={1}>
-                            <Button size="small" variant="outlined" onClick={() => handleEdit(ev)}>
-                              Düzenle
-                            </Button>
-                            <Button
-                              size="small"
-                              color="error"
-                              variant="text"
-                              onClick={() => handleDelete(ev.id)}
-                            >
-                              Sil
-                            </Button>
-                          </Stack>
-                        </Box>
-                      ))}
-                    </Stack>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          </LocalizationProvider>
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle>Takvim</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">Takvim özelliği yakında eklenecek.</Typography>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ flexGrow: 1 }}>
-            Bu ekran, randevu ve hatırlatıcılar için genel takvim hub'ı olacak.
-          </Typography>
+        <DialogActions>
           <Button onClick={handleClose}>Kapat</Button>
         </DialogActions>
       </Dialog>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import {
   Box,
   Paper,
@@ -30,9 +30,10 @@ import FlightLandIcon from "@mui/icons-material/FlightLand";
 import HotelIcon from "@mui/icons-material/Hotel";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { useI18n } from "../components/I18nProvider";
+import { ThemeModeContext } from "../components/ThemeRegistry";
 
 // Basit yıl ve ay listeleri
-const YEARS = [2024, 2025, 2026];
+const YEARS = [2024, 2025, 2026, 2027];
 const MONTHS = [
   { value: 0, label: "Ocak" },
   { value: 1, label: "Şubat" },
@@ -121,9 +122,10 @@ function formatDateTime(dateStr: string, timeStr: string): string {
 
 export default function AppointmentsPage() {
   const { t } = useI18n();
+  const { mode } = useContext(ThemeModeContext);
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [year, setYear] = useState<number | "all">(2025);
+  const [year, setYear] = useState<number | "all">("all");
   const [month, setMonth] = useState<number | "all">("all");
   const [doctors, setDoctors] = useState<any[]>([]);
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
@@ -165,7 +167,7 @@ export default function AppointmentsPage() {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
+      const res = await fetch("/api/crm-sqlite?all=true&include=sales&status=Sat%C4%B1%C5%9F,Sat%C4%B1%C5%9F%20Kapal%C4%B1", { cache: "no-store" });
       if (!res.ok) return;
       const response = await res.json();
       const data = response.data || response; // Pagination response format
@@ -176,15 +178,12 @@ export default function AppointmentsPage() {
       const mapped: any[] = [];
       
       data.forEach((c: any) => {
-        // SQLite API artık düz string değerler döndürüyor
+        // API zaten Satış/Satış Kapalı durumundakileri döndürüyor
         const statusValue = c.status || '';
         const advisorValue = c.advisor || '';
         const categoryValue = c.category || '';
         const serviceValue = c.service || '';
-        
-        // Sadece "Satış" veya "Satış Kapalı" durumundaki müşterileri al
-        if (statusValue === "Satış" || statusValue === "Satış Kapalı") {
-          const trips = c.sales?.trips || [];
+        const trips = c.sales?.trips || [];
           
           trips.forEach((trip: any, tripIndex: number) => {
             if (trip.appointmentDate) {
@@ -213,7 +212,6 @@ export default function AppointmentsPage() {
               });
             }
           });
-        }
       });
 
       setRows(mapped);
@@ -417,15 +415,16 @@ export default function AppointmentsPage() {
         <Box 
           sx={{ 
             cursor: "pointer", 
-            color: "#000", 
-            fontWeight: 400,
+            color: mode === "dark" ? "#FFFFFF" : "#000", 
+            fontWeight: 500,
             display: "flex",
             alignItems: "center",
-            gap: 1
+            gap: 1,
+            '&:hover': { color: '#9F67FF' }
           }}
           onClick={() => window.location.href = `/customers/${params.row.customerId}`}
         >
-          <Box component="span" sx={{ color: "#6c757d" }}>👤</Box>
+          <Box component="span" sx={{ color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6c757d" }}>👤</Box>
           {params.value}
         </Box>
       ),
@@ -436,12 +435,12 @@ export default function AppointmentsPage() {
       width: 150,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
-          <CalendarTodayIcon sx={{ color: "#6c757d", fontSize: 16 }} />
+          <CalendarTodayIcon sx={{ color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6c757d", fontSize: 16 }} />
           <Stack spacing={0.3}>
-            <Typography variant="body2" sx={{ color: "#000", fontSize: "0.875rem" }}>
+            <Typography variant="body2" sx={{ color: mode === "dark" ? "#FFFFFF" : "#000", fontSize: "0.875rem" }}>
               {formatDate(params.value)}
             </Typography>
-            <Typography variant="caption" sx={{ color: "#6c757d", fontSize: "0.75rem" }}>
+            <Typography variant="caption" sx={{ color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6c757d", fontSize: "0.75rem" }}>
               {params.row.appointmentTime || "--:--"}
             </Typography>
           </Stack>
@@ -484,7 +483,7 @@ export default function AppointmentsPage() {
       headerName: t("appointments.columns.doctor"), 
       width: 200,
       renderCell: (params) => (
-        <Typography variant="body2" sx={{ color: "#000", fontSize: "0.875rem" }}>
+        <Typography variant="body2" sx={{ color: mode === "dark" ? "#FFFFFF" : "#000", fontSize: "0.875rem" }}>
           {params.value}
         </Typography>
       ),
@@ -494,7 +493,7 @@ export default function AppointmentsPage() {
       headerName: t("appointments.columns.service"), 
       width: 200,
       renderCell: (params) => (
-        <Typography sx={{ fontSize: "0.875rem", color: "#111827" }}>
+        <Typography sx={{ fontSize: "0.875rem", color: mode === "dark" ? "#C4B5FD" : "#111827" }}>
           {params.value || "-"}
         </Typography>
       ),
@@ -541,8 +540,8 @@ export default function AppointmentsPage() {
       width: 180,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
-          <AccessTimeIcon sx={{ color: "#6c757d", fontSize: 16 }} />
-          <Typography variant="body2" sx={{ color: "#6c757d", fontSize: "0.875rem" }}>
+          <AccessTimeIcon sx={{ color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6c757d", fontSize: 16 }} />
+          <Typography variant="body2" sx={{ color: mode === "dark" ? "rgba(255,255,255,0.7)" : "#6c757d", fontSize: "0.875rem" }}>
             {params.value || "--:--"}
           </Typography>
         </Stack>
@@ -555,8 +554,8 @@ export default function AppointmentsPage() {
       minWidth: 220,
       renderCell: (params) => (
         <Stack direction="row" spacing={1} alignItems="center">
-          <HotelIcon sx={{ color: "#6c757d", fontSize: 16 }} />
-          <Typography variant="body2" sx={{ color: "#000", fontSize: "0.875rem" }}>
+          <HotelIcon sx={{ color: mode === "dark" ? "rgba(255,255,255,0.5)" : "#6c757d", fontSize: 16 }} />
+          <Typography variant="body2" sx={{ color: mode === "dark" ? "#FFFFFF" : "#000", fontSize: "0.875rem" }}>
             {params.value || "-"}
           </Typography>
         </Stack>
@@ -567,11 +566,14 @@ export default function AppointmentsPage() {
       headerName: t("appointments.columns.status"), 
       width: 150,
       renderCell: (params) => {
-        const statusColors: Record<string, { bg: string; color: string }> = {
+        const statusColors: Record<string, { bg: string; color: string }> = mode === "dark" ? {
+          "Satış": { bg: "rgba(22, 163, 74, 0.15)", color: "#4ADE80" },
+          "Satış Kapalı": { bg: "rgba(220, 38, 38, 0.15)", color: "#F87171" },
+        } : {
           "Satış": { bg: "#dcfce7", color: "#16a34a" },
           "Satış Kapalı": { bg: "#fee2e2", color: "#dc2626" },
         };
-        const style = statusColors[params.value] || { bg: "#f3f4f6", color: "#6b7280" };
+        const style = statusColors[params.value] || (mode === "dark" ? { bg: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.6)" } : { bg: "#f3f4f6", color: "#6b7280" });
         
         return (
           <Box sx={{ 
@@ -602,8 +604,8 @@ export default function AppointmentsPage() {
       width: "100%", 
       maxWidth: "100vw",
       height: "calc(100vh - 80px)", 
-      p: 3, 
-      bgcolor: "#f8f9fa",
+      p: { xs: 1.5, md: 2 }, 
+      bgcolor: mode === "dark" ? "#1E1B3E" : "#F3F4F6",
       overflow: "hidden",
       position: "relative"
     }}>
@@ -611,11 +613,11 @@ export default function AppointmentsPage() {
         {/* Header */}
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
-            <Typography variant="h5" fontWeight={700} color="#000">
+            <Typography variant="h5" fontWeight={700} sx={{ color: mode === "dark" ? "#FFFFFF" : "#000" }}>
               {t("appointments.page.title")}
             </Typography>
-            <Typography variant="body2" color="#6c757d" sx={{ mt: 0.5 }}>
-              {t("appointments.page.title")}
+            <Typography variant="body2" sx={{ color: mode === "dark" ? "rgba(255,255,255,0.6)" : "#6c757d", mt: 0.5 }}>
+              Satış durumundaki müşterilerin seyahat ve randevu bilgileri
             </Typography>
           </Box>
           <Stack direction="row" spacing={1.5}>
@@ -627,11 +629,11 @@ export default function AppointmentsPage() {
               sx={{ 
                 textTransform: "none",
                 fontWeight: 500,
-                color: "#000",
-                borderColor: "#dee2e6",
+                color: mode === "dark" ? "rgba(255,255,255,0.9)" : "#000",
+                borderColor: mode === "dark" ? "rgba(124, 58, 237, 0.3)" : "#dee2e6",
                 "&:hover": {
-                  borderColor: "#adb5bd",
-                  bgcolor: "#f8f9fa"
+                  borderColor: mode === "dark" ? "rgba(124, 58, 237, 0.5)" : "#adb5bd",
+                  bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.08)" : "#f8f9fa"
                 }
               }}
             >
@@ -644,10 +646,6 @@ export default function AppointmentsPage() {
               sx={{ 
                 textTransform: "none",
                 fontWeight: 600,
-                bgcolor: "#0d6efd",
-                "&:hover": {
-                  bgcolor: "#0b5ed7"
-                }
               }}
             >
               Yenile
@@ -660,17 +658,17 @@ export default function AppointmentsPage() {
           <TextField
             size="small"
             placeholder="Ara..."
-            sx={{ width: 200, bgcolor: "#fff" }}
+            sx={{ width: 200, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}
           />
 
-          <FormControl size="small" sx={{ width: 120, bgcolor: "#fff" }}>
+          <FormControl size="small" sx={{ width: 120, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Aralık</InputLabel>
             <Select label="Aralık" value="all">
               <MenuItem value="all">Tümü</MenuItem>
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ width: 100, bgcolor: "#fff" }}>
+          <FormControl size="small" sx={{ width: 100, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Yıl</InputLabel>
             <Select
               label="Yıl"
@@ -686,7 +684,7 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ width: 110, bgcolor: "#fff" }}>
+          <FormControl size="small" sx={{ width: 110, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Ay</InputLabel>
             <Select
               label="Ay"
@@ -702,7 +700,7 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ width: 140, bgcolor: "#fff" }}>
+          <FormControl size="small" sx={{ width: 140, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Danışman</InputLabel>
             <Select
               label="Danışman"
@@ -716,7 +714,7 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ width: 140, bgcolor: "#fff" }}>
+          <FormControl size="small" sx={{ width: 140, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Doktor</InputLabel>
             <Select
               label="Doktor"
@@ -730,7 +728,7 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ width: 120, bgcolor: "#fff" }}>
+          <FormControl size="small" sx={{ width: 120, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Durum</InputLabel>
             <Select
               label="Durum"
@@ -751,9 +749,9 @@ export default function AppointmentsPage() {
             onClick={(e) => setColumnMenuAnchor(e.currentTarget)}
             sx={{ 
               textTransform: "none",
-              color: "#6c757d",
+              color: mode === "dark" ? "rgba(255,255,255,0.7)" : "#6c757d",
               "&:hover": {
-                bgcolor: "#f8f9fa"
+                bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.08)" : "#f8f9fa"
               }
             }}
           >
@@ -772,7 +770,7 @@ export default function AppointmentsPage() {
               }
             }}
           >
-            <Box sx={{ px: 2, py: 1, borderBottom: "1px solid #e9ecef" }}>
+            <Box sx={{ px: 2, py: 1, borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.2)" : "1px solid #e9ecef" }}>
               <Typography variant="subtitle2" fontWeight={600}>
                 Sütün Görünümü
               </Typography>
@@ -810,10 +808,8 @@ export default function AppointmentsPage() {
           height: "calc(100vh - 240px)", 
           width: "100%",
           maxWidth: "100%",
-          bgcolor: "#fff",
-          borderRadius: 1,
+          borderRadius: 2,
           overflow: "hidden",
-          border: "1px solid #dee2e6"
         }}>
           <DataGrid
             rows={filteredRows}
@@ -822,18 +818,23 @@ export default function AppointmentsPage() {
             columnVisibilityModel={columnVisibilityModel}
             disableRowSelectionOnClick
             disableColumnResize
-            pageSizeOptions={[10, 25, 50]}
+            pageSizeOptions={[10, 25, 50, 100]}
             initialState={{
-              pagination: { paginationModel: { pageSize: 10 } },
+              pagination: { paginationModel: { pageSize: 50 } },
             }}
             sx={{
               border: "none",
+              fontSize: "0.8rem",
+              bgcolor: "transparent",
+              color: mode === "dark" ? "#FFFFFF" : "inherit",
+              "& .MuiDataGrid-main": { bgcolor: "transparent" },
+              "& .MuiDataGrid-virtualScroller": { bgcolor: "transparent" },
               "& .MuiDataGrid-columnHeaders": {
-                bgcolor: "#f8f9fa",
-                color: "#495057",
+                bgcolor: mode === "dark" ? "#2D2757" : "#F9FAFB",
+                color: mode === "dark" ? "rgba(255,255,255,0.9)" : "#374151",
                 fontWeight: 600,
                 fontSize: "0.75rem",
-                borderBottom: "1px solid #dee2e6",
+                borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid #E5E7EB",
                 minHeight: "48px !important",
                 maxHeight: "48px !important",
               },
@@ -842,22 +843,36 @@ export default function AppointmentsPage() {
               },
               "& .MuiDataGrid-columnHeaderTitle": {
                 fontWeight: 600,
-              },
-              "& .MuiDataGrid-cell": {
-                borderBottom: "1px solid #f1f3f5",
-                py: 1,
+                color: mode === "dark" ? "rgba(255,255,255,0.9)" : undefined,
               },
               "& .MuiDataGrid-row": {
-                bgcolor: "#fff",
+                bgcolor: mode === "dark" ? "#252047" : "transparent",
+                "&:nth-of-type(even)": { bgcolor: mode === "dark" ? "#2A2450" : "transparent" },
                 "&:hover": { 
-                  bgcolor: "#f8f9fa",
+                  bgcolor: mode === "dark" ? "#322C5E" : "#F9FAFB",
                   cursor: "pointer"
                 },
               },
-              "& .MuiDataGrid-footerContainer": {
-                borderTop: "1px solid #dee2e6",
-                bgcolor: "#f8f9fa",
+              "& .MuiDataGrid-cell": {
+                borderBottom: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.1)" : "1px solid #F3F4F6",
+                borderRight: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.08)" : "none",
+                py: 1,
+                color: mode === "dark" ? "#FFFFFF" : "inherit",
               },
+              "& .MuiDataGrid-columnSeparator": { display: "none" },
+              "& .MuiDataGrid-footerContainer": {
+                bgcolor: mode === "dark" ? "#252047" : "#F9FAFB",
+                borderTop: mode === "dark" ? "1px solid rgba(124, 58, 237, 0.25)" : "1px solid #E5E7EB",
+                color: mode === "dark" ? "#FFFFFF" : undefined,
+              },
+              "& .MuiTablePagination-root": { color: mode === "dark" ? "#FFFFFF" : undefined },
+              "& .MuiTablePagination-selectIcon": { color: mode === "dark" ? "rgba(255,255,255,0.7)" : undefined },
+              "& .MuiCheckbox-root": { color: mode === "dark" ? "rgba(255,255,255,0.5)" : undefined },
+              "& .MuiDataGrid-overlay": { bgcolor: mode === "dark" ? "#1E1B3E" : undefined },
+              ...(mode === "dark" && {
+                "& .MuiInputBase-root": { color: "#FFFFFF", bgcolor: "transparent" },
+                "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.6)" },
+              }),
             }}
           />
         </Paper>

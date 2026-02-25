@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation"; // URL kontrolü için
+import { useState, useEffect, useContext } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   Box,
@@ -16,8 +16,12 @@ import {
   IconButton,
   useMediaQuery,
   useTheme,
+  Avatar,
+  Stack,
+  Badge,
+  Tooltip,
+  Chip,
 } from "@mui/material";
-// İkonlar
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import PeopleIcon from "@mui/icons-material/People";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
@@ -31,11 +35,18 @@ import GroupIcon from "@mui/icons-material/Group";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import SettingsIcon from "@mui/icons-material/Settings";
 import MenuIcon from "@mui/icons-material/Menu";
-import HotelIcon from "@mui/icons-material/Hotel";
+import GridViewIcon from "@mui/icons-material/GridView";
+import LightModeIcon from "@mui/icons-material/LightMode";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LogoutIcon from "@mui/icons-material/Logout";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import { useAuth } from "./AuthProvider";
 import { useI18n } from "./I18nProvider";
+import { ThemeModeContext } from "./ThemeRegistry";
 
-const drawerWidth = 260;
+const drawerWidth = 220;
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -44,6 +55,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
   const { t } = useI18n();
+  const { toggleTheme, mode } = useContext(ThemeModeContext);
   const [rolePermissions, setRolePermissions] = useState<any | null>(null);
 
   useEffect(() => {
@@ -208,83 +220,235 @@ export default function Sidebar() {
     return result;
   })();
 
+  const isSelected = (path: string) => {
+    return pathname === path || (path !== "/" && pathname.startsWith(path));
+  };
+
   const drawerContent = (
-    <>
-      <Box sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "center", height: 96 }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        background: mode === "dark" 
+          ? "linear-gradient(180deg, #2A2550 0%, #1E1B3E 100%)" 
+          : "#FFFFFF",
+      }}
+    >
+      {/* Logo */}
+      <Box sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 1.5 }}>
         <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
           <Box
             component="img"
             src="/xirtiz-logo.png"
             alt="Xirtiz CRM Logo"
-            sx={{ height: 66, objectFit: "contain" }}
+            sx={{ height: 36, objectFit: "contain", filter: mode === "dark" ? "brightness(1.2)" : "none" }}
           />
         </Link>
       </Box>
-      <Divider />
-      <List sx={{ py: 1.5 }}>
+
+
+
+      {/* Menü */}
+      <Box sx={{ flex: 1, overflowY: "auto", px: 1.5, py: 2 }}>
         {menuItems.map((item, index) => {
           const label = (item as any).textKey ? t((item as any).textKey) : item.text;
 
+          // Header'ları atla, sadece menü itemlarını göster
           if (item.type === "header") {
-            return (
-              <Typography
-                key={index}
-                variant="caption"
-                sx={{
-                  display: "block",
-                  color: "#999",
-                  fontWeight: "bold",
-                  mt: 2.5,
-                  mb: 0.5,
-                  px: 3,
-                  fontSize: "0.68rem",
-                  letterSpacing: 1,
-                }}
-              >
-                {label}
-              </Typography>
-            );
+            return null;
           }
+
+          const selected = isSelected(item.path || "#");
+
           return (
-            <ListItem
+            <ListItemButton
               key={index}
-              disablePadding
+              component={Link}
+              href={item.path || "#"}
               sx={{
-                position: "relative",
-                "&:not(:last-of-type)::after": {
-                  content: '""',
-                  position: "absolute",
-                  left: 24,
-                  right: 24,
-                  bottom: 0,
-                  height: "1px",
-                  background:
-                    "linear-gradient(90deg, transparent, #e5e7eb, transparent)",
+                px: 1.5,
+                py: 0.8,
+                mb: 0.3,
+                mx: 1,
+                borderRadius: 2,
+                transition: "all 0.2s ease",
+                background: selected
+                  ? mode === "dark"
+                    ? "linear-gradient(90deg, rgba(124, 58, 237, 0.2) 0%, rgba(124, 58, 237, 0.05) 100%)"
+                    : "linear-gradient(135deg, rgba(108, 93, 211, 0.15) 0%, rgba(108, 93, 211, 0.08) 100%)"
+                  : "transparent",
+                "&:hover": {
+                  background: mode === "dark"
+                    ? "rgba(124, 58, 237, 0.1)"
+                    : "rgba(108, 93, 211, 0.05)",
+                  transform: "translateX(2px)",
                 },
               }}
             >
-              <ListItemButton
-                component={Link}
-                href={item.path || "#"}
-                sx={{ px: 3, py: 0.8 }}
+              <ListItemIcon
+                sx={{
+                  minWidth: 36,
+                  color: selected
+                    ? "#9F67FF"
+                    : mode === "dark"
+                    ? "rgba(255,255,255,0.7)"
+                    : "rgba(0,0,0,0.5)",
+                }}
               >
-                <ListItemIcon sx={{ minWidth: 36, color: "#666" }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={label}
-                  primaryTypographyProps={{
-                    fontSize: "0.75rem",
-                    fontWeight: 500,
-                    color: "#444",
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={label}
+                primaryTypographyProps={{
+                  fontSize: "0.8rem",
+                  fontWeight: selected ? 600 : 500,
+                  color: selected
+                    ? mode === "dark"
+                      ? "#FFFFFF"
+                      : "#11142D"
+                    : mode === "dark"
+                    ? "rgba(255,255,255,0.85)"
+                    : "rgba(0,0,0,0.7)",
+                }}
+              />
+            </ListItemButton>
           );
         })}
-      </List>
-    </>
+      </Box>
+
+      {/* Footer - Kullanıcı Bilgisi ve Tema Toggle */}
+      <Box
+        sx={{
+          p: 2,
+          mt: "auto",
+        }}
+      >
+        {/* Tema Toggle */}
+        <Box
+          onClick={toggleTheme}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            px: 1.5,
+            py: 1,
+            mb: 1.5,
+            borderRadius: 1.5,
+            background: mode === "dark" ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.03)",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            "&:hover": {
+              background: mode === "dark" ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+            },
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Box
+              sx={{
+                width: 20,
+                height: 20,
+                borderRadius: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background:
+                  mode === "dark"
+                    ? "linear-gradient(135deg, #7C3AED 0%, #9F67FF 100%)"
+                    : "rgba(0,0,0,0.08)",
+              }}
+            >
+              {mode === "dark" ? (
+                <LightModeIcon sx={{ color: "#fff", fontSize: 14 }} />
+              ) : (
+                <DarkModeIcon sx={{ color: "#fff", fontSize: 14 }} />
+              )}
+            </Box>
+            <Typography
+              variant="caption"
+              fontWeight={500}
+              sx={{ color: mode === "dark" ? "rgba(255,255,255,0.9)" : "#374151", fontSize: "0.7rem" }}
+            >
+              {mode === "dark" ? "Açık Tema" : "Koyu Tema"}
+            </Typography>
+          </Stack>
+          <Box
+            sx={{
+              width: 32,
+              height: 16,
+              borderRadius: 8,
+              background:
+                mode === "dark"
+                  ? "linear-gradient(135deg, #7C3AED 0%, #9F67FF 100%)"
+                  : "rgba(0,0,0,0.12)",
+              position: "relative",
+              transition: "all 0.2s",
+            }}
+          >
+            <Box
+              sx={{
+                width: 12,
+                height: 12,
+                borderRadius: "50%",
+                bgcolor: "#fff",
+                position: "absolute",
+                top: 2,
+                left: mode === "dark" ? 18 : 2,
+                transition: "all 0.2s ease",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* Ayarlar ve Çıkış */}
+        <Stack direction="row" spacing={0.5}>
+          <Tooltip title="Ayarlar" arrow>
+            <ListItemButton
+              component={Link}
+              href="/settings"
+              sx={{
+                flex: 1,
+                px: 1.5,
+                py: 0.8,
+                borderRadius: 1.5,
+                background: mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+                justifyContent: "center",
+                transition: "all 0.2s",
+                "&:hover": {
+                  background: mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                },
+              }}
+            >
+              <SettingsIcon
+                sx={{
+                  color: mode === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                  fontSize: 16,
+                }}
+              />
+            </ListItemButton>
+          </Tooltip>
+          <Tooltip title="Çıkış Yap" arrow>
+            <ListItemButton
+              sx={{
+                flex: 1,
+                px: 1.5,
+                py: 0.8,
+                borderRadius: 1.5,
+                background: "rgba(239, 68, 68, 0.08)",
+                justifyContent: "center",
+                transition: "all 0.2s",
+                "&:hover": {
+                  background: "rgba(239, 68, 68, 0.15)",
+                },
+              }}
+            >
+              <LogoutIcon sx={{ color: "#ef4444", fontSize: 16 }} />
+            </ListItemButton>
+          </Tooltip>
+        </Stack>
+      </Box>
+    </Box>
   );
 
   // Detay sayfasında sidebar'ı tamamen gizle
@@ -323,8 +487,8 @@ export default function Sidebar() {
           "& .MuiDrawer-paper": {
             width: drawerWidth,
             boxSizing: "border-box",
-            backgroundColor: "#fff",
-            borderRight: "1px solid #e0e0e0",
+            border: "none",
+            background: "transparent",
           },
         }}
       >

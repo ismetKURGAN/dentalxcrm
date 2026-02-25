@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Box, Paper, Typography, Stack, Avatar, Button, Chip, IconButton, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText 
+  Box, Paper, Typography, Stack, Avatar, Button, Chip, IconButton, CircularProgress, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Card, useTheme 
 } from "@mui/material";
 
 // İKONLAR (Hata buradaki eksiklerden kaynaklanıyordu, hepsi eklendi)
@@ -20,6 +20,7 @@ import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useI18n } from "./components/I18nProvider";
 import { useAuth } from "./components/AuthProvider";
+import { ThemeModeContext } from "./components/ThemeRegistry";
 
 // GRAFİK
 import { 
@@ -28,10 +29,10 @@ import {
 
 // Üst kartlar için temel tanım (değerler runtime'da hesaplanır)
 const BASE_STATS = [
-  { key: "customers", titleKey: "dashboard.card.customers", icon: <GroupIcon sx={{ color: '#fff' }} />, color: '#2196F3' },
-  { key: "sales", titleKey: "dashboard.card.sales", icon: <ShoppingCartIcon sx={{ color: '#fff' }} />, color: '#FF9800' },
-  { key: "offers", titleKey: "dashboard.card.offers", icon: <DescriptionIcon sx={{ color: '#fff' }} />, color: '#4CAF50' },
-  { key: "conversion", titleKey: "dashboard.card.conversion", icon: <TrendingUpIcon sx={{ color: '#fff' }} />, color: '#9C27B0' },
+  { key: "customers", titleKey: "dashboard.card.customers", icon: <GroupIcon />, color: "#6366f1", lightBg: "rgba(99, 102, 241, 0.1)" },
+  { key: "sales", titleKey: "dashboard.card.sales", icon: <ShoppingCartIcon />, color: "#10b981", lightBg: "rgba(16, 185, 129, 0.1)" },
+  { key: "offers", titleKey: "dashboard.card.offers", icon: <DescriptionIcon />, color: "#f59e0b", lightBg: "rgba(245, 158, 11, 0.1)" },
+  { key: "conversion", titleKey: "dashboard.card.conversion", icon: <TrendingUpIcon />, color: "#ec4899", lightBg: "rgba(236, 72, 153, 0.1)" },
 ];
 
 // Başlangıç için demo grafik verisi (gerçek veriler gelene kadar)
@@ -64,25 +65,16 @@ function buildChartData(customers: any[]): { name: string; musteri: number; tekl
 
     const d = new Date(created);
     const diffMonths = (d.getFullYear() - now.getFullYear()) * 12 + (d.getMonth() - now.getMonth());
-    const indexFromEnd = 11 + diffMonths; // diffMonths negatif, 0 en eski, 11 en yeni
+    const indexFromEnd = 11 + diffMonths;
     if (indexFromEnd < 0 || indexFromEnd > 11) return;
 
     const bucket = buckets[indexFromEnd];
     bucket.musteri += 1;
 
-    // Status ve hizmet bilgisini al
-    let hasService = false;
-    let statusValue = '';
+    // SQLite API düz string döndürür: c.status = "Satış", c.service = "Dental..."
+    const statusValue = (c.status || '').toString().toLowerCase();
+    const hasService = c.service && c.service.toString().trim() !== '';
     
-    if (typeof c.status === 'object' && c.status !== null) {
-      hasService = c.status.services && c.status.services.trim() !== '';
-      statusValue = (c.status.status || '').toString().toLowerCase();
-    } else if (typeof c.status === 'string') {
-      statusValue = c.status.toLowerCase();
-      hasService = c.service && c.service.trim() !== '';
-    }
-    
-    // Teklif: Hizmet seçilmiş VE durum "teklif" içeriyor
     if (hasService && statusValue.includes('teklif')) {
       bucket.teklif += 1;
     }
@@ -96,8 +88,10 @@ function buildChartData(customers: any[]): { name: string; musteri: number; tekl
 
 export default function Dashboard() {
   const router = useRouter();
-  const { t, language } = useI18n();
+  const theme = useTheme();
+  const { t } = useI18n();
   const { user } = useAuth();
+  const { mode } = useContext(ThemeModeContext);
   const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin");
   const [reminders, setReminders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,20 +114,14 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchReminders = async () => {
       try {
-        const res = await fetch("/api/crm", { cache: "no-store" });
+        const res = await fetch("/api/crm-sqlite?all=true", { cache: "no-store" });
         if (res.ok) {
-          let data = await res.json();
+          const response = await res.json();
+          let data = Array.isArray(response) ? response : (response.data || response);
           
           // Admin değilse sadece kendi müşterilerini filtrele
           if (!isAdmin && user?.name) {
-            data = data.filter((c: any) => {
-              // Status objesinden danışman bilgisini al
-              if (typeof c.status === 'object' && c.status !== null) {
-                return c.status.consultant === user.name;
-              }
-              // Eski formatta advisor alanını kontrol et
-              return c.advisor === user.name;
-            });
+            data = data.filter((c: any) => c.advisor === user.name);
           }
 
           // Filtreleme: Reminder objesi var mı ve enabled true mu?
@@ -188,34 +176,18 @@ export default function Dashboard() {
           try {
             const totalCustomers = Array.isArray(data) ? data.length : 0;
             
-            // Teklif: Hizmet seçilmiş VE durum "Teklif" içeren müşteriler
+            // SQLite API düz string döndürür
             const offers = Array.isArray(data)
               ? data.filter((c: any) => {
-                  // Status objesinden hizmet ve durum bilgisini al
-                  let hasService = false;
-                  let statusValue = '';
-                  
-                  if (typeof c.status === 'object' && c.status !== null) {
-                    hasService = c.status.services && c.status.services.trim() !== '';
-                    statusValue = (c.status.status || '').toString().toLowerCase();
-                  } else if (typeof c.status === 'string') {
-                    statusValue = c.status.toLowerCase();
-                    // Eski formatta service alanını kontrol et
-                    hasService = c.service && c.service.trim() !== '';
-                  }
-                  
+                  const statusValue = (c.status || '').toString().toLowerCase();
+                  const hasService = c.service && c.service.toString().trim() !== '';
                   return hasService && statusValue.includes('teklif');
                 }).length
               : 0;
               
             const sales = Array.isArray(data)
               ? data.filter((c: any) => {
-                  let statusValue = '';
-                  if (typeof c.status === 'object' && c.status !== null) {
-                    statusValue = (c.status.status || '').toString().toLowerCase();
-                  } else if (typeof c.status === 'string') {
-                    statusValue = c.status.toLowerCase();
-                  }
+                  const statusValue = (c.status || '').toString().toLowerCase();
                   return statusValue.includes('satış') || statusValue.includes('satis') || statusValue.includes('sale');
                 }).length
               : 0;
@@ -241,17 +213,14 @@ export default function Dashboard() {
   }, [isAdmin, user]);
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        maxWidth: '100%',
-        overflowX: 'hidden',
-        p: { xs: 2, md: 3 },
-        bgcolor: "#f3f4f6",
-        minHeight: "100vh",
-      }}
-    >
-      
+    <Box sx={{ flexGrow: 1, p: 2.5, background: mode === "dark" ? "#1E1B3E" : "#F4F5F7", minHeight: "100vh" }}>
+      {/* Üst Başlık */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: mode === "dark" ? "#F9FAFB" : "#11142D" }}>
+          Dental X CRM
+        </Typography>
+      </Box>
+
       {/* İSTATİSTİK KARTLARI (GERÇEK VERİLERLE) */}
       <Box
         sx={{
@@ -297,20 +266,77 @@ export default function Dashboard() {
           const percentLabel = `${Math.abs(rawTrend).toFixed(1)}% ${isPositive ? t('dashboard.card.trend.increase') : t('dashboard.card.trend.decrease')}`;
 
           return (
-          <Paper key={stat.key} elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid #E0E0E0', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' } }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-              <Box>
-                <Typography variant="subtitle2" color="text.secondary" fontWeight="600" gutterBottom>{t(stat.titleKey)}</Typography>
-                <Typography variant="h4" fontWeight="800" sx={{ color: '#111827', my: 1 }}>{value}</Typography>
-                <Stack direction="row" spacing={0.5} alignItems="center">
-                  {isPositive ? <ArrowUpwardIcon sx={{ fontSize: 16, color: 'success.main' }} /> : <ArrowDownwardIcon sx={{ fontSize: 16, color: 'error.main' }} />}
-                  <Typography variant="body2" fontWeight="bold" sx={{ color: isPositive ? 'success.main' : 'error.main' }}>{percentLabel}</Typography>
-                </Stack>
-              </Box>
-              <Avatar variant="rounded" sx={{ bgcolor: stat.color, width: 56, height: 56, borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>{stat.icon}</Avatar>
-            </Stack>
-          </Paper>
-        );
+            <Card 
+              key={stat.key} 
+              elevation={0}
+              sx={{ 
+                p: 2.5, 
+                borderRadius: 3,
+                background: mode === "dark"
+                  ? `linear-gradient(145deg, ${stat.color}20 0%, ${stat.color}10 100%)`
+                  : stat.lightBg,
+                border: mode === "dark" 
+                  ? `1px solid ${stat.color}30`
+                  : `1px solid ${stat.color}20`,
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: mode === "dark"
+                    ? `0 8px 24px ${stat.color}40`
+                    : `0 8px 24px ${stat.color}30`,
+                },
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                <Box>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: mode === "dark" ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.6)",
+                      mb: 1,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {t(stat.titleKey)}
+                  </Typography>
+                  <Typography 
+                    variant="h4" 
+                    fontWeight="bold"
+                    sx={{ color: mode === "dark" ? "#F9FAFB" : "#11142D" }}
+                  >
+                    {value}
+                  </Typography>
+                  <Chip
+                    icon={isPositive ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />}
+                    label={percentLabel}
+                    size="small"
+                    sx={{
+                      mt: 1.5,
+                      bgcolor: isPositive
+                        ? mode === "dark" ? 'rgba(16, 185, 129, 0.2)' : 'rgba(16, 185, 129, 0.15)'
+                        : mode === "dark" ? 'rgba(239, 68, 68, 0.2)' : 'rgba(239, 68, 68, 0.15)',
+                      color: isPositive ? '#10b981' : '#ef4444',
+                      fontWeight: 600,
+                      borderRadius: 2,
+                    }}
+                  />
+                </Box>
+                <Avatar 
+                  sx={{ 
+                    bgcolor: stat.color,
+                    width: 48, 
+                    height: 48,
+                    boxShadow: `0 2px 10px ${stat.color}50`,
+                    color: '#fff',
+                  }}
+                >
+                  {stat.icon}
+                </Avatar>
+              </Stack>
+            </Card>
+          );
         })}
       </Box>
 
@@ -321,9 +347,15 @@ export default function Dashboard() {
         <Paper
           elevation={0}
           sx={{
-            p: { xs: 2, md: 3 },
-            borderRadius: 4,
-            border: '1px solid #E0E0E0',
+            p: { xs: 2, md: 2.5 },
+            borderRadius: 3,
+            background: mode === "dark" 
+              ? "rgba(42, 37, 80, 0.4)"
+              : "#FFFFFF",
+            border: mode === "dark"
+              ? "1px solid rgba(124, 58, 237, 0.2)"
+              : "1px solid rgba(0, 0, 0, 0.06)",
+            backdropFilter: mode === "dark" ? "blur(10px)" : "none",
             height: { xs: 360, md: 500 },
             display: 'flex',
             flexDirection: 'column',
@@ -332,8 +364,26 @@ export default function Dashboard() {
           }}
         >
           <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
-            <Typography variant="h6" fontWeight="bold">{t('dashboard.chart.title')}</Typography>
-            <Button size="small" variant="outlined" color="inherit" sx={{ borderRadius: 2, textTransform: 'none' }} endIcon={<CalendarTodayIcon fontSize="small"/>}>{t('dashboard.chart.last12Months')}</Button>
+            <Typography 
+              variant="h6" 
+              fontWeight="bold"
+              sx={{ color: mode === "dark" ? "#F9FAFB" : "#11142D" }}
+            >
+              {t('dashboard.chart.title')}
+            </Typography>
+            <Button 
+              size="small" 
+              variant="outlined" 
+              sx={{ 
+                borderRadius: 2, 
+                textTransform: 'none',
+                borderColor: mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)",
+                color: mode === "dark" ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.7)",
+              }} 
+              endIcon={<CalendarTodayIcon fontSize="small"/>}
+            >
+              {t('dashboard.chart.last12Months')}
+            </Button>
           </Stack>
           <Box sx={{ flexGrow: 1, width: '100%', minHeight: 0 }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -404,8 +454,14 @@ export default function Dashboard() {
           elevation={0}
           sx={{
             p: 0,
-            borderRadius: 4,
-            border: '1px solid #E0E0E0',
+            borderRadius: 3,
+            background: mode === "dark" 
+              ? "rgba(42, 37, 80, 0.4)"
+              : "#FFFFFF",
+            border: mode === "dark"
+              ? "1px solid rgba(124, 58, 237, 0.2)"
+              : "1px solid rgba(0, 0, 0, 0.06)",
+            backdropFilter: mode === "dark" ? "blur(10px)" : "none",
             height: { xs: 360, md: 500 },
             display: 'flex',
             flexDirection: 'column',
@@ -413,10 +469,42 @@ export default function Dashboard() {
             overflow: 'hidden',
           }}
         >
-          <Box sx={{ p: 2, borderBottom: "1px solid #f3f4f6", display: "flex", alignItems: "center", gap: 1, bgcolor: "#fff" }}>
-            <Box sx={{ p: 1, borderRadius: "50%", bgcolor: "#eff6ff", color: "#3b82f6" }}><NotificationsActiveIcon fontSize="small" /></Box>
-            <Typography fontWeight={600} color="#374151">{t('dashboard.reminders.title')}</Typography>
-            <Chip label={reminders.length} size="small" color="primary" sx={{ ml: "auto", height: 20, fontSize: 11 }} />
+          <Box 
+            sx={{ 
+              p: 2, 
+              borderBottom: mode === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid #f3f4f6", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: 1,
+            }}
+          >
+            <Box 
+              sx={{ 
+                p: 1, 
+                borderRadius: "50%", 
+                bgcolor: mode === "dark" ? "rgba(99, 102, 241, 0.2)" : "#eff6ff", 
+                color: "#6366f1" 
+              }}
+            >
+              <NotificationsActiveIcon fontSize="small" />
+            </Box>
+            <Typography 
+              fontWeight={600} 
+              sx={{ color: mode === "dark" ? "#F9FAFB" : "#374151" }}
+            >
+              {t('dashboard.reminders.title')}
+            </Typography>
+            <Chip 
+              label={reminders.length} 
+              size="small" 
+              sx={{ 
+                ml: "auto", 
+                height: 20, 
+                fontSize: 11,
+                bgcolor: mode === "dark" ? "rgba(99, 102, 241, 0.2)" : "rgba(99, 102, 241, 0.1)",
+                color: "#6366f1",
+              }} 
+            />
           </Box>
           
           <Box sx={{ overflowY: 'auto', flexGrow: 1 }}>
@@ -453,22 +541,24 @@ export default function Dashboard() {
                     item.reminder.notes?.toLowerCase().includes("görüşme");
 
                   return (
-                    <ListItem key={item.id} disablePadding divider>
+                    <ListItem key={item.id} disablePadding divider sx={{ borderColor: 'divider' }}>
                       <ListItemButton
                         onClick={() => router.push(`/customers/${item.id}`)}
                         sx={{
-                          '&:hover': { bgcolor: "#f9fafb" },
-                          bgcolor: isPast ? '#fef2f2' : 'white', // Geçmişse hafif kırmızı
-                          opacity: isPast ? 0.8 : 1,
+                          '&:hover': { bgcolor: 'action.hover' },
+                          bgcolor: isPast 
+                            ? (mode === 'dark' ? 'rgba(239, 68, 68, 0.1)' : '#fef2f2')
+                            : 'transparent',
+                          opacity: isPast ? 0.85 : 1,
                         }}
                       >
                       <ListItemIcon sx={{ minWidth: 40 }}>
                         {isPhoneCall ? (
-                          <Avatar sx={{ width: 32, height: 32, bgcolor: "#ecfdf5", color: "#10b981" }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(16, 185, 129, 0.15)', color: 'primary.main' }}>
                             <PhoneCallbackIcon fontSize="small" />
                           </Avatar>
                         ) : (
-                          <Avatar sx={{ width: 32, height: 32, bgcolor: "#e0e7ff", color: "#4f46e5" }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: 'rgba(99, 102, 241, 0.15)', color: '#6366F1' }}>
                             {item.name?.charAt(0).toUpperCase() || "?"}
                           </Avatar>
                         )}
@@ -477,7 +567,7 @@ export default function Dashboard() {
                       <ListItemText
                         primary={
                           <Box display="flex" justifyContent="space-between">
-                            <Typography variant="subtitle2" fontWeight={600} color="#1f2937">
+                            <Typography variant="subtitle2" fontWeight="600" color="text.primary">
                               {item.name}
                             </Typography>
                             <Typography

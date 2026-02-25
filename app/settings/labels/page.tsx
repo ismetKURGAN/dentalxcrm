@@ -83,16 +83,19 @@ export default function LabelsSettingsPage() {
   const [tempCategoryId, setTempCategoryId] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Meta"]));
 
-  // Kampanyalardan dinamik olarak topParent listesi oluştur
-  const TOP_PARENTS = useMemo(() => {
-    const parents = new Set<string>();
-    campaigns.forEach((c) => {
-      const topParent = c.topParent || c.parent;
-      if (topParent) parents.add(topParent);
-    });
-    // Alfabetik sırala
-    return Array.from(parents).sort((a, b) => a.localeCompare(b));
-  }, [campaigns]);
+  const TOP_PARENTS = [
+    "Landing Page",
+    "Şirket Hattı",
+    "Meta",
+    "TikTok",
+    "Acente",
+    "Kurum İçi",
+    "WhatClinic",
+    "Ek Satış",
+    "Influencer",
+    "Konsültasyon",
+    "Snapchat",
+  ];
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<LabelConfig | null>(null);
@@ -321,46 +324,45 @@ export default function LabelsSettingsPage() {
               />
 
               <FormControl fullWidth size="small">
+                <InputLabel>Üst Kategori Grubu</InputLabel>
+                <Select
+                  label="Üst Kategori Grubu"
+                  value={editing.categoryId ? (categories.find(c => c.id === editing.categoryId)?.topParent || "") : (tempCategoryId || "")}
+                  onChange={(e) => {
+                    setTempCategoryId(e.target.value as string);
+                    setEditing({ ...editing, categoryId: "" });
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>Grup Seçiniz</em>
+                  </MenuItem>
+                  {TOP_PARENTS.map(tp => (
+                    <MenuItem key={tp} value={tp}>
+                      {tp} ({categories.filter(c => c.topParent === tp).length})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth size="small">
                 <InputLabel>Kategori</InputLabel>
                 <Select
-                  open={selectOpen}
-                  onOpen={() => {
-                    setSelectOpen(true);
-                    setTempCategoryId(editing.categoryId);
-                  }}
-                  onClose={() => {
-                    setSelectOpen(false);
-                    setTempCategoryId("");
-                  }}
                   label="Kategori"
-                  value={tempCategoryId}
-                  onChange={(e) => setTempCategoryId(e.target.value as string)}
-                  displayEmpty
+                  value={editing.categoryId}
+                  onChange={(e) => setEditing({ ...editing, categoryId: e.target.value as string })}
+                  disabled={!tempCategoryId && !editing.categoryId}
                   MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        maxHeight: 450,
-                        '& .MuiMenuItem-root': {
-                          fontFamily: 'monospace',
-                          fontSize: '0.875rem',
-                          whiteSpace: 'pre',
-                        }
-                      }
-                    },
-                    autoFocus: false
+                    PaperProps: { sx: { maxHeight: 400 } }
                   }}
                 >
                   <MenuItem value="">
                     <em>Kategori Seçiniz</em>
                   </MenuItem>
-                  
                   {(() => {
-                    const getLevel = (cat: Category): number => {
-                      if (!cat.parentId) return 0;
-                      const parent = categories.find(c => c.id === cat.parentId);
-                      if (!parent) return 0;
-                      return 1 + getLevel(parent);
-                    };
+                    const selectedGroup = editing.categoryId 
+                      ? (categories.find(c => c.id === editing.categoryId)?.topParent || tempCategoryId)
+                      : tempCategoryId;
+                    if (!selectedGroup) return null;
                     
                     const getPath = (cat: Category): string => {
                       if (!cat.parentId) return cat.name;
@@ -369,133 +371,22 @@ export default function LabelsSettingsPage() {
                       return getPath(parent) + ' > ' + cat.name;
                     };
                     
-                    const options: Array<{ value: string; label: string; level: number; topParent: string; isDivider?: boolean; isExpanded?: boolean }> = [];
-                    
-                    TOP_PARENTS.forEach(topParent => {
-                      const catsInGroup = categories.filter(c => c.topParent === topParent);
-                      const isExpanded = expandedGroups.has(topParent);
-                      
-                      options.push({
-                        value: `divider-${topParent}`,
-                        label: topParent,
-                        level: -1,
-                        topParent,
-                        isDivider: true,
-                        isExpanded
-                      });
-                      
-                      if (isExpanded && catsInGroup.length > 0) {
-                        const sorted = [...catsInGroup].sort((a, b) => {
-                          const pathA = getPath(a);
-                          const pathB = getPath(b);
-                          return pathA.localeCompare(pathB);
-                        });
-                        
-                        sorted.forEach(cat => {
-                          const level = getLevel(cat);
-                          const indent = '  '.repeat(level);
-                          options.push({
-                            value: cat.id,
-                            label: indent + cat.name,
-                            level,
-                            topParent: cat.topParent
-                          });
-                        });
-                      }
-                    });
-                    
-                    return options.map(opt => {
-                      if (opt.isDivider) {
+                    return categories
+                      .filter(c => c.topParent === selectedGroup)
+                      .sort((a, b) => getPath(a).localeCompare(getPath(b)))
+                      .map(cat => {
+                        const level = (() => {
+                          let l = 0, cur: Category | undefined = cat;
+                          while (cur?.parentId) { l++; cur = categories.find(c => c.id === cur!.parentId); }
+                          return l;
+                        })();
                         return (
-                          <MenuItem 
-                            key={opt.value}
-                            autoFocus={false}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              const newExpanded = new Set(expandedGroups);
-                              if (newExpanded.has(opt.topParent)) {
-                                newExpanded.delete(opt.topParent);
-                              } else {
-                                newExpanded.add(opt.topParent);
-                              }
-                              setExpandedGroups(newExpanded);
-                            }}
-                            sx={{ 
-                              fontWeight: 700, 
-                              bgcolor: '#f5f5f5',
-                              color: '#1976d2',
-                              fontSize: '0.8rem',
-                              py: 0.5,
-                              borderTop: '1px solid #e0e0e0',
-                              borderBottom: '1px solid #e0e0e0',
-                              cursor: 'pointer',
-                              '&:hover': {
-                                bgcolor: '#e3f2fd'
-                              },
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 0.5
-                            }}
-                          >
-                            {opt.isExpanded ? '▼' : '▶'} {opt.label}
+                          <MenuItem key={cat.id} value={cat.id} sx={{ pl: 2 + level * 2 }}>
+                            {cat.name}
                           </MenuItem>
                         );
-                      }
-                      return (
-                        <MenuItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </MenuItem>
-                      );
-                    });
+                      });
                   })()}
-                  
-                  <MenuItem
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setEditing({ ...editing, categoryId: tempCategoryId });
-                      setSelectOpen(false);
-                      setTempCategoryId("");
-                    }}
-                    sx={{
-                      position: 'sticky',
-                      bottom: 0,
-                      bgcolor: '#f5f5f5',
-                      borderTop: '1px solid #e0e0e0',
-                      justifyContent: 'flex-end',
-                      py: 0.75,
-                      px: 2,
-                      '&:hover': {
-                        bgcolor: '#f5f5f5'
-                      }
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        bgcolor: '#4caf50',
-                        color: 'white',
-                        px: 2,
-                        py: 0.75,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        '&:hover': {
-                          bgcolor: '#45a049'
-                        }
-                      }}
-                    >
-                      ✓ Onayla
-                    </Box>
-                  </MenuItem>
                 </Select>
               </FormControl>
 

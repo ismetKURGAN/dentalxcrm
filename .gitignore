@@ -38,6 +38,8 @@ settings.json
 
 # data files (müşteri verileri - GitHub'a gitmemeli)
 db.json
+crm.db
+deleted-customers.json
 campaigns.json
 labels.json
 users.json

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { getAllCustomersLight } from "../lib/sqlite-customers";
 
-const DB_PATH = path.join(process.cwd(), "db.json");
 const SETTINGS_PATH = path.join(process.cwd(), "settings.json");
 
 const INTERNAL_BASE_URL =
@@ -17,12 +17,6 @@ interface DailyStats {
   sales: number;
 }
 
-function getCustomers(): any[] {
-  if (!fs.existsSync(DB_PATH)) return [];
-  const raw = fs.readFileSync(DB_PATH, "utf-8");
-  return JSON.parse(raw);
-}
-
 function getSettings(): any {
   if (!fs.existsSync(SETTINGS_PATH)) return {};
   const raw = fs.readFileSync(SETTINGS_PATH, "utf-8");
@@ -30,7 +24,7 @@ function getSettings(): any {
 }
 
 function calculateDailyStats(): DailyStats[] {
-  const customers = getCustomers();
+  const customers = getAllCustomersLight();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
