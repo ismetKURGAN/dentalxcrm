@@ -4,12 +4,32 @@ import "./globals.css";
 import ThemeRegistry from "./components/ThemeRegistry"; // Tema sağlayıcı
 import AppShell from "./components/AppShell";
 import { I18nProvider } from "./components/I18nProvider";
+import PWARegister from "./components/PWARegister";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DentalXCrm",
-  description: "Customer Relationship Management",
+  title: "DentalX CRM",
+  description: "DentalX Turkey - Customer Relationship Management",
+  manifest: "/manifest.json",
+  themeColor: "#F5A623",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "DentalX CRM",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: "/icons/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icons/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
 };
 
 // HMR WebSocket hatasında sayfa yenilenmesini engelle
@@ -55,9 +75,12 @@ export default function RootLayout({
   return (
     <html lang="tr">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
         <script dangerouslySetInnerHTML={{ __html: hmrDisableScript }} />
       </head>
       <body className={inter.className} style={{ display: "flex" }}>
+        <PWARegister />
         <ThemeRegistry>
           <I18nProvider>
             <AppShell>{children}</AppShell>

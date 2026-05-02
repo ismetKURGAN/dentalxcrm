@@ -132,6 +132,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
             transition: "all 0.2s",
             ...(mode === "dark" && {
               color: "#FFFFFF",
+              backgroundColor: "rgba(255,255,255,0.05)",
               "& fieldset": { borderColor: "rgba(124, 58, 237, 0.3)" },
               "&:hover fieldset": { borderColor: "rgba(124, 58, 237, 0.5)" },
             }),
@@ -155,7 +156,10 @@ const getDesignTokens = (mode: PaletteMode) => ({
           borderRadius: 10,
           ...(mode === "dark" && {
             color: "#FFFFFF",
+            backgroundColor: "rgba(255,255,255,0.05)",
             "& .MuiSvgIcon-root": { color: "rgba(255,255,255,0.7)" },
+            "& fieldset": { borderColor: "rgba(124, 58, 237, 0.3)" },
+            "&:hover fieldset": { borderColor: "rgba(124, 58, 237, 0.5)" },
           }),
         },
       },

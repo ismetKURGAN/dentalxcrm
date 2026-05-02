@@ -70,7 +70,7 @@ function calculateDailyStats(): DailyStats[] {
     }
 
     // Satış kontrolü
-    if (statusStr.includes("satış") && !statusStr.includes("iptal")) {
+    if (statusStr.includes("satış") && !statusStr.includes("iptal") && !statusStr.includes("potansiyel")) {
       stats.sales++;
     }
   });

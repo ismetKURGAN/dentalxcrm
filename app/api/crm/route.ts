@@ -3,6 +3,8 @@ import fs from "fs";
 import path from "path";
 import type { LabelConfig } from "../settings/labels/route";
 import { getAllCustomersFull, getCustomerById, upsertCustomer, deleteCustomer, findDuplicate } from "../lib/sqlite-customers";
+import { detectCountryFromPhone } from "../lib/phone-country";
+import { sendSatisMail, sendVisitMail } from "../lib/notify-mail";
 
 // Veri dosyasının yolu
 const CAMPAIGNS_DB_PATH = path.join(process.cwd(), "campaigns.json");
@@ -612,12 +614,18 @@ async function sendAdvisorLeadNotificationIfPossible(customer: any) {
     const category = customer.category || customer.personal?.facebook?.campaignName || "-";
     const status =
       (customer.status && customer.status.status) || customer.status || "-";
+    const whatsappNum =
+      customer.whatsappNumber ||
+      customer.personal?.whatsappNumber ||
+      customer["jaki_jest_twoj_numer_whatsapp"] ||
+      "";
 
     const text =
       "📥 *Yeni Lead Atandı*\n\n" +
       `🧑‍💼 Danışman: ${advisorName}\n` +
       `👤 Müşteri: ${customerName}\n` +
       `📱 Müşteri Tel: ${customerPhone}\n` +
+      (whatsappNum ? `� Notlar: ${whatsappNum}\n` : "") +
       `🏷 Kategori: ${category}\n` +
       `📌 Durum: ${status}`;
 
@@ -811,9 +819,16 @@ export async function POST(request: Request) {
     const incomingCategory = categoryName;
     const incomingServices = body.service || body.services || '';
 
+    // Telefon numarasından ülke otomatik tespiti
+    const incomingPhoneRaw = body.phone || body.personal?.phone || "";
+    const detectedCountry = !body.country && incomingPhoneRaw
+      ? detectCountryFromPhone(incomingPhoneRaw)
+      : null;
+
     const newCustomer = {
       ...body,
       advisor,
+      country: body.country || detectedCountry || body.personal?.country || "",
       // Kampanya eşleşmesi varsa kategori ve üst kategori bilgilerini yaz
       category: incomingCategory,
       parentCategory: topParentName || body.parentCategory,
@@ -959,6 +974,76 @@ export async function PUT(request: Request) {
       
       // SQLite'a kaydet
       upsertCustomer(updatedCustomer);
+
+      // Visit bildirimi: yeni eklenen veya düzenlenen Seyahat(ler)
+      try {
+        const oldTrips: any[] = Array.isArray(existingCustomer?.sales?.trips) ? existingCustomer.sales.trips : [];
+        const newTrips: any[] = Array.isArray(updatedCustomer?.sales?.trips) ? updatedCustomer.sales.trips : [];
+        const oldById = new Map(oldTrips.map((t: any) => [String(t?.id ?? ""), t]));
+        const advisorName = updatedCustomer.advisor || (typeof updatedCustomer.status === "object" ? updatedCustomer.status?.consultant : "") || "";
+        const customerName = updatedCustomer.name || updatedCustomer.personal?.name || "";
+        const price = Number(updatedCustomer.sales?.price || 0);
+        const currency = updatedCustomer.sales?.priceCurrency || "EUR";
+
+        // Bir trip'in mail için anlamlı alanları aynı mı?
+        const tripFields = [
+          "appointmentDate", "appointmentTime", "doctor", "hotel", "roomType",
+          "peopleCount", "transferCompany", "arrivalDate", "arrivalTime",
+          "arrivalFlightCode", "departureDate", "departureTime", "departureFlightCode",
+          "travelNotes", "dateUndetermined", "name",
+        ];
+        const tripsEqual = (a: any, b: any) => tripFields.every(f => String(a?.[f] ?? "") === String(b?.[f] ?? ""));
+
+        for (const trip of newTrips) {
+          if (!trip) continue;
+          const key = String(trip.id ?? "");
+          const prev = oldById.get(key);
+          const isNew = !prev;
+          const isUpdated = !isNew && !tripsEqual(prev, trip);
+          if (!isNew && !isUpdated) continue;
+          sendVisitMail({
+            advisor: advisorName,
+            customerName,
+            tripName: trip.name,
+            appointmentDate: trip.appointmentDate,
+            appointmentTime: trip.appointmentTime,
+            doctor: trip.doctor,
+            hotel: trip.hotel,
+            roomType: trip.roomType,
+            peopleCount: trip.peopleCount,
+            transferCompany: trip.transferCompany,
+            arrivalDate: trip.arrivalDate,
+            arrivalTime: trip.arrivalTime,
+            arrivalFlightCode: trip.arrivalFlightCode,
+            departureDate: trip.departureDate,
+            departureTime: trip.departureTime,
+            departureFlightCode: trip.departureFlightCode,
+            notes: trip.travelNotes,
+            dateUndetermined: !!trip.dateUndetermined,
+            amount: price,
+            currency,
+            isUpdate: isUpdated,
+          }).catch(() => {});
+        }
+      } catch {}
+
+      // Satış bildirimi: status "Satış" oldu ve önceden değildi
+      try {
+        const prevStatus = typeof existingCustomer.status === "object"
+          ? (existingCustomer.status?.status || "")
+          : (existingCustomer.status || "");
+        const newStatusStr = typeof updatedCustomer.status === "object"
+          ? (updatedCustomer.status?.status || "")
+          : (updatedCustomer.status || "");
+        if (newStatusStr === "Satış" && prevStatus !== "Satış") {
+          sendSatisMail({
+            advisor: updatedCustomer.advisor || (typeof updatedCustomer.status === "object" ? updatedCustomer.status?.consultant : "") || "",
+            customerName: updatedCustomer.name || updatedCustomer.personal?.name || "",
+            category: updatedCustomer.category || (typeof updatedCustomer.status === "object" ? updatedCustomer.status?.category : "") || "",
+            dateTime: new Date().toISOString(),
+          }).catch(() => {});
+        }
+      } catch {}
 
       return withCors(NextResponse.json(updatedCustomer), request);
     } else {

@@ -30,9 +30,8 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import { useI18n } from "../components/I18nProvider";
 import { ThemeModeContext } from "../components/ThemeRegistry";
 
-const OFFER_KEYWORDS = ["Teklif"];
 const SALE_KEYWORDS = ["Satış"];
-const CANCEL_KEYWORDS = ["Randevu İptal", "Satış İptal", "İptal"];
+const CANCEL_KEYWORDS = ["Randevu İptal", "Satış İptal", "Satış İptali", "İptal"];
 
 // Türkçe İ/i uyumlu lowercase
 function trLower(s: string): string {
@@ -56,6 +55,7 @@ const TOP_PARENT_CATEGORIES = [
   "Konsültasyon",
   "Snapchat",
   "Boş",
+  "Eski Data",
 ];
 
 type Category = {
@@ -104,15 +104,17 @@ type AggRow = {
 
 function groupStatusFromValue(statusValue: any, customer?: Customer): StatusGroup {
   const raw = (typeof statusValue === "string" ? statusValue : statusValue?.status || "").toString();
-  if (!raw) return "other";
   const s = trLower(raw);
   
   // Önce iptal kontrolü ("Randevu İptal", "Satış İptal" vs.)
   if (CANCEL_KEYWORDS.some((k) => s.includes(trLower(k)))) return "cancel";
+  // Potansiyel Satış → teklif (satış sayılmaz)
+  if (s.includes("potansiyel satis") || s.includes("potansiyel satış")) return "offer";
   // Satış kontrolü
   if (SALE_KEYWORDS.some((k) => s.includes(trLower(k)))) return "sale";
-  // Teklif kontrolü: durum içinde "teklif" geçiyorsa
-  if (OFFER_KEYWORDS.some((k) => s.includes(trLower(k)))) return "offer";
+  // Teklif kontrolü: sadece hizmet seçiliyse teklif say
+  const service = (customer?.service || "").toString().trim();
+  if (service) return "offer";
   
   return "other";
 }
@@ -129,7 +131,7 @@ export default function StatsPage() {
   const { mode } = useContext(ThemeModeContext);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
   const [categoriesData, setCategoriesData] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -143,10 +145,9 @@ export default function StatsPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [crmRes, usersRes, campaignsRes, categoriesRes] = await Promise.all([
+      const [crmRes, usersRes, categoriesRes] = await Promise.all([
         fetch("/api/crm-sqlite?all=true", { cache: "no-store" }),
         fetch("/api/users", { cache: "no-store" }),
-        fetch("/api/campaigns", { cache: "no-store" }),
         fetch("/api/categories", { cache: "no-store" }),
       ]);
 
@@ -158,10 +159,6 @@ export default function StatsPage() {
       if (usersRes.ok) {
         const data = await usersRes.json();
         setUsers(Array.isArray(data) ? data : []);
-      }
-      if (campaignsRes.ok) {
-        const data = await campaignsRes.json();
-        setCampaigns(Array.isArray(data) ? data : []);
       }
       if (categoriesRes.ok) {
         const data = await categoriesRes.json();
@@ -306,7 +303,7 @@ export default function StatsPage() {
       if (g === "cancel") map[parent].cancel += 1;
     });
     return Object.values(map).sort((a, b) => b.total - a.total);
-  }, [filtered, users]);
+  }, [filtered]);
 
   // Helper to get category level
   const getCategoryLevel = (catId: string, allCats: Category[]): number => {
@@ -324,79 +321,66 @@ export default function StatsPage() {
   };
 
   const byCategory: AggRow[] = useMemo(() => {
+    const catById: Record<string, Category> = {};
+    categoriesData.forEach(c => { catById[c.id] = c; });
+
     const map: Record<string, AggRow> = {};
-    
-    // Önce kategorilerden tüm kategorileri al ve başlangıç değerleri oluştur
-    categoriesData.forEach((category) => {
-      const cat = category.name;
-      if (!cat) return;
-      
-      const parent = category.topParent;
-      const level = getCategoryLevel(category.id, categoriesData);
-      const key = category.id;
-      
-      if (!map[key]) {
-        map[key] = {
-          key,
-          parentCategory: parent,
-          category: cat,
-          categoryId: category.id,
-          parentCategoryId: category.parentId,
-          level,
-          total: 0,
-          offer: 0,
-          sale: 0,
-          cancel: 0,
-        };
-      }
-    });
-    
-    // Müşterileri say
+
+    const ensureRow = (cat: Category) => {
+      if (map[cat.id]) return;
+      map[cat.id] = {
+        key: cat.id,
+        parentCategory: cat.topParent,
+        category: cat.name,
+        categoryId: cat.id,
+        parentCategoryId: cat.parentId,
+        level: getCategoryLevel(cat.id, categoriesData),
+        total: 0,
+        offer: 0,
+        sale: 0,
+        cancel: 0,
+      };
+    };
+
+    // Tüm kategoriler için başlangıç satırı oluştur
+    categoriesData.forEach(ensureRow);
+
+    // Müşterileri say — leaf'e ve tüm üst parent'lara bubble up
     filtered.forEach((c) => {
-      const catName = c.category || "Diğer";
-      const parent = resolveParentCategory(c);
-      
-      // Kategori adından ID bul
-      const matchingCat = categoriesData.find(cat => 
-        cat.name === catName && cat.topParent === parent
-      );
-      
-      const key = matchingCat ? matchingCat.id : `${parent}:::${catName}`;
-      
-      if (!map[key]) {
-        map[key] = {
-          key,
-          parentCategory: parent,
-          category: catName,
-          categoryId: matchingCat?.id,
-          parentCategoryId: matchingCat?.parentId || null,
-          level: matchingCat ? getCategoryLevel(matchingCat.id, categoriesData) : 0,
-          total: 0,
-          offer: 0,
-          sale: 0,
-          cancel: 0,
-        };
-      }
-      
+      const catName = c.category || "";
+      if (!catName) return;
+
+      const topParent = resolveParentCategory(c);
+      const matchingCat =
+        categoriesData.find(cat => cat.name === catName && cat.topParent === topParent) ||
+        categoriesData.find(cat => cat.name === catName);
+
+      if (!matchingCat) return;
+
       const g = groupStatusFromValue(c.status, c);
-      map[key].total += 1;
-      if (g === "offer") map[key].offer += 1;
-      if (g === "sale") map[key].sale += 1;
-      if (g === "cancel") map[key].cancel += 1;
+
+      // Leaf'ten başlayarak tüm üst parent'lara sayıyı ekle
+      let current: Category | undefined = matchingCat;
+      while (current) {
+        ensureRow(current);
+        map[current.id].total += 1;
+        if (g === "offer") map[current.id].offer += 1;
+        if (g === "sale") map[current.id].sale += 1;
+        if (g === "cancel") map[current.id].cancel += 1;
+        current = current.parentId ? catById[current.parentId] : undefined;
+      }
     });
-    
+
     // Hiyerarşik sıraya göre sırala
     return Object.values(map).sort((a, b) => {
       if (a.parentCategory !== b.parentCategory) {
         return (a.parentCategory || '').localeCompare(b.parentCategory || '');
       }
-      
-      // Aynı topParent içinde hiyerarşik sıralama
       const pathA = a.categoryId ? getCategoryPath(a.categoryId, categoriesData) : a.category || '';
       const pathB = b.categoryId ? getCategoryPath(b.categoryId, categoriesData) : b.category || '';
       return pathA.localeCompare(pathB);
     });
-  }, [filtered, categoriesData, users]);
+  }, [filtered, categoriesData]);
 
   const byAdvisor: AggRow[] = useMemo(() => {
     const map: Record<string, AggRow> = {};
@@ -521,9 +505,10 @@ export default function StatsPage() {
             Excel'e Aktar
           </Button>
           <Button
-            variant="text"
+            variant={showFilters ? "contained" : "outlined"}
             size="small"
             sx={{ textTransform: "none" }}
+            onClick={() => setShowFilters((v) => !v)}
           >
             Filtrele
           </Button>
@@ -531,6 +516,7 @@ export default function StatsPage() {
             variant="contained"
             size="small"
             sx={{ textTransform: "none" }}
+            onClick={fetchData}
           >
             Yenile
           </Button>
@@ -542,7 +528,7 @@ export default function StatsPage() {
         {[
           { label: 'Toplam Lead', value: filtered.length, pct: '100', color: '#6366f1', iconBg: mode === 'dark' ? 'rgba(99,102,241,0.15)' : '#e3f2fd' },
           { label: 'Teklif', value: totals.offer, pct: filtered.length ? formatPercent((totals.offer / filtered.length) * 100) : '0.0', color: '#f59e0b', iconBg: mode === 'dark' ? 'rgba(245,158,11,0.15)' : '#fff3e0' },
-          { label: 'Satış', value: totals.sale, pct: totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : '0.0', color: '#10b981', iconBg: mode === 'dark' ? 'rgba(16,185,129,0.15)' : '#e8f5e9' },
+          { label: 'Satış', value: totals.sale, pct: filtered.length ? formatPercent((totals.sale / filtered.length) * 100) : '0.0', color: '#10b981', iconBg: mode === 'dark' ? 'rgba(16,185,129,0.15)' : '#e8f5e9' },
           { label: 'İptal', value: totals.cancel, pct: filtered.length ? formatPercent((totals.cancel / filtered.length) * 100) : '0.0', color: '#ef4444', iconBg: mode === 'dark' ? 'rgba(239,68,68,0.15)' : '#ffebee' },
           { label: 'Dönüşüm', value: null, pct: totals.offer ? formatPercent((totals.sale / totals.offer) * 100) : '0.0', color: '#8b5cf6', iconBg: mode === 'dark' ? 'rgba(139,92,246,0.15)' : '#f3e5f5' },
         ].map((stat) => (
@@ -575,7 +561,7 @@ export default function StatsPage() {
           mb: 2.5,
           p: 2,
           borderRadius: 2,
-          display: "none",
+          display: showFilters ? "block" : "none",
         }}
       >
         <Stack
@@ -685,15 +671,20 @@ export default function StatsPage() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {TOP_PARENT_CATEGORIES.map((parent) => {
-                const parentData = byParent.find(r => r.parentCategory === parent) || {
-                  total: 0,
-                  offer: 0,
-                  sale: 0,
-                  cancel: 0
-                };
+              {(() => {
+                // byParent'taki tüm satırları göster — TOP_PARENT_CATEGORIES sırasıyla + geri kalanlar
+                const knownParents = TOP_PARENT_CATEGORIES;
+                const extraParents = byParent
+                  .map(r => r.parentCategory)
+                  .filter((p): p is string => !!p && !knownParents.includes(p));
+                const allParents = [...knownParents, ...extraParents];
+                return allParents.map((parent) => {
                 const isExpanded = expandedCategories.has(parent);
                 const childCategories = byCategory.filter(c => c.parentCategory === parent);
+                // Üst satır sayısı byParent'tan gelir (tüm müşterileri kapsar)
+                const parentData = byParent.find(r => r.parentCategory === parent) || {
+                  total: 0, offer: 0, sale: 0, cancel: 0
+                };
                 const grandTotal = filtered.length || 1;
                 const totalPct = formatPercent((parentData.total / grandTotal) * 100);
                 const offerPct = parentData.total ? formatPercent((parentData.offer / parentData.total) * 100) : "0.0";
@@ -738,8 +729,7 @@ export default function StatsPage() {
                     {isExpanded && (() => {
                       // Render hierarchical categories
                       const renderCategory = (cat: AggRow, depth: number = 0): React.ReactNode[] => {
-                        const parentTotal = parentData.total || 1;
-                        const catTotalPct = formatPercent((cat.total / parentTotal) * 100);
+                        const catTotalPct = formatPercent((cat.total / grandTotal) * 100);
                         const catOfferPct = cat.total ? formatPercent((cat.offer / cat.total) * 100) : "0.0";
                         const catSalePct = cat.offer ? formatPercent((cat.sale / cat.offer) * 100) : "0.0";
                         const catCancelPct = cat.total ? formatPercent((cat.cancel / cat.total) * 100) : "0.0";
@@ -805,7 +795,8 @@ export default function StatsPage() {
                     })()}
                   </React.Fragment>
                 );
-              })}
+              });
+              })()}
               {/* Toplam Satırı */}
               <TableRow sx={{ bgcolor: mode === "dark" ? "#2D2757" : "#f0f0f0" }}>
                 <TableCell>

@@ -53,6 +53,9 @@ export async function GET() {
     const customers = getCustomersWithActiveReminders();
 
     const now = new Date();
+    // Türkiye saati UTC+3. Hatırlatıcı tarihi timezone bilgisi olmadan (datetime-local)
+    // kaydedildiği için sunucu bunu UTC olarak okur; karşılaştırmadan önce 3 saat geri çekiyoruz.
+    const TURKEY_OFFSET_MS = 3 * 60 * 60 * 1000;
     const logs: string[] = [];
 
     // 2. Müşterileri Tara
@@ -69,10 +72,11 @@ export async function GET() {
         !c.reminder.sent && 
         c.reminder.datetime
       ) {
-        const reminderTime = new Date(c.reminder.datetime);
+        // datetime-local string'i Türkiye saati (UTC+3) olarak yorumla → UTC'ye çevir
+        const reminderTimeUTC = new Date(new Date(c.reminder.datetime).getTime() - TURKEY_OFFSET_MS);
         
-        // Eğer şu anki zaman, hatırlatma zamanından büyük veya eşitse
-        if (now >= reminderTime) {
+        // Eğer şu anki zaman (UTC), Türkiye saatiyle ayarlı hatırlatma zamanından büyük veya eşitse
+        if (now >= reminderTimeUTC) {
           // Danışmana gidecek hatırlatma (müşteriye değil)
           const customerName = c.name || c.personal?.name || "Bilinmiyor";
           const rawCustomerPhone = c.personal?.phone || c.phone;

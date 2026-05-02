@@ -29,6 +29,7 @@ import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import DescriptionIcon from "@mui/icons-material/Description";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupIcon from "@mui/icons-material/Group";
@@ -54,7 +55,7 @@ export default function Sidebar() {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user } = useAuth();
-  const { t } = useI18n();
+  const { t, language, setLanguage } = useI18n();
   const { toggleTheme, mode } = useContext(ThemeModeContext);
   const [rolePermissions, setRolePermissions] = useState<any | null>(null);
 
@@ -71,8 +72,10 @@ export default function Sidebar() {
           const roleDef = data.find((r: any) => r.name === rName);
           if (roleDef && roleDef.permissions) {
             Object.entries(roleDef.permissions).forEach(([key, value]) => {
-              if (value) {
+              if (value === true) {
                 perms[key] = true;
+              } else if (!(key in perms)) {
+                perms[key] = false;
               }
             });
           }
@@ -92,13 +95,15 @@ export default function Sidebar() {
     return fallback;
   };
 
-  const allowedChatRoles = ["Admin", "Danışman", "Operasyon", "SuperAdmin", "Acenta"];
-  const fallbackCanSeeChats = user?.roles?.some((r) => allowedChatRoles.includes(r)) ?? false;
-  const canSeeChats = hasPerm("viewChats", fallbackCanSeeChats);
-  const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin") || false;
+  const isSuperAdmin = user?.roles?.includes("SuperAdmin") || false;
+  const isAdmin = user?.roles?.includes("Admin") || isSuperAdmin || false;
   const isManager = user?.roles?.includes("Yönetici") || false;
+  const isSorumlu = user?.roles?.includes("Sorumlu") || false;
+  const isVeriGiris = user?.roles?.includes("Veri Giriş Sorumlusu") || false;
   const isAdvisor = user?.roles?.includes("Danışman") || false;
+  const isMeetUpDanisMan = user?.roles?.includes("Meet-Up Danışman") || false;
   const isAgency = user?.roles?.includes("Acenta") || false;
+  const isOperasyon = user?.roles?.includes("Operasyon") || false;
 
   // --- MÜŞTERİ DETAY SAYFASINDA TAMAMEN GİZLE ---
   // Örn: /customers/123
@@ -106,119 +111,82 @@ export default function Sidebar() {
     pathname.startsWith("/customers/") && pathname.split("/").length > 2;
   // -----------------------------------------------------
 
-  const canViewAppointments = hasPerm("viewAppointments", !isAgency);
+  const canViewCustomers = hasPerm("viewCustomers", !isOperasyon);
+  const canViewAppointments = hasPerm("viewAppointments",
+    isAdmin || isManager || isVeriGiris || isAdvisor || isMeetUpDanisMan || isOperasyon);
+  const allowedChatRoles = ["Admin", "SuperAdmin", "Yönetici", "Sorumlu", "Veri Giriş Sorumlusu",
+    "Danışman", "Meet-Up Danışman", "Acenta"];
+  const fallbackCanSeeChats = user?.roles?.some((r) => allowedChatRoles.includes(r)) ?? false;
+  const canSeeChats = hasPerm("viewChats", fallbackCanSeeChats && !isOperasyon);
+  const canViewStats = hasPerm("viewStats", isAdmin || isManager || isSorumlu || isVeriGiris);
+  const canViewReports = hasPerm("viewReports", isAdmin || isManager || isSorumlu || isVeriGiris);
+  const canViewCosts = hasPerm("viewCosts", isAdmin);
+  const canViewSegments = hasPerm("viewSegments",
+    isAdmin || isManager || isSorumlu || isAdvisor || isAgency || isMeetUpDanisMan);
+  const canViewCampaignStatuses = hasPerm("viewCampaignStatuses", isAdmin || isManager || isSorumlu);
+  const canViewUsers = isAdmin;
+  const canViewTimesheets = hasPerm("viewTimesheets", isAdmin);
+  const canViewSettings = hasPerm("manageSettings", isAdmin);
 
   const baseMenuItems = [
     { text: "ANA SAYFA", textKey: "sidebar.header.home", type: "header" },
     { text: "Kontrol Paneli", textKey: "sidebar.dashboard", icon: <DashboardIcon />, path: "/" },
     { text: "MÜŞTERİ İŞLEMLERİ", textKey: "sidebar.header.customers", type: "header" },
-    { text: "Müşteriler", textKey: "sidebar.customers", icon: <PeopleIcon />, path: "/customers" },
-    ...(
-      canViewAppointments
-        ? [{ text: "Randevular", textKey: "sidebar.appointments", icon: <CalendarMonthIcon />, path: "/appointments" }]
-        : []
-    ),
-    ...(
-      (canSeeChats || isAdmin)
-        ? [{ text: "WHATSAPP", textKey: "sidebar.header.whatsapp", type: "header" }]
-        : []
-    ),
-    ...(
-      canSeeChats
-        ? [{ text: "Sohbetler", textKey: "sidebar.chats", icon: <WhatsAppIcon color="success" />, path: "/whatsapp" }]
-        : []
-    ),
-    ...(
-      isAdmin
-        ? [{ text: "Wazzup", textKey: "sidebar.wazzup", icon: <WhatsAppIcon color="primary" />, path: "/wazzup" }]
-        : []
-    ),
-    { text: "RAPOR", textKey: "sidebar.header.reports", type: "header" },
-    { text: "İstatistikler", textKey: "sidebar.stats", icon: <BarChartIcon />, path: "/stats" },
-    { text: "Raporlar", textKey: "sidebar.reports", icon: <DescriptionIcon />, path: "/reports" },
-    { text: "PAZARLAMA", textKey: "sidebar.header.marketing", type: "header" },
-    { text: "Segmentler", textKey: "sidebar.segments", icon: <FilterListIcon />, path: "/segments" },
-    { text: "Kampanya Durumları", textKey: "sidebar.campaignStatuses", icon: <FlagIcon />, path: "/campaign-status" },
-    { text: "KULLANICI İŞLEMLERİ", textKey: "sidebar.header.users", type: "header" },
-    ...(
-      isAdmin
-        ? [{ text: "Kullanıcılar", textKey: "sidebar.users", icon: <GroupIcon />, path: "/users" }]
-        : []
-    ),
-    { text: "Mesai Takip", textKey: "sidebar.timesheets", icon: <AccessTimeIcon />, path: "/timesheets" },
-    { text: "GENEL AYARLAR", textKey: "sidebar.header.settings", type: "header" },
-    { text: "Ayarlar", textKey: "sidebar.settings", icon: <SettingsIcon />, path: "/settings" },
+    ...(canViewCustomers
+      ? [{ text: "Müşteriler", textKey: "sidebar.customers", icon: <PeopleIcon />, path: "/customers" }]
+      : []),
+    ...(canViewAppointments
+      ? [{ text: "Randevular", textKey: "sidebar.appointments", icon: <CalendarMonthIcon />, path: "/appointments" }]
+      : []),
+    ...((canSeeChats || isAdmin)
+      ? [{ text: "WHATSAPP", textKey: "sidebar.header.whatsapp", type: "header" }]
+      : []),
+    ...(canSeeChats
+      ? [{ text: "Sohbetler", textKey: "sidebar.chats", icon: <WhatsAppIcon color="success" />, path: "/whatsapp" }]
+      : []),
+    ...(isAdmin
+      ? [{ text: "Wazzup", textKey: "sidebar.wazzup", icon: <WhatsAppIcon color="primary" />, path: "/wazzup" }]
+      : []),
+    ...((canViewStats || canViewReports || canViewCosts)
+      ? [{ text: "RAPOR", textKey: "sidebar.header.reports", type: "header" }]
+      : []),
+    ...(canViewStats
+      ? [{ text: "İstatistikler", textKey: "sidebar.stats", icon: <BarChartIcon />, path: "/stats" }]
+      : []),
+    ...(canViewReports
+      ? [{ text: "Raporlar", textKey: "sidebar.reports", icon: <DescriptionIcon />, path: "/reports" }]
+      : []),
+    ...(canViewCosts
+      ? [{ text: "Maliyetler", textKey: "sidebar.costs", icon: <AttachMoneyIcon />, path: "/costs" }]
+      : []),
+    ...((canViewSegments || canViewCampaignStatuses)
+      ? [{ text: "PAZARLAMA", textKey: "sidebar.header.marketing", type: "header" }]
+      : []),
+    ...(canViewSegments
+      ? [{ text: "Segmentler", textKey: "sidebar.segments", icon: <FilterListIcon />, path: "/segments" }]
+      : []),
+    ...(canViewCampaignStatuses
+      ? [{ text: "Kampanya Durumları", textKey: "sidebar.campaignStatuses", icon: <FlagIcon />, path: "/campaign-status" }]
+      : []),
+    ...((canViewUsers || canViewTimesheets)
+      ? [{ text: "KULLANICI İŞLEMLERİ", textKey: "sidebar.header.users", type: "header" }]
+      : []),
+    ...(canViewUsers
+      ? [{ text: "Kullanıcılar", textKey: "sidebar.users", icon: <GroupIcon />, path: "/users" }]
+      : []),
+    ...(canViewTimesheets
+      ? [{ text: "Mesai Takip", textKey: "sidebar.timesheets", icon: <AccessTimeIcon />, path: "/timesheets" }]
+      : []),
+    ...(canViewSettings
+      ? [{ text: "GENEL AYARLAR", textKey: "sidebar.header.settings", type: "header" }]
+      : []),
+    ...(canViewSettings
+      ? [{ text: "Ayarlar", textKey: "sidebar.settings", icon: <SettingsIcon />, path: "/settings" }]
+      : []),
   ];
 
-  // Danışmanlar ve Acenta için bazı sekmeleri tamamen gizle
-  const menuItems = (() => {
-    const items = [...baseMenuItems];
-
-    // Admin / SuperAdmin / Yönetici rollerine hiçbir kısıtlama uygulama
-    if (isAdmin || isManager) {
-      return items;
-    }
-
-    // Acenta rolü: Sadece Dashboard, Müşteriler, Sohbetler ve Segmentler
-    if (isAgency) {
-      const allowedPaths = new Set(["/", "/customers", "/whatsapp", "/segments"]);
-      const filtered = items.filter((item: any) => {
-        if (!item.path) return true; // Header'ları geçici tut
-        return allowedPaths.has(item.path);
-      });
-      
-      // Boş header'ları temizle
-      const result: any[] = [];
-      for (let i = 0; i < filtered.length; i++) {
-        const item = filtered[i] as any;
-        if (item.type === "header") {
-          const next = filtered[i + 1] as any | undefined;
-          if (!next || next.type === "header") {
-            continue;
-          }
-        }
-        result.push(item);
-      }
-      return result;
-    }
-
-    // Danışmanlar için kısıtlamalar
-    if (!isAdvisor) {
-      return items;
-    }
-
-    const hiddenPaths = new Set([
-      "/stats",
-      "/reports",
-      "/segments",
-      "/campaign-status",
-      "/users",
-      "/timesheets",
-      "/settings",
-    ]);
-
-    // İlk pass: path'e bağlı item'leri filtrele
-    const filtered = items.filter((item: any) => {
-      if (!item.path) return true;
-      return !hiddenPaths.has(item.path);
-    });
-
-    // İkinci pass: altında hiç normal item kalmayan header'ları temizle
-    const result: any[] = [];
-    for (let i = 0; i < filtered.length; i++) {
-      const item = filtered[i] as any;
-      if (item.type === "header") {
-        // Sonraki eleman bir header veya yoksa, bu header'ı atla
-        const next = filtered[i + 1] as any | undefined;
-        if (!next || next.type === "header") {
-          continue;
-        }
-      }
-      result.push(item);
-    }
-
-    return result;
-  })();
+  // Tüm menü filtresi baseMenuItems içinde yetki bazlı yapılıyor
+  const menuItems = baseMenuItems;
 
   const isSelected = (path: string) => {
     return pathname === path || (path !== "/" && pathname.startsWith(path));
@@ -401,33 +369,62 @@ export default function Sidebar() {
           </Box>
         </Box>
 
-        {/* Ayarlar ve Çıkış */}
-        <Stack direction="row" spacing={0.5}>
-          <Tooltip title="Ayarlar" arrow>
-            <ListItemButton
-              component={Link}
-              href="/settings"
+        {/* Dil Değiştirme */}
+        <Box sx={{ display: "flex", gap: 0.5, mb: 0.5 }}>
+          {(["tr", "en"] as const).map((lang) => (
+            <Box
+              key={lang}
+              onClick={() => setLanguage(lang)}
               sx={{
-                flex: 1,
-                px: 1.5,
-                py: 0.8,
-                borderRadius: 1.5,
-                background: mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
-                justifyContent: "center",
+                flex: 1, textAlign: "center", py: 0.6, borderRadius: 1.5, cursor: "pointer",
+                fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase",
                 transition: "all 0.2s",
-                "&:hover": {
-                  background: mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
-                },
+                bgcolor: language === lang
+                  ? (mode === "dark" ? "rgba(124,58,237,0.35)" : "rgba(124,58,237,0.12)")
+                  : (mode === "dark" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)"),
+                color: language === lang
+                  ? (mode === "dark" ? "#C4B5FD" : "#7C3AED")
+                  : (mode === "dark" ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)"),
+                border: language === lang
+                  ? `1px solid ${mode === "dark" ? "rgba(124,58,237,0.5)" : "rgba(124,58,237,0.3)"}`
+                  : "1px solid transparent",
+                "&:hover": { opacity: 0.85 },
               }}
             >
-              <SettingsIcon
+              {lang === "tr" ? "🇹🇷 TR" : "🇬🇧 EN"}
+            </Box>
+          ))}
+        </Box>
+
+        {/* Ayarlar ve Çıkış */}
+        <Stack direction="row" spacing={0.5}>
+          {canViewSettings && (
+            <Tooltip title="Ayarlar" arrow>
+              <ListItemButton
+                component={Link}
+                href="/settings"
                 sx={{
-                  color: mode === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
-                  fontSize: 16,
+                  flex: 1,
+                  px: 1.5,
+                  py: 0.8,
+                  borderRadius: 1.5,
+                  background: mode === "dark" ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.02)",
+                  justifyContent: "center",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    background: mode === "dark" ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                  },
                 }}
-              />
-            </ListItemButton>
-          </Tooltip>
+              >
+                <SettingsIcon
+                  sx={{
+                    color: mode === "dark" ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                    fontSize: 16,
+                  }}
+                />
+              </ListItemButton>
+            </Tooltip>
+          )}
           <Tooltip title="Çıkış Yap" arrow>
             <ListItemButton
               sx={{

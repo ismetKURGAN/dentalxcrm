@@ -25,6 +25,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { useAuth } from "../../components/AuthProvider";
 import { useI18n } from "../../components/I18nProvider";
+import { ThemeModeContext } from "../../components/ThemeRegistry";
 
 interface ServiceItem {
   id: number;
@@ -35,6 +36,8 @@ interface ServiceItem {
 export default function ServicesSettingsPage() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const { mode } = React.useContext(ThemeModeContext);
+  const isDark = mode === "dark";
   const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin");
   
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -191,7 +194,7 @@ export default function ServicesSettingsPage() {
   }
 
   return (
-    <Box sx={{ p: 3, bgcolor: "#F3F4F6", minHeight: "100vh" }}>
+    <Box sx={{ p: 3, bgcolor: "background.default", minHeight: "100vh" }}>
       <Paper sx={{ p: 3, maxWidth: 900, mx: "auto" }}>
         <Typography variant="h5" fontWeight="bold" mb={1}>
           Servis Yönetimi
@@ -213,7 +216,7 @@ export default function ServicesSettingsPage() {
         )}
 
         {/* Yeni Servis Ekleme */}
-        <Paper variant="outlined" sx={{ p: 2, mb: 4, bgcolor: "#F9FAFB" }}>
+        <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
           <Typography variant="subtitle2" fontWeight={600} mb={2}>
             Yeni Servis Ekle
           </Typography>
@@ -261,7 +264,7 @@ export default function ServicesSettingsPage() {
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#F3F4F6" }}>
+                  <TableRow sx={{ bgcolor: isDark ? "rgba(255,255,255,0.05)" : "#F3F4F6" }}>
                     <TableCell sx={{ fontWeight: 600 }}>Türkçe</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>İngilizce</TableCell>
                     <TableCell align="right" sx={{ fontWeight: 600, width: 120 }}>İşlemler</TableCell>

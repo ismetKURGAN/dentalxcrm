@@ -50,6 +50,7 @@ import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import CategoryIcon from "@mui/icons-material/Category";
 import { useAuth } from "../../components/AuthProvider";
 import { useI18n } from "../../components/I18nProvider";
+import { ThemeModeContext } from "../../components/ThemeRegistry";
 
 // Sabit üst kategoriler (Level 1)
 const TOP_PARENTS = [
@@ -247,7 +248,7 @@ function TreeSelect({
 
   if (!topParent) {
     return (
-      <Paper variant="outlined" sx={{ p: 2, bgcolor: "#F9FAFB" }}>
+      <Paper variant="outlined" sx={{ p: 2 }}>
         <Typography variant="body2" color="text.secondary" textAlign="center">
           Önce üst kategori grubu seçin
         </Typography>
@@ -258,7 +259,7 @@ function TreeSelect({
   return (
     <Box>
       {value && (
-        <Box sx={{ mb: 1, p: 1, bgcolor: "#E3F2FD", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Box sx={{ mb: 1, p: 1, bgcolor: "action.selected", borderRadius: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Typography variant="body2" color="primary.dark" sx={{ fontWeight: 500 }}>
             {getSelectedPath()}
           </Typography>
@@ -269,7 +270,7 @@ function TreeSelect({
       )}
       
       <Paper variant="outlined" sx={{ maxHeight: 350, overflow: "auto" }}>
-        <Box sx={{ p: 1, borderBottom: "1px solid #E0E0E0", position: "sticky", top: 0, bgcolor: "white", zIndex: 1 }}>
+        <Box sx={{ p: 1, borderBottom: "1px solid", borderColor: "divider", position: "sticky", top: 0, bgcolor: "background.paper", zIndex: 1 }}>
           <TextField
             fullWidth
             size="small"
@@ -343,6 +344,8 @@ function TreeSelect({
 export default function CategoriesSettingsPage() {
   const { user } = useAuth();
   const { t, language } = useI18n();
+  const { mode } = React.useContext(ThemeModeContext);
+  const isDark = mode === "dark";
   const isAdmin = user?.roles?.includes("Admin") || user?.roles?.includes("SuperAdmin");
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -692,7 +695,7 @@ export default function CategoriesSettingsPage() {
   }, [categories]);
 
   return (
-    <Box sx={{ p: 3, bgcolor: "#F3F4F6", minHeight: "100vh" }}>
+    <Box sx={{ p: 3, bgcolor: "background.default", minHeight: "100vh" }}>
       <Paper sx={{ p: 3, maxWidth: 1400, mx: "auto" }}>
         {/* Header */}
         <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3 }}>
@@ -708,7 +711,7 @@ export default function CategoriesSettingsPage() {
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => handleOpenDialog()}
-            sx={{ bgcolor: "#3b82f6", "&:hover": { bgcolor: "#2563eb" } }}
+            color="primary"
           >
             Kategori Ekle
           </Button>
@@ -774,7 +777,7 @@ export default function CategoriesSettingsPage() {
             <TableContainer component={Paper} variant="outlined">
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#F9FAFB" }}>
+                  <TableRow sx={{ bgcolor: isDark ? "rgba(255,255,255,0.05)" : "#F9FAFB" }}>
                     <TableCell sx={{ fontWeight: 600, width: 400 }}>Kategori Adı</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Lead Form ID</TableCell>
                     <TableCell sx={{ fontWeight: 600 }}>Tarih</TableCell>
@@ -872,7 +875,7 @@ export default function CategoriesSettingsPage() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 2, borderBottom: "1px solid #E5E7EB" }}>
+        <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pb: 2, borderBottom: "1px solid", borderColor: "divider" }}>
           <Box>
             <Typography variant="h6" fontWeight={600} sx={{ fontSize: "1.125rem" }}>
               Yeni Kategori Ekle
@@ -898,10 +901,7 @@ export default function CategoriesSettingsPage() {
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'white',
-                  }
-                }}
+                  }}
               />
             </Box>
 
@@ -914,7 +914,6 @@ export default function CategoriesSettingsPage() {
                 <Select
                   value={form.topParent}
                   onChange={(e) => setForm({ ...form, topParent: e.target.value as string, parentId: null })}
-                  sx={{ bgcolor: 'white' }}
                 >
                   {TOP_PARENTS.map(tp => (
                     <MenuItem key={tp} value={tp}>{tp}</MenuItem>
@@ -971,10 +970,7 @@ export default function CategoriesSettingsPage() {
                 value={form.leadFormId}
                 onChange={(e) => setForm({ ...form, leadFormId: e.target.value })}
                 sx={{
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: 'white',
-                  }
-                }}
+                  }}
               />
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontSize: "0.75rem" }}>
                 Facebook entegrasyonu aktif değil. Lead Form ID'yi manuel olarak girebilirsiniz.
@@ -998,7 +994,7 @@ export default function CategoriesSettingsPage() {
             </Box>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ px: 3, py: 2.5, borderTop: "1px solid #E5E7EB", gap: 1 }}>
+        <DialogActions sx={{ px: 3, py: 2.5, borderTop: "1px solid", borderColor: "divider", gap: 1 }}>
           <Button 
             onClick={handleCloseDialog} 
             variant="outlined"
@@ -1006,11 +1002,8 @@ export default function CategoriesSettingsPage() {
               flex: 1,
               textTransform: "none",
               fontWeight: 500,
-              borderColor: "#D1D5DB",
-              color: "text.primary",
               "&:hover": {
-                borderColor: "#9CA3AF",
-                bgcolor: "#F9FAFB"
+                bgcolor: "action.hover"
               }
             }}
           >
@@ -1024,9 +1017,7 @@ export default function CategoriesSettingsPage() {
               flex: 1,
               textTransform: "none",
               fontWeight: 600,
-              bgcolor: "#000", 
-              "&:hover": { bgcolor: "#1F2937" },
-              "&:disabled": { bgcolor: "#E5E7EB", color: "#9CA3AF" }
+              "&:disabled": { opacity: 0.5 }
             }}
           >
             Kaydet

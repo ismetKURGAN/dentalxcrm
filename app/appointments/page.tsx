@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import {
   Box,
   Paper,
@@ -31,6 +31,7 @@ import HotelIcon from "@mui/icons-material/Hotel";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import { useI18n } from "../components/I18nProvider";
 import { ThemeModeContext } from "../components/ThemeRegistry";
+import { useAuth } from "../components/AuthProvider";
 
 // Basit yıl ve ay listeleri
 const YEARS = [2024, 2025, 2026, 2027];
@@ -120,28 +121,52 @@ function formatDateTime(dateStr: string, timeStr: string): string {
   return `${date} ${time}`;
 }
 
+const APPT_FILTER_KEY = "crm_appointments_filters";
+
+function loadApptFilters(): { year: number | "all"; month: number | "all"; advisorFilter: string | "all"; doctorFilter: string | "all"; showNoDate: boolean } {
+  if (typeof window === 'undefined') return { year: new Date().getFullYear(), month: new Date().getMonth(), advisorFilter: "all", doctorFilter: "all", showNoDate: false };
+  try {
+    const raw = sessionStorage.getItem(APPT_FILTER_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      return {
+        year: p.year ?? new Date().getFullYear(),
+        month: p.month ?? new Date().getMonth(),
+        advisorFilter: p.advisorFilter ?? "all",
+        doctorFilter: p.doctorFilter ?? "all",
+        showNoDate: p.showNoDate ?? false,
+      };
+    }
+  } catch {}
+  return { year: new Date().getFullYear(), month: new Date().getMonth(), advisorFilter: "all", doctorFilter: "all", showNoDate: false };
+}
+
+function saveApptFilters(f: { year: number | "all"; month: number | "all"; advisorFilter: string | "all"; doctorFilter: string | "all"; showNoDate: boolean }) {
+  if (typeof window === 'undefined') return;
+  try { sessionStorage.setItem(APPT_FILTER_KEY, JSON.stringify(f)); } catch {}
+}
+
 export default function AppointmentsPage() {
   const { t } = useI18n();
   const { mode } = useContext(ThemeModeContext);
+  const { user } = useAuth();
+  const isAdvisor = !!((user?.roles?.includes("Danışman") || user?.roles?.includes("Meet-Up Danışman")) && !user?.roles?.includes("Admin") && !user?.roles?.includes("SuperAdmin"));
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [year, setYear] = useState<number | "all">("all");
-  const [month, setMonth] = useState<number | "all">("all");
+  const savedAppt = useMemo(() => loadApptFilters(), []);
+  const [year, setYear] = useState<number | "all">(savedAppt.year);
+  const [month, setMonth] = useState<number | "all">(savedAppt.month);
   const [doctors, setDoctors] = useState<any[]>([]);
   const [allCustomers, setAllCustomers] = useState<any[]>([]);
-  const [advisorFilter, setAdvisorFilter] = useState<string | "all">("all");
-  const [doctorFilter, setDoctorFilter] = useState<string | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<string | "all">("all");
+  const [advisorFilter, setAdvisorFilter] = useState<string | "all">(savedAppt.advisorFilter);
+  const [doctorFilter, setDoctorFilter] = useState<string | "all">(savedAppt.doctorFilter);
+  const [showNoDate, setShowNoDate] = useState(savedAppt.showNoDate);
   const [visibleColumns, setVisibleColumns] = useState<string[]>([
     "name",
     "appointmentDate",
     "tripName",
     "doctor",
     "service",
-    "status",
-    "arrivalDate",
-    "departureDate",
-    "hotel",
   ]);
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -186,7 +211,7 @@ export default function AppointmentsPage() {
         const trips = c.sales?.trips || [];
           
           trips.forEach((trip: any, tripIndex: number) => {
-            if (trip.appointmentDate) {
+            if (trip.appointmentDate || trip.dateUndetermined) {
               mapped.push({
                 id: `${c.id}-trip-${tripIndex}`,
                 customerId: c.id,
@@ -195,7 +220,7 @@ export default function AppointmentsPage() {
                 status: statusValue || "-",
                 category: categoryValue || "-",
                 tripName: trip.name || `${tripIndex + 1}. Seyahat`,
-                appointmentDate: trip.appointmentDate,
+                appointmentDate: trip.appointmentDate || "",
                 appointmentTime: trip.appointmentTime || "",
                 doctor: trip.doctor || "",
                 service: serviceValue || trip.service || "",
@@ -237,12 +262,7 @@ export default function AppointmentsPage() {
     fetchAppointments();
     fetchDoctors();
 
-    // Otomatik yenileme - her 30 saniyede bir
-    const interval = setInterval(() => {
-      fetchAppointments();
-    }, 30000);
-
-    return () => clearInterval(interval);
+    return () => {};
   }, []);
 
   const handleInlineUpdate = async (id: string, field: string, value: any) => {
@@ -299,6 +319,12 @@ export default function AppointmentsPage() {
   };
 
   const filteredRows = rows.filter((r) => {
+    if (isAdvisor && r.advisor !== user?.name) return false;
+
+    if (showNoDate) {
+      return !r.appointmentDate || isNaN(new Date(r.appointmentDate).getTime());
+    }
+
     if (!r.appointmentDate) return false;
     
     try {
@@ -313,7 +339,6 @@ export default function AppointmentsPage() {
     
     if (advisorFilter !== "all" && r.advisor !== advisorFilter) return false;
     if (doctorFilter !== "all" && r.doctor !== doctorFilter) return false;
-    if (statusFilter !== "all" && r.status !== statusFilter) return false;
     return true;
   });
 
@@ -396,6 +421,31 @@ export default function AppointmentsPage() {
       if (!res.ok) {
         console.error("Yeni randevu kaydedilemedi", await res.text());
         return;
+      }
+
+      const savedData = await res.json();
+      const newCustomerId = savedData?.id || base.id;
+
+      // Otomatik cost kaydı oluştur (duplicate kontrolü)
+      try {
+        const existingRes = await fetch(`/api/costs?type=patient&relatedId=${newCustomerId}`, { cache: "no-store" });
+        const existing = existingRes.ok ? await existingRes.json() : [];
+        if (existing.length === 0) {
+          await fetch("/api/costs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "patient", category: "clinic", direction: "expense",
+              amount: 0, currency: "EUR",
+              description: `Randevu – ${formVisit || "Seyahat 1"} / ${base.service || ""}`.trim().replace(/\/$/, ""),
+              relatedId: String(newCustomerId), relatedName: name,
+              date: formDate || new Date().toISOString().slice(0, 10),
+              createdBy: advisor, salesAmount: 0,
+            }),
+          });
+        }
+      } catch (e) {
+        console.error("Cost kaydı oluşturulamadı", e);
       }
 
       setModalOpen(false);
@@ -673,7 +723,7 @@ export default function AppointmentsPage() {
             <Select
               label="Yıl"
               value={year}
-              onChange={(e) => setYear(e.target.value as any)}
+              onChange={(e) => { const v = e.target.value as any; setYear(v); saveApptFilters({ year: v, month, advisorFilter, doctorFilter, showNoDate }); }}
             >
               <MenuItem value="all">Tümü</MenuItem>
               {YEARS.map((y) => (
@@ -689,7 +739,7 @@ export default function AppointmentsPage() {
             <Select
               label="Ay"
               value={month}
-              onChange={(e) => setMonth(e.target.value as any)}
+              onChange={(e) => { const v = e.target.value as any; setMonth(v); saveApptFilters({ year, month: v, advisorFilter, doctorFilter, showNoDate }); }}
             >
               <MenuItem value="all">Tümü</MenuItem>
               {MONTHS.map((m) => (
@@ -700,12 +750,13 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
+          {!isAdvisor && (
           <FormControl size="small" sx={{ width: 140, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Danışman</InputLabel>
             <Select
               label="Danışman"
               value={advisorFilter}
-              onChange={(e) => setAdvisorFilter(e.target.value as any)}
+              onChange={(e) => { const v = e.target.value as any; setAdvisorFilter(v); saveApptFilters({ year, month, advisorFilter: v, doctorFilter, showNoDate }); }}
             >
               <MenuItem value="all">Tümü</MenuItem>
               {Array.from(new Set(rows.map((r) => r.advisor).filter(Boolean))).map((a) => (
@@ -713,13 +764,14 @@ export default function AppointmentsPage() {
               ))}
             </Select>
           </FormControl>
+          )}
 
           <FormControl size="small" sx={{ width: 140, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
             <InputLabel>Doktor</InputLabel>
             <Select
               label="Doktor"
               value={doctorFilter}
-              onChange={(e) => setDoctorFilter(e.target.value as any)}
+              onChange={(e) => { const v = e.target.value as any; setDoctorFilter(v); saveApptFilters({ year, month, advisorFilter, doctorFilter: v, showNoDate }); }}
             >
               <MenuItem value="all">Tümü</MenuItem>
               {Array.from(new Set(rows.map((r) => r.doctor).filter(Boolean))).map((d) => (
@@ -728,19 +780,20 @@ export default function AppointmentsPage() {
             </Select>
           </FormControl>
 
-          <FormControl size="small" sx={{ width: 120, bgcolor: mode === "dark" ? "rgba(42, 37, 80, 0.6)" : "#fff" }}>
-            <InputLabel>Durum</InputLabel>
-            <Select
-              label="Durum"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-            >
-              <MenuItem value="all">Tümü</MenuItem>
-              {Array.from(new Set(rows.map((r) => r.status).filter(Boolean))).map((s) => (
-                <MenuItem key={s} value={s}>{s}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Button
+            variant={showNoDate ? "contained" : "outlined"}
+            size="small"
+            color={showNoDate ? "warning" : "warning"}
+            onClick={() => { const nv = !showNoDate; setShowNoDate(nv); saveApptFilters({ year, month, advisorFilter, doctorFilter, showNoDate: nv }); }}
+            sx={{
+              textTransform: "none",
+              whiteSpace: "nowrap",
+              fontWeight: showNoDate ? 700 : 400,
+              opacity: showNoDate ? 1 : 0.75,
+            }}
+          >
+            Tarihi Belirsiz
+          </Button>
 
           <Button 
             variant="text" 
@@ -821,6 +874,7 @@ export default function AppointmentsPage() {
             pageSizeOptions={[10, 25, 50, 100]}
             initialState={{
               pagination: { paginationModel: { pageSize: 50 } },
+              sorting: { sortModel: [{ field: "appointmentDate", sort: "asc" }] },
             }}
             sx={{
               border: "none",

@@ -47,6 +47,7 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import CategoryIcon from "@mui/icons-material/Category";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
 import { useI18n, translateValue } from "../components/I18nProvider";
 import { useAuth } from "../components/AuthProvider";
 import { ThemeModeContext } from "../components/ThemeRegistry";
@@ -132,6 +133,55 @@ const getStatusColor = (status: any, isDark = false) => {
   return { bg: isDark ? "rgba(255,255,255,0.05)" : "#F5F5F5", color: isDark ? "rgba(255,255,255,0.6)" : "#616161" };
 };
 
+const FILTER_STORAGE_KEY = "crm_customers_filters";
+
+const defaultFilters = {
+  categories: [] as string[],
+  advisors: [] as string[],
+  statuses: [] as string[],
+  services: [] as string[],
+  countries: [] as string[],
+  trustpilot: null as string | null,
+  googleReview: null as string | null,
+  satisfactionSurvey: null as string | null,
+  guaranteeSent: null as string | null,
+  rpt: null as string | null,
+  salesDateFrom: "",
+  salesDateTo: "",
+  registerDateFrom: "",
+  registerDateTo: "",
+  editDateFrom: "",
+  editDateTo: "",
+  categoryOperator: "içinde" as "içinde" | "içinde değil",
+  advisorOperator: "içinde" as "içinde" | "içinde değil",
+  statusOperator: "içinde" as "içinde" | "içinde değil",
+  serviceOperator: "içinde" as "içinde" | "içinde değil",
+  countryOperator: "içinde" as "içinde" | "içinde değil",
+};
+
+function loadFiltersFromSession(): { filters: typeof defaultFilters; filterLogic: "VE" | "VEYA"; searchQuery: string } {
+  if (typeof window === 'undefined') return { filters: defaultFilters, filterLogic: "VE", searchQuery: "" };
+  try {
+    const raw = sessionStorage.getItem(FILTER_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        filters: { ...defaultFilters, ...parsed.filters },
+        filterLogic: parsed.filterLogic || "VE",
+        searchQuery: parsed.searchQuery || "",
+      };
+    }
+  } catch {}
+  return { filters: defaultFilters, filterLogic: "VE", searchQuery: "" };
+}
+
+function saveFiltersToSession(filters: typeof defaultFilters, filterLogic: "VE" | "VEYA", searchQuery: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({ filters, filterLogic, searchQuery }));
+  } catch {}
+}
+
 export default function CustomersPage() {
   const router = useRouter();
   const { t, language } = useI18n();
@@ -149,66 +199,68 @@ export default function CustomersPage() {
   
   // Gelişmiş Filtre State'leri
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [filterLogic, setFilterLogic] = useState<"VE" | "VEYA">("VE");
-  const [advancedFilters, setAdvancedFilters] = useState<{
-    categories: string[];
-    advisors: string[];
-    statuses: string[];
-    services: string[];
-    countries: string[];
-    trustpilot: string | null;
-    googleReview: string | null;
-    satisfactionSurvey: string | null;
-    guaranteeSent: string | null;
-    rpt: string | null;
-    salesDateFrom: string;
-    salesDateTo: string;
-    registerDateFrom: string;
-    registerDateTo: string;
-    editDateFrom: string;
-    editDateTo: string;
-    categoryOperator: "içinde" | "içinde değil";
-    advisorOperator: "içinde" | "içinde değil";
-    statusOperator: "içinde" | "içinde değil";
-    serviceOperator: "içinde" | "içinde değil";
-    countryOperator: "içinde" | "içinde değil";
-  }>({
-    categories: [],
-    advisors: [],
-    statuses: [],
-    services: [],
-    countries: [],
-    trustpilot: null,
-    googleReview: null,
-    satisfactionSurvey: null,
-    guaranteeSent: null,
-    rpt: null,
-    salesDateFrom: "",
-    salesDateTo: "",
-    registerDateFrom: "",
-    registerDateTo: "",
-    editDateFrom: "",
-    editDateTo: "",
-    categoryOperator: "içinde",
-    advisorOperator: "içinde",
-    statusOperator: "içinde",
-    serviceOperator: "içinde",
-    countryOperator: "içinde",
-  });
-  const [tempFilters, setTempFilters] = useState(advancedFilters);
-  const [tempFilterLogic, setTempFilterLogic] = useState<"VE" | "VEYA">("VE");
+  const savedState = useMemo(() => loadFiltersFromSession(), []);
+  const [filterLogic, setFilterLogic] = useState<"VE" | "VEYA">(savedState.filterLogic);
+  const [advancedFilters, setAdvancedFilters] = useState(savedState.filters);
+  const [tempFilters, setTempFilters] = useState(savedState.filters);
+  const [tempFilterLogic, setTempFilterLogic] = useState<"VE" | "VEYA">(savedState.filterLogic);
   const isMountedRef = useRef(false);
   const [advisorOptions, setAdvisorOptions] = useState<string[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
+  const [categoriesData, setCategoriesData] = useState<any[]>([]);
+  const [selectionModel, setSelectionModel] = useState<any>({ type: 'include', ids: new Set() });
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditValues, setBulkEditValues] = useState({ advisor: "", service: "", status: "" });
+  const [bulkLoading, setBulkLoading] = useState(false);
   
+  // Telefon prefix → ülke + bayrak eşleştirme
+  const PHONE_PREFIX_MAP: { prefix: string; country: string; flag: string }[] = [
+    { prefix: "+90", country: "Türkiye", flag: "🇹🇷" },
+    { prefix: "+44", country: "United Kingdom", flag: "🇬🇧" },
+    { prefix: "+49", country: "Germany", flag: "🇩🇪" },
+    { prefix: "+48", country: "Poland", flag: "🇵🇱" },
+    { prefix: "+33", country: "France", flag: "🇫🇷" },
+    { prefix: "+31", country: "Netherlands", flag: "🇳🇱" },
+    { prefix: "+32", country: "Belgium", flag: "🇧🇪" },
+    { prefix: "+43", country: "Austria", flag: "🇦🇹" },
+    { prefix: "+41", country: "Switzerland", flag: "🇨🇭" },
+    { prefix: "+47", country: "Norway", flag: "🇳🇴" },
+    { prefix: "+46", country: "Sweden", flag: "🇸🇪" },
+    { prefix: "+45", country: "Denmark", flag: "🇩🇰" },
+    { prefix: "+353", country: "Ireland", flag: "🇮🇪" },
+    { prefix: "+39", country: "Italy", flag: "🇮🇹" },
+    { prefix: "+34", country: "Spain", flag: "🇪🇸" },
+    { prefix: "+351", country: "Portugal", flag: "🇵🇹" },
+    { prefix: "+30", country: "Greece", flag: "🇬🇷" },
+    { prefix: "+40", country: "Romania", flag: "🇷🇴" },
+    { prefix: "+1", country: "USA", flag: "🇺🇸" },
+    { prefix: "+61", country: "Australia", flag: "🇦🇺" },
+    { prefix: "+1", country: "Canada", flag: "🇨🇦" },
+    { prefix: "+77", country: "Kazakhstan", flag: "🇰🇿" },
+    { prefix: "+993", country: "Turkmenistan", flag: "🇹🇲" },
+    { prefix: "+996", country: "Kyrgyzstan", flag: "🇰🇬" },
+    { prefix: "+998", country: "Uzbekistan", flag: "🇺🇿" },
+  ];
+
+  const detectCountryFromPhone = (phone: string): { country: string; flag: string } | null => {
+    if (!phone.startsWith("+")) return null;
+    // Uzun prefix'leri önce kontrol et (örn. +353 önce +39'dan)
+    const sorted = [...PHONE_PREFIX_MAP].sort((a, b) => b.prefix.length - a.prefix.length);
+    const match = sorted.find(p => phone.startsWith(p.prefix));
+    return match ? { country: match.country, flag: match.flag } : null;
+  };
+
   // Modal
   const [open, setOpen] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: "", country: "", registerDate: ""
   });
+  const [phoneFlag, setPhoneFlag] = useState("🌍");
   
+  const [activeParentCategory, setActiveParentCategory] = useState("");
+
   // Arama state'i
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(savedState.searchQuery);
   const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Pagination state'leri
@@ -280,7 +332,7 @@ export default function CustomersPage() {
   };
 
   // --- Verileri Çek (Pagination Destekli) ---
-  const fetchCustomers = async (pageNum: number = page, search?: string, filters?: typeof advancedFilters) => {
+  const fetchCustomers = async (pageNum: number = page, search?: string, filters?: typeof advancedFilters, parentCat?: string) => {
     try {
       if (!isMountedRef.current) return;
       setLoading(true);
@@ -309,7 +361,27 @@ export default function CustomersPage() {
         if (af.advisorOperator === "içinde değil") url += `&advisorOp=notIn`;
       }
       if (af.categories.length > 0) {
-        url += `&categories=${encodeURIComponent(af.categories.join(','))}`;
+        // Seçilen kategorilerin tüm alt kategorilerini de ekle
+        const expandWithDescendants = (selectedNames: string[]): string[] => {
+          const result = new Set<string>(selectedNames);
+          const catByName: Record<string, any> = {};
+          categoriesData.forEach((c: any) => { catByName[c.name] = c; });
+          const addDescendants = (parentId: string) => {
+            categoriesData
+              .filter((c: any) => c.parentId === parentId)
+              .forEach((child: any) => {
+                result.add(child.name);
+                addDescendants(child.id);
+              });
+          };
+          selectedNames.forEach(name => {
+            const cat = catByName[name];
+            if (cat) addDescendants(cat.id);
+          });
+          return Array.from(result);
+        };
+        const expandedCats = expandWithDescendants(af.categories);
+        url += `&categories=${encodeURIComponent(expandedCats.join(','))}`;
         if (af.categoryOperator === "içinde değil") url += `&categoryOp=notIn`;
       }
       if (af.services.length > 0) {
@@ -319,6 +391,12 @@ export default function CustomersPage() {
       if (af.countries.length > 0) {
         url += `&countries=${encodeURIComponent(af.countries.join(','))}`;
         if (af.countryOperator === "içinde değil") url += `&countryOp=notIn`;
+      }
+      
+      // Üst kategori (hızlı filtre butonu)
+      const parentCatValue = parentCat !== undefined ? parentCat : activeParentCategory;
+      if (parentCatValue) {
+        url += `&parentCategory=${encodeURIComponent(parentCatValue)}`;
       }
       
       const res = await fetch(url, { cache: "no-store" });
@@ -385,7 +463,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     isMountedRef.current = true;
-    fetchCustomers(1); // İlk sayfa
+    fetchCustomers(1, savedState.searchQuery, savedState.filters); // İlk sayfa (kaydedilmiş filtrelerle)
     fetchStatuses();
     fetchServices();
 
@@ -407,23 +485,16 @@ export default function CustomersPage() {
 
     fetchAdvisors();
 
-    // Kategori listesi: categories API + campaigns fallback
+    // Kategori listesi
     const fetchCategories = async () => {
       try {
-        const catNames = new Set<string>();
-        const [catRes, campRes] = await Promise.all([
-          fetch("/api/categories", { cache: "no-store" }),
-          fetch("/api/campaigns", { cache: "no-store" }),
-        ]);
+        const catRes = await fetch("/api/categories", { cache: "no-store" });
         if (catRes.ok) {
           const cats = await catRes.json();
-          (cats as any[]).forEach((c: any) => { if (c.name) catNames.add(c.name); });
+          setCategoriesData(Array.isArray(cats) ? cats : []);
+          const catNames = (cats as any[]).map((c: any) => c.name).filter(Boolean).sort((a: string, b: string) => a.localeCompare(b));
+          setCategoryOptions(catNames);
         }
-        if (campRes.ok) {
-          const camps = await campRes.json();
-          (camps as any[]).forEach((c: any) => { const n = c.name || c.title; if (n) catNames.add(n); });
-        }
-        setCategoryOptions(Array.from(catNames).sort((a, b) => a.localeCompare(b)));
       } catch (e) {
         console.error("Kategori listesi yüklenemedi", e);
       }
@@ -474,6 +545,7 @@ export default function CustomersPage() {
       
       if (field === 'advisor') {
         // advisor güncellenirken status.consultant olarak kaydet
+        updateData.advisor = value;
         updateData.status = { consultant: value };
       } else if (field === 'status') {
         // status güncellenirken status.status olarak kaydet
@@ -555,6 +627,7 @@ export default function CustomersPage() {
         await fetchCustomers();
         setOpen(false);
         setNewCustomer({ name: "", phone: "", email: "", advisor: "", status: "Yeni Form", service: "", category: "", country: "", registerDate: "" });
+      setPhoneFlag("🌍");
         setSnackbar({ open: true, message: t("customers.snackbar.created"), severity: "success" });
       } else if (res.status === 409) {
         // Mükerrer müşteri hatası
@@ -581,6 +654,46 @@ export default function CustomersPage() {
     } catch (error) {
       alert("Hata oluştu");
     }
+  };
+
+  // --- Toplu Güncelleme ---
+  const handleBulkUpdate = async () => {
+    const hasChanges = bulkEditValues.advisor || bulkEditValues.service || bulkEditValues.status;
+    if (!hasChanges || !selectedCount) return;
+
+    setBulkLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const id of selectedIdsArray) {
+      try {
+        const updateData: any = { id };
+        if (bulkEditValues.advisor) updateData.advisor = bulkEditValues.advisor;
+        if (bulkEditValues.service) updateData.service = bulkEditValues.service;
+        if (bulkEditValues.status) updateData.status = bulkEditValues.status;
+
+        const res = await fetch("/api/crm", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
+        });
+        if (res.ok) successCount++;
+        else errorCount++;
+      } catch {
+        errorCount++;
+      }
+    }
+
+    setBulkLoading(false);
+    setBulkEditOpen(false);
+    setSelectionModel({ type: 'include', ids: new Set() });
+    setBulkEditValues({ advisor: "", service: "", status: "" });
+    await fetchCustomers();
+    setSnackbar({
+      open: true,
+      message: `✅ ${successCount} hasta güncellendi${errorCount > 0 ? `, ${errorCount} hata` : ""}`,
+      severity: errorCount > 0 ? "error" : "success",
+    });
   };
 
   // --- Excel Export ---
@@ -907,6 +1020,22 @@ export default function CustomersPage() {
     return filtered;
   }, [rows, advancedFilters, filterLogic]);
 
+  const selectedCount = useMemo(() =>
+    selectionModel?.type === 'include'
+      ? (selectionModel.ids?.size ?? 0)
+      : selectionModel?.type === 'exclude'
+        ? filteredRows.length - (selectionModel.ids?.size ?? 0)
+        : 0
+  , [selectionModel, filteredRows]);
+
+  const selectedIdsArray: (string | number)[] = useMemo(() =>
+    selectionModel?.type === 'include'
+      ? Array.from(selectionModel.ids ?? [])
+      : selectionModel?.type === 'exclude'
+        ? filteredRows.filter((r: any) => !selectionModel.ids?.has(r.id)).map((r: any) => r.id)
+        : []
+  , [selectionModel, filteredRows]);
+
   return (
     <Box
       sx={{
@@ -961,6 +1090,20 @@ export default function CustomersPage() {
           Gelişmiş Filtreler {(advancedFilters.categories.length + advancedFilters.advisors.length + advancedFilters.statuses.length + advancedFilters.services.length + advancedFilters.countries.length) > 0 && `(${advancedFilters.categories.length + advancedFilters.advisors.length + advancedFilters.statuses.length + advancedFilters.services.length + advancedFilters.countries.length})`}
         </Button>
         
+        <Button
+          variant={activeParentCategory === "Konsültasyon" ? "contained" : "outlined"}
+          color={activeParentCategory === "Konsültasyon" ? "secondary" : "inherit"}
+          onClick={() => {
+            const newVal = activeParentCategory === "Konsültasyon" ? "" : "Konsültasyon";
+            setActiveParentCategory(newVal);
+            setPage(1);
+            fetchCustomers(1, undefined, undefined, newVal);
+          }}
+          sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' }, fontWeight: 600 }}
+        >
+          🦷 Konsültasyon
+        </Button>
+
         <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }} />
         
         <TextField 
@@ -970,6 +1113,7 @@ export default function CustomersPage() {
           onChange={(e) => {
             const val = e.target.value;
             setSearchQuery(val);
+            saveFiltersToSession(advancedFilters, filterLogic, val);
             // Debounce: 400ms sonra server-side arama yap
             if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
             searchTimerRef.current = setTimeout(() => {
@@ -989,6 +1133,47 @@ export default function CustomersPage() {
         </IconButton>
       </Paper>
 
+      {/* TOPLU İŞLEM ÇUBUĞU */}
+      {selectedCount > 0 && (
+        <Paper
+          sx={{
+            px: 2,
+            py: 1.5,
+            mb: 1.5,
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap',
+            bgcolor: mode === 'dark' ? 'rgba(124, 58, 237, 0.15)' : '#EEF2FF',
+            border: mode === 'dark' ? '1px solid rgba(124, 58, 237, 0.4)' : '1px solid #C7D2FE',
+          }}
+        >
+          <PeopleAltIcon sx={{ color: mode === 'dark' ? '#A5B4FC' : '#6366F1', fontSize: 20 }} />
+          <Typography fontWeight={600} sx={{ color: mode === 'dark' ? '#A5B4FC' : '#4F46E5', fontSize: '0.9rem' }}>
+            {selectedCount} hasta seçildi
+          </Typography>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<EditIcon />}
+            onClick={() => setBulkEditOpen(true)}
+            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#6366F1', '&:hover': { bgcolor: '#4F46E5' } }}
+          >
+            Toplu Düzenle
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setSelectionModel({ type: 'include', ids: new Set() })}
+            sx={{ textTransform: 'none', borderColor: mode === 'dark' ? 'rgba(124,58,237,0.5)' : '#C7D2FE', color: mode === 'dark' ? '#A5B4FC' : '#4F46E5' }}
+          >
+            Seçimi Temizle
+          </Button>
+        </Paper>
+      )}
+
       {/* TABLO - Masaüstü */}
       {!isMobile && (
         <Paper
@@ -1005,6 +1190,8 @@ export default function CustomersPage() {
             columns={columns}
             checkboxSelection
             disableRowSelectionOnClick
+            rowSelectionModel={selectionModel}
+            onRowSelectionModelChange={(model) => setSelectionModel(model)}
             loading={loading}
             rowHeight={60}
             pageSizeOptions={[10, 25, 50, 100]}
@@ -1293,15 +1480,24 @@ export default function CustomersPage() {
             <Box>
               <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>Telefon</Typography>
               <TextField 
-                placeholder="+90" 
+                placeholder="+90, +44, +48..." 
                 size="small" 
                 fullWidth
                 value={newCustomer.phone} 
-                onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})} 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const detected = detectCountryFromPhone(val);
+                  setPhoneFlag(detected ? detected.flag : "🌍");
+                  setNewCustomer({
+                    ...newCustomer,
+                    phone: val,
+                    country: detected ? detected.country : newCustomer.country,
+                  });
+                }}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <Box component="span" sx={{ fontSize: '1.2rem' }}>🇹🇷</Box>
+                      <Box component="span" sx={{ fontSize: '1.2rem' }}>{phoneFlag}</Box>
                     </InputAdornment>
                   ),
                 }}
@@ -1400,6 +1596,67 @@ export default function CustomersPage() {
             }}
           >
             Kaydet
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* TOPLU DÜZENLEME DIALOG */}
+      <Dialog open={bulkEditOpen} onClose={() => !bulkLoading && setBulkEditOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box>
+            <Typography variant="h6" fontWeight={600}>Toplu Düzenleme</Typography>
+            <Typography variant="caption" color="text.secondary">{selectedCount} hasta için geçerli olacak — boş bırakılan alanlar değiştirilmez</Typography>
+          </Box>
+          <IconButton onClick={() => setBulkEditOpen(false)} disabled={bulkLoading} size="small"><CloseIcon /></IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={3} sx={{ pt: 1 }}>
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Danışman</Typography>
+              <Autocomplete
+                size="small"
+                options={advisorOptions}
+                value={bulkEditValues.advisor || null}
+                onChange={(_, v) => setBulkEditValues(prev => ({ ...prev, advisor: v || "" }))}
+                renderInput={(params) => <TextField {...params} placeholder="Değiştirmek için seçin..." />}
+              />
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Hizmet</Typography>
+              <Autocomplete
+                size="small"
+                options={serviceNames}
+                value={bulkEditValues.service || null}
+                onChange={(_, v) => setBulkEditValues(prev => ({ ...prev, service: v || "" }))}
+                renderInput={(params) => <TextField {...params} placeholder="Değiştirmek için seçin..." />}
+              />
+            </Box>
+            <Box>
+              <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Durum</Typography>
+              <Autocomplete
+                size="small"
+                options={statuses}
+                value={bulkEditValues.status || null}
+                onChange={(_, v) => setBulkEditValues(prev => ({ ...prev, status: v || "" }))}
+                renderInput={(params) => <TextField {...params} placeholder="Değiştirmek için seçin..." />}
+              />
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          {bulkLoading && (
+            <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+              Güncelleniyor... ({selectedCount} hasta)
+            </Typography>
+          )}
+          <Button onClick={() => setBulkEditOpen(false)} disabled={bulkLoading} sx={{ textTransform: 'none', color: 'text.secondary' }}>İptal</Button>
+          <Button
+            onClick={handleBulkUpdate}
+            variant="contained"
+            disabled={bulkLoading || (!bulkEditValues.advisor && !bulkEditValues.service && !bulkEditValues.status)}
+            sx={{ textTransform: 'none', fontWeight: 600, bgcolor: '#6366F1', '&:hover': { bgcolor: '#4F46E5' }, px: 3 }}
+          >
+            {bulkLoading ? 'Uygulanıyor...' : `${selectedCount} Hastayı Güncelle`}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1802,6 +2059,7 @@ export default function CustomersPage() {
               setFilterLogic("VE");
               setTempFilterLogic("VE");
               setFilterDialogOpen(false);
+              saveFiltersToSession(emptyFilters, "VE", searchQuery);
               // Filtresiz yeniden çek
               fetchCustomers(1, undefined, emptyFilters);
             }}
@@ -1815,6 +2073,7 @@ export default function CustomersPage() {
               setAdvancedFilters(newFilters);
               setFilterLogic(tempFilterLogic);
               setFilterDialogOpen(false);
+              saveFiltersToSession(newFilters, tempFilterLogic, searchQuery);
               // Server-side filtre ile yeniden çek
               fetchCustomers(1, undefined, newFilters);
             }}

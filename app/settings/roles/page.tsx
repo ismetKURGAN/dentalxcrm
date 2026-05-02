@@ -24,18 +24,28 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const PERMISSION_DEFS: { key: string; label: string; group: string }[] = [
-  { key: "viewCustomers", label: "Müşteri Görüntüle", group: "Müşteriler" },
+  { key: "viewCustomers", label: "Müşteri Sayfası", group: "Müşteriler" },
+  { key: "viewAllCustomers", label: "Tüm Danışman Müşterileri", group: "Müşteriler" },
+  { key: "viewOwnCustomers", label: "Sadece Kendi Müşterileri", group: "Müşteriler" },
+  { key: "viewConsultationOnly", label: "Sadece Konsültasyon Müşterileri", group: "Müşteriler" },
   { key: "editCustomers", label: "Müşteri Düzenle", group: "Müşteriler" },
-  { key: "viewAppointments", label: "Randevu Görüntüle", group: "Randevular" },
+  { key: "viewAppointments", label: "Randevu Sayfası", group: "Randevular" },
+  { key: "viewAllAppointments", label: "Tüm Randevuları Görme", group: "Randevular" },
+  { key: "viewOwnAppointments", label: "Sadece Kendi Randevuları", group: "Randevular" },
   { key: "editAppointments", label: "Randevu Düzenle", group: "Randevular" },
+  { key: "viewChats", label: "Sohbetler Sekmesi", group: "Sohbetler" },
   { key: "viewStats", label: "İletişim İstatistikleri", group: "Raporlar" },
   { key: "viewReports", label: "Danışman Raporları", group: "Raporlar" },
-  { key: "manageSegments", label: "Segment Yönetimi", group: "Kampanyalar" },
-  { key: "sendCampaigns", label: "Toplu Kampanya Gönder", group: "Kampanyalar" },
-  { key: "manageDoctors", label: "Doktor Yönetimi", group: "Tanımlar" },
-  { key: "manageUsers", label: "Kullanıcı Yönetimi", group: "Tanımlar" },
-  { key: "manageSettings", label: "Genel Ayarlar", group: "Tanımlar" },
-  { key: "viewChats", label: "Sohbetler Sekmesi", group: "Menü / Sekmeler" },
+  { key: "viewCosts", label: "Maliyetler (Muhasebe)", group: "Raporlar" },
+  { key: "viewPayments", label: "Ödeme Bilgileri", group: "Raporlar" },
+  { key: "viewSegments", label: "Segment Sekmesi", group: "Pazarlama" },
+  { key: "viewCampaignStatuses", label: "Kampanya Durumları Sekmesi", group: "Pazarlama" },
+  { key: "manageSegments", label: "Segment Yönetimi", group: "Pazarlama" },
+  { key: "sendCampaigns", label: "Toplu Kampanya Gönder", group: "Pazarlama" },
+  { key: "manageDoctors", label: "Doktor Yönetimi", group: "Yönetim" },
+  { key: "manageUsers", label: "Kullanıcı Yönetimi", group: "Yönetim" },
+  { key: "viewTimesheets", label: "Mesai Takip", group: "Yönetim" },
+  { key: "manageSettings", label: "Genel Ayarlar", group: "Yönetim" },
 ];
 
 export default function RolesSettingsPage() {

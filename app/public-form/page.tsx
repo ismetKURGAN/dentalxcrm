@@ -163,6 +163,10 @@ export default function PublicContactFormPage() {
                       <MenuItem value={"+46"}>🇸🇪 +46</MenuItem>
                       <MenuItem value={"+47"}>🇳🇴 +47</MenuItem>
                       <MenuItem value={"+45"}>🇩🇰 +45</MenuItem>
+                      <MenuItem value={"+77"}>🇰🇿 +77</MenuItem>
+                      <MenuItem value={"+993"}>🇹🇲 +993</MenuItem>
+                      <MenuItem value={"+996"}>🇰🇬 +996</MenuItem>
+                      <MenuItem value={"+998"}>🇺🇿 +998</MenuItem>
                     </Select>
                   </FormControl>
                   <TextField

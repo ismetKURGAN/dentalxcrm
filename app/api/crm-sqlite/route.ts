@@ -178,6 +178,7 @@ export async function GET(request: NextRequest) {
     const countryOp = searchParams.get("countryOp") || "in";
     const advAdvisorFilter = searchParams.get("advisors")?.trim();
     const advAdvisorOp = searchParams.get("advisorOp") || "in";
+    const parentCategoryFilter = searchParams.get("parentCategory")?.trim();
     
     // WHERE koşullarını birleştir
     const conditions: string[] = [];
@@ -237,6 +238,14 @@ export async function GET(request: NextRequest) {
       const placeholders = countries.map(() => '?').join(',');
       conditions.push(countryOp === "notIn" ? `country NOT IN (${placeholders})` : `country IN (${placeholders})`);
       params.push(...countries);
+    }
+    
+    // Üst kategori filtresi (data JSON'dan)
+    if (parentCategoryFilter) {
+      const parents = parentCategoryFilter.split(',').map(s => s.trim());
+      const placeholders = parents.map(() => '?').join(',');
+      conditions.push(`json_extract(data, '$.parentCategory') IN (${placeholders})`);
+      params.push(...parents);
     }
     
     if (searchQuery) {
