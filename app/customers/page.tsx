@@ -258,6 +258,7 @@ export default function CustomersPage() {
   const [phoneFlag, setPhoneFlag] = useState("🌍");
   
   const [activeParentCategory, setActiveParentCategory] = useState("");
+  const [showIncompleteOnly, setShowIncompleteOnly] = useState(false);
 
   // Arama state'i
   const [searchQuery, setSearchQuery] = useState(savedState.searchQuery);
@@ -337,6 +338,12 @@ export default function CustomersPage() {
       if (!isMountedRef.current) return;
       setLoading(true);
       let url = `/api/crm-sqlite?page=${pageNum}&limit=${pageSize}`;
+      
+      // Eksik bilgili hastalar için sales ve files bilgilerini de çek
+      if (showIncompleteOnly) {
+        url += `&include=sales,files`;
+      }
+      
       const searchTerm = search !== undefined ? search : searchQuery;
       if (searchTerm.trim()) {
         url += `&search=${encodeURIComponent(searchTerm.trim())}`;
@@ -352,6 +359,8 @@ export default function CustomersPage() {
       
       // Gelişmiş filtreleri server-side'a gönder
       const af = filters || advancedFilters;
+      let expandedCatsForPost: string[] | null = null;
+      let expandedCatsOpForPost: string = "in";
       if (af.statuses.length > 0) {
         url += `&statuses=${encodeURIComponent(af.statuses.join(','))}`;
         if (af.statusOperator === "içinde değil") url += `&statusOp=notIn`;
@@ -361,11 +370,12 @@ export default function CustomersPage() {
         if (af.advisorOperator === "içinde değil") url += `&advisorOp=notIn`;
       }
       if (af.categories.length > 0) {
-        // Seçilen kategorilerin tüm alt kategorilerini de ekle
+        // Seçilen kategorilerin tüm alt kategorilerini de ekle (recursive)
         const expandWithDescendants = (selectedNames: string[]): string[] => {
           const result = new Set<string>(selectedNames);
           const catByName: Record<string, any> = {};
           categoriesData.forEach((c: any) => { catByName[c.name] = c; });
+          
           const addDescendants = (parentId: string) => {
             categoriesData
               .filter((c: any) => c.parentId === parentId)
@@ -374,15 +384,16 @@ export default function CustomersPage() {
                 addDescendants(child.id);
               });
           };
+          
           selectedNames.forEach(name => {
             const cat = catByName[name];
             if (cat) addDescendants(cat.id);
           });
           return Array.from(result);
         };
-        const expandedCats = expandWithDescendants(af.categories);
-        url += `&categories=${encodeURIComponent(expandedCats.join(','))}`;
-        if (af.categoryOperator === "içinde değil") url += `&categoryOp=notIn`;
+        expandedCatsForPost = expandWithDescendants(af.categories);
+        expandedCatsOpForPost = af.categoryOperator === "içinde değil" ? "notIn" : "in";
+        // URL'e eklemiyoruz - POST body'e koyacağız
       }
       if (af.services.length > 0) {
         url += `&services=${encodeURIComponent(af.services.join(','))}`;
@@ -399,7 +410,17 @@ export default function CustomersPage() {
         url += `&parentCategory=${encodeURIComponent(parentCatValue)}`;
       }
       
-      const res = await fetch(url, { cache: "no-store" });
+      // Kategori filtresi: POST body kullan (URL limit sorununu önler)
+      const hasCategories = expandedCatsForPost && expandedCatsForPost.length > 0;
+      const res = await fetch(url, {
+        method: hasCategories ? "POST" : "GET",
+        cache: "no-store",
+        headers: hasCategories ? { "Content-Type": "application/json" } : undefined,
+        body: hasCategories ? JSON.stringify({
+          categories: expandedCatsForPost,
+          categoryOp: expandedCatsOpForPost,
+        }) : undefined,
+      });
       if (res.ok) {
         const response = await res.json();
         const data = response.data || response; // Yeni format: {data, pagination} veya eski format: array
@@ -938,6 +959,81 @@ export default function CustomersPage() {
     
     let filtered = rows;
     
+    // Eksik bilgili hastalar filtresi
+    if (showIncompleteOnly) {
+      filtered = filtered.filter((row: any) => {
+        // Satış durumunda olan hastaları kontrol et (server-side zaten filtreliyor olabilir)
+        const isSalesStatus = row.status === "Satış" || row.status === "Satış Kapalı" || 
+                             (typeof row.status === "string" && row.status.startsWith("Satış"));
+        
+        // Satış ve dosya bilgilerini kontrol et
+        let isSalesIncomplete = false;
+        let isFilesIncomplete = false;
+        
+        // Satış kontrolü
+        if (row.sales && row.sales !== null) {
+          const sales = typeof row.sales === 'string' ? JSON.parse(row.sales) : row.sales;
+          
+          // Fiyat kontrolü
+          if (!sales.price || sales.price.trim() === "") {
+            isSalesIncomplete = true;
+          }
+          
+          // Seyahat kontrolü
+          if (!isSalesIncomplete && sales.trips && Array.isArray(sales.trips)) {
+            if (sales.trips.length === 0) {
+              isSalesIncomplete = true;
+            } else {
+              const tripsWithDates = sales.trips.filter((trip: any) => 
+                !trip.dateUndetermined && trip.appointmentDate && trip.appointmentDate.trim() !== ""
+              );
+              
+              if (tripsWithDates.length === 0) {
+                isSalesIncomplete = true;
+              } else if (tripsWithDates.length < sales.trips.length) {
+                // Bazı seyahatlerin tarihi girilmemiş, gelecek tarihli olmalı
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const upcomingTrips = tripsWithDates.filter((trip: any) => {
+                  const tripDate = new Date(trip.appointmentDate);
+                  return tripDate >= today;
+                });
+                if (upcomingTrips.length === 0) {
+                  isSalesIncomplete = true;
+                }
+              }
+            }
+          } else if (!isSalesIncomplete) {
+            isSalesIncomplete = true; // Seyahat bilgisi yok
+          }
+        } else {
+          isSalesIncomplete = true; // Satış bilgisi yok
+        }
+        
+        // Dosya kontrolü
+        if (row.files) {
+          const files = typeof row.files === 'string' ? JSON.parse(row.files) : row.files;
+          
+          if (!Array.isArray(files) || files.length === 0) {
+            isFilesIncomplete = true;
+          } else {
+            const hasPassport = files.some((f: any) => f.category === "passport");
+            const hasTicket = files.some((f: any) => f.category === "ticket");
+            const hasProposal = files.some((f: any) => f.category === "proposal");
+            
+            if (!hasPassport || !hasTicket || !hasProposal) {
+              isFilesIncomplete = true;
+            }
+          }
+        } else {
+          isFilesIncomplete = true; // Dosya bilgisi yok
+        }
+        
+        // Satış VEYA dosyalar eksikse göster
+        return isSalesIncomplete || isFilesIncomplete;
+      });
+    }
+    
     const hasClientFilters = 
       advancedFilters.trustpilot !== null ||
       advancedFilters.googleReview !== null ||
@@ -1088,6 +1184,72 @@ export default function CustomersPage() {
           sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
         >
           Gelişmiş Filtreler {(advancedFilters.categories.length + advancedFilters.advisors.length + advancedFilters.statuses.length + advancedFilters.services.length + advancedFilters.countries.length) > 0 && `(${advancedFilters.categories.length + advancedFilters.advisors.length + advancedFilters.statuses.length + advancedFilters.services.length + advancedFilters.countries.length})`}
+        </Button>
+        
+        <Button
+          variant={showIncompleteOnly ? "contained" : "outlined"}
+          color={showIncompleteOnly ? "error" : "inherit"}
+          startIcon={<PeopleAltIcon />}
+          onClick={async () => {
+            const newValue = !showIncompleteOnly;
+            setShowIncompleteOnly(newValue);
+            setPage(1);
+            
+            // State güncellenmeden önce API çağrısı yap
+            // fetchCustomers içinde showIncompleteOnly kullanılıyor, o yüzden manuel kontrol
+            setLoading(true);
+            try {
+              let url = `/api/crm-sqlite?page=1&limit=100`; // Limit 100
+              
+              // Yeni değere göre include parametresi ekle
+              if (newValue) {
+                url += `&include=sales,files`;
+                // Satış durumundaki hastaları filtrele (server-side)
+                url += `&statuses=Satış,Satış Kapalı`;
+              }
+              
+              const searchTerm = searchQuery;
+              if (searchTerm.trim()) {
+                url += `&search=${encodeURIComponent(searchTerm.trim())}`;
+              }
+              
+              // Rol bazlı danışman filtresi
+              const roles = Array.isArray(user?.roles) ? user.roles : [];
+              if ((roles.includes("Danışman") || roles.includes("Acenta")) && !roles.includes("Admin") && !roles.includes("Yönetici")) {
+                if (user?.name) {
+                  url += `&advisor=${encodeURIComponent(user.name)}`;
+                }
+              }
+              
+              console.log("[BUTTON] API URL:", url);
+              
+              const res = await fetch(url, { cache: "no-store" });
+              if (res.ok) {
+                const response = await res.json();
+                const data = response.data || response;
+                const pagination = response.pagination;
+                
+                if (pagination) {
+                  setTotalPages(pagination.totalPages);
+                  setTotalRecords(pagination.total);
+                  setPage(pagination.page);
+                }
+                
+                setRows(data);
+              }
+            } catch (error) {
+              console.error("[BUTTON] Veri çekme hatası:", error);
+            } finally {
+              setLoading(false);
+            }
+          }}
+          sx={{ 
+            textTransform: 'none', 
+            width: { xs: '100%', sm: 'auto' },
+            fontWeight: 600
+          }}
+        >
+          {showIncompleteOnly ? "Tüm Hastalar" : "Eksik Bilgili Hastalar"}
         </Button>
         
         <Button

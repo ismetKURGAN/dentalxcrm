@@ -28,6 +28,10 @@ import {
   Fab,
   Autocomplete,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 // ICONS
@@ -52,6 +56,8 @@ import DownloadIcon from "@mui/icons-material/Download";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import HealingIcon from "@mui/icons-material/Healing";
+import LockOpenIcon from "@mui/icons-material/LockOpen";
+import LockIcon from "@mui/icons-material/Lock";
 import { useI18n } from "../../components/I18nProvider";
 import PatientCostsTab from "../../components/PatientCostsTab";
 
@@ -194,6 +200,8 @@ type CustomerState = {
     salesDate: string;
     price: string;
     priceCurrency: string;
+    priceLocked?: boolean;
+    priceLockedAt?: string;
     deposit: string;
     depositCurrency: string;
     depositPaid: boolean;
@@ -227,14 +235,17 @@ type CustomerState = {
     }[];
   };
   calls: { id: number; title: string; date: string; notes: string }[];
-  files: { id: number; name: string; size: string; uploadedAt: string; url?: string }[];
+  files: { id: number; name: string; size: string; uploadedAt: string; url?: string; category?: "passport" | "ticket" | "proposal" | "other" }[];
   history: {
     id: number;
-    title: string;
+    action: string; // "created" | "updated" | "status_changed" | "note_added" | "file_uploaded" | "call_added" | "trip_added" | etc.
+    section: string; // "personal" | "status" | "sales" | "files" | "calls" | "notes" | etc.
+    field?: string; // Değişen alan adı
     oldValue: string;
     newValue: string;
     date: string;
     user: string;
+    details?: string; // Ek detaylar
   }[];
   soldBy?: string;
   consultationNotes: { id: number; date: string; note: string }[];
@@ -283,6 +294,8 @@ const INITIAL_STATE: CustomerState = {
     salesDate: "",
     price: "",
     priceCurrency: "GBP",
+    priceLocked: false,
+    priceLockedAt: "",
     deposit: "",
     depositCurrency: "GBP",
     depositPaid: false,
@@ -328,7 +341,42 @@ export default function CustomerDetailPage() {
   const [statusOptions, setStatusOptions] = useState<string[]>([]);
   const [doctorOptions, setDoctorOptions] = useState<string[]>([]);
   const [transferCompanyOptions, setTransferCompanyOptions] = useState<string[]>([]);
-const [hotelOptions, setHotelOptions] = useState<string[]>([]);
+  const [hotelOptions, setHotelOptions] = useState<string[]>([]);
+  
+  // Fiyat değişiklik talebi için
+  const [priceChangeDialogOpen, setPriceChangeDialogOpen] = useState(false);
+  const [priceChangeRequest, setPriceChangeRequest] = useState({ newPrice: "", reason: "" });
+  
+  // Zorunlu alan kontrolü için
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  
+  // Dosya kategorisi seçimi için
+  const [fileCategory, setFileCategory] = useState<"passport" | "ticket" | "proposal" | "other">("other");
+  
+  // Sayfa ayrılma uyarısı için
+  const [showExitWarning, setShowExitWarning] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null);
+  
+  // History log ekleme fonksiyonu
+  const addHistoryLog = (action: string, section: string, field: string, oldValue: string, newValue: string, details?: string) => {
+    const userEmail = typeof window !== 'undefined' ? localStorage.getItem("userEmail") : "Sistem";
+    const newLog = {
+      id: Date.now(),
+      action,
+      section,
+      field,
+      oldValue,
+      newValue,
+      date: new Date().toLocaleString("tr-TR"),
+      user: userEmail || "Sistem",
+      details
+    };
+    
+    setCustomer(prev => ({
+      ...prev,
+      history: [newLog, ...prev.history]
+    }));
+  };
 
   // --- VERİ ÇEKME ---
   useEffect(() => {
@@ -465,11 +513,26 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     fetchData();
   }, [params]);
 
+  // Sayfa ayrılma uyarısı - browser tab/window kapatma
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!checkRequiredFields()) {
+        e.preventDefault();
+        e.returnValue = "Zorunlu alanlar doldurulmamış. Sayfadan ayrılırsanız bilgileriniz kaybedilecek.";
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [customer]);
+
   // Seyahat ekleme fonksiyonu
   const handleAddTrip = () => {
+    const tripNumber = customer.sales.trips.length + 1;
     const newTrip = {
       id: Date.now(),
-      name: `${customer.sales.trips.length + 1}. Seyahat`,
+      name: `${tripNumber}. Seyahat`,
       dateUndetermined: false,
       appointmentDate: "",
       appointmentTime: "",
@@ -491,6 +554,16 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
       ...prev,
       sales: { ...prev.sales, trips: [...prev.sales.trips, newTrip] },
     }));
+    
+    // History log ekle
+    addHistoryLog(
+      "trip_added",
+      "sales",
+      "Seyahat",
+      "",
+      `${tripNumber}. Seyahat`,
+      "Yeni seyahat planı eklendi"
+    );
   };
 
   // Seyahat silme fonksiyonu
@@ -545,12 +618,53 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     });
   };
 
+  // Fiyat değişiklik talebi gönder
+  const handlePriceChangeRequest = async () => {
+    if (!priceChangeRequest.newPrice || !priceChangeRequest.reason) {
+      setSnackbar({ open: true, message: "Lütfen yeni fiyat ve sebep giriniz", severity: "error" });
+      return;
+    }
+
+    try {
+      const emailBody = {
+        to: "rapor@xirtiz.com",
+        subject: `Fiyat Değişiklik Talebi - ${customer.personal.name}`,
+        html: `
+          <h2>Fiyat Değişiklik Talebi</h2>
+          <p><strong>Hasta:</strong> ${customer.personal.name}</p>
+          <p><strong>Hasta ID:</strong> ${customer.id}</p>
+          <p><strong>Mevcut Fiyat:</strong> ${customer.sales.price} ${customer.sales.priceCurrency}</p>
+          <p><strong>Talep Edilen Fiyat:</strong> ${priceChangeRequest.newPrice} ${customer.sales.priceCurrency}</p>
+          <p><strong>Sebep:</strong> ${priceChangeRequest.reason}</p>
+          <p><strong>Talep Eden:</strong> ${typeof window !== 'undefined' ? localStorage.getItem("userEmail") : "Bilinmiyor"}</p>
+          <p><strong>Tarih:</strong> ${new Date().toLocaleString("tr-TR")}</p>
+        `,
+      };
+
+      const res = await fetch("/api/settings/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailBody),
+      });
+
+      if (res.ok) {
+        setSnackbar({ open: true, message: "Fiyat değişiklik talebi gönderildi", severity: "success" });
+        setPriceChangeDialogOpen(false);
+        setPriceChangeRequest({ newPrice: "", reason: "" });
+      } else {
+        throw new Error("Email gönderilemedi");
+      }
+    } catch (error) {
+      setSnackbar({ open: true, message: "Talep gönderilemedi", severity: "error" });
+    }
+  };
+
   // 8. SATIŞ (yalnızca durum "Satış" olduğunda gösterilecek sekme)
   const renderSalesTab = () => (
     <Stack spacing={3}>
       {/* Satış Bilgileri */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           Satış Bilgileri
         </Typography>
         <Grid container spacing={2}>
@@ -610,9 +724,37 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             <Grid container spacing={2}>
               {/* Satış Fiyatı */}
               <Grid size={{ xs: 12, md: 6 }}>
-                <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ mb: 1, display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
-                  Satış Fiyatı
-                </Typography>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+                  <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>
+                    Satış Fiyatı
+                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    {customer.sales.priceLocked && (
+                      <Typography variant="caption" sx={{ color: "#f59e0b", fontWeight: 600, display: "flex", alignItems: "center", gap: 0.5 }}>
+                        🔒 Kilitli
+                      </Typography>
+                    )}
+                    {customer.sales.priceLocked && userRoles.includes("Admin") && (
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setCustomer((prev) => ({
+                            ...prev,
+                            sales: { ...prev.sales, priceLocked: false, priceLockedAt: "" }
+                          }));
+                          setSnackbar({ open: true, message: "Fiyat kilidi açıldı", severity: "success" });
+                        }}
+                        sx={{ 
+                          color: "#22c55e",
+                          '&:hover': { bgcolor: "rgba(34,197,94,0.08)" }
+                        }}
+                        title="Kilidi Aç (Admin)"
+                      >
+                        <LockOpenIcon fontSize="small" />
+                      </IconButton>
+                    )}
+                  </Stack>
+                </Stack>
                 <Stack direction="row" spacing={1}>
                   <TextField
                     size="small"
@@ -621,17 +763,58 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                     value={customer.sales.price}
-                    onChange={(e) =>
-                      setCustomer((prev) => ({ ...prev, sales: { ...prev.sales, price: e.target.value } }))
-                    }
+                    disabled={customer.sales.priceLocked}
+                    onChange={(e) => {
+                      const newPrice = e.target.value;
+                      setCustomer((prev) => ({ 
+                        ...prev, 
+                        sales: { 
+                          ...prev.sales, 
+                          price: newPrice,
+                          // Fiyat kilitleme işlemi kaldırıldı - manuel kilitleme yapılacak
+                          priceLocked: prev.sales.priceLocked,
+                          priceLockedAt: prev.sales.priceLockedAt
+                        } 
+                      }));
+                    }}
                     placeholder="0"
+                    sx={{
+                      '& .MuiInputBase-input.Mui-disabled': {
+                        WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
+                        cursor: 'not-allowed'
+                      }
+                    }}
                   />
+                  {!customer.sales.priceLocked && customer.sales.price && (
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setCustomer((prev) => ({
+                          ...prev,
+                          sales: { 
+                            ...prev.sales, 
+                            priceLocked: true, 
+                            priceLockedAt: new Date().toISOString() 
+                          }
+                        }));
+                        setSnackbar({ open: true, message: "Fiyat kilitlendi", severity: "success" });
+                      }}
+                      sx={{ 
+                        color: "#f59e0b",
+                        '&:hover': { bgcolor: "rgba(245,158,11,0.08)" }
+                      }}
+                      title="Fiyatı Kilitle"
+                    >
+                      <LockIcon fontSize="small" />
+                    </IconButton>
+                  )}
                   <FormControl size="small" sx={{ minWidth: 110 }}>
                     <InputLabel shrink>Para Birimi</InputLabel>
                     <Select
                       value={customer.sales.priceCurrency}
                       label="Para Birimi"
                       notched
+                      disabled={customer.sales.priceLocked}
                       onChange={(e) =>
                         setCustomer((prev) => ({ ...prev, sales: { ...prev.sales, priceCurrency: e.target.value } }))
                       }
@@ -639,6 +822,22 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                       {SALE_CURRENCIES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
                     </Select>
                   </FormControl>
+                  {customer.sales.priceLocked && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => setPriceChangeDialogOpen(true)}
+                      sx={{ 
+                        textTransform: "none", 
+                        whiteSpace: "nowrap",
+                        borderColor: "#f59e0b",
+                        color: "#f59e0b",
+                        '&:hover': { borderColor: "#d97706", bgcolor: "rgba(245,158,11,0.08)" }
+                      }}
+                    >
+                      Değiştir
+                    </Button>
+                  )}
                 </Stack>
               </Grid>
 
@@ -680,11 +879,11 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
               <Grid size={{ xs: 12, md: 6 }}>
                 <Stack direction="row" alignItems="center" justifyContent="space-between"
                   sx={{ borderRadius: 1.5, px: 2, py: 1, border: "1px solid", borderColor: customer.sales.depositPaid ? "#22c55e" : "#f59e0b",
-                    bgcolor: customer.sales.depositPaid ? "rgba(34,197,94,0.1)" : "rgba(245,158,11,0.1)" }}
+                    bgcolor: customer.sales.depositPaid ? "rgba(34,197,94,0.15)" : "rgba(245,158,11,0.15)" }}
                 >
                   <Stack direction="row" alignItems="center" spacing={1}>
                     <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: customer.sales.depositPaid ? "#22c55e" : "#f59e0b" }} />
-                    <Typography variant="body2" fontWeight={600} color={customer.sales.depositPaid ? "#16a34a" : "#d97706"}>
+                    <Typography variant="body2" fontWeight={600} color={customer.sales.depositPaid ? "success.main" : "warning.main"}>
                       {customer.sales.depositPaid ? "Depozito Ödendi" : "Depozito Bekleniyor"}
                     </Typography>
                   </Stack>
@@ -694,7 +893,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                     onChange={(e) =>
                       setCustomer((prev) => ({ ...prev, sales: { ...prev.sales, depositPaid: e.target.checked } }))
                     }
-                    sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#22c55e' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#22c55e' } }}
+                    sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: 'success.main' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'success.main' } }}
                   />
                 </Stack>
               </Grid>
@@ -719,7 +918,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
       {/* Müşteri Geri Bildirimleri */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           Müşteri Geri Bildirimleri
         </Typography>
         <Stack spacing={1}>
@@ -867,7 +1066,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             <Stack spacing={2.5}>
               {/* Randevu Bilgileri */}
               <Box>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "text.primary" }}>
                   Randevu Bilgileri
                 </Typography>
                 <Grid container spacing={2}>
@@ -927,7 +1126,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
               {/* Otel ve Transfer */}
               <Box>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "text.primary" }}>
                   Otel ve Transfer
                 </Typography>
                 <Grid container spacing={2}>
@@ -1005,7 +1204,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
               {/* Geliş ve Gidiş Bilgileri */}
               {!trip.dateUndetermined && (
                 <Box>
-                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "text.primary" }}>
                     Geliş ve Gidiş Bilgileri
                   </Typography>
                   <Grid container spacing={2}>
@@ -1115,7 +1314,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
               {/* Notlar */}
               <Box>
-                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "#374151" }}>
+                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1.5, color: "text.primary" }}>
                   Notlar
                 </Typography>
                 <TextField
@@ -1143,8 +1342,131 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     </Stack>
   );
 
+  // Zorunlu alan kontrolü (SADECE satış zorunlu - kayıt için)
+  const checkRequiredFields = () => {
+    const errors: string[] = [];
+    
+    // Sadece Satış durumundaysa satış bilgileri zorunlu
+    const isSalesStatus = customer.status.status === "Satış" || customer.status.status === "Satış Kapalı" || 
+        (typeof customer.status.status === "string" && customer.status.status.startsWith("Satış"));
+    
+    if (isSalesStatus) {
+      // Fiyat kontrolü
+      if (!customer.sales.price || customer.sales.price.trim() === "") {
+        errors.push("sales");
+      }
+      
+      // Seyahat kontrolü
+      if (!customer.sales.trips || customer.sales.trips.length === 0) {
+        errors.push("sales");
+      } else {
+        // Tarihi girilmiş seyahatleri bul
+        const tripsWithDates = customer.sales.trips.filter(trip => 
+          !trip.dateUndetermined && trip.appointmentDate && trip.appointmentDate.trim() !== ""
+        );
+        
+        // Hiç tarih girilmemişse hata
+        if (tripsWithDates.length === 0) {
+          errors.push("sales");
+        } else if (tripsWithDates.length === customer.sales.trips.length) {
+          // Tüm seyahatlerin tarihi girilmişse OK (geçmiş/gelecek fark etmez)
+        } else {
+          // Bazı seyahatlerin tarihi girilmemişse: Gelecek tarihli olmalı
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const upcomingTrips = tripsWithDates.filter(trip => {
+            const tripDate = new Date(trip.appointmentDate);
+            return tripDate >= today;
+          });
+          
+          // Gelecek tarihli seyahat yoksa hata
+          if (upcomingTrips.length === 0) {
+            errors.push("sales");
+          }
+        }
+      }
+    }
+    
+    // NOT: Görüşme Notları, Tedavi Notları ve Dosyalar artık zorunlu DEĞİL
+    // Kırmızı uyarılar isTabComplete fonksiyonunda gösterilmeye devam ediyor
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
+  };
+  
+  // Sekme doldurulma durumu kontrolü
+  const isTabComplete = (tabKey: string) => {
+    if (tabKey === "consultationNotes") {
+      return customer.consultationNotes && customer.consultationNotes.length > 0;
+    }
+    if (tabKey === "treatmentNotes") {
+      return customer.treatmentNotes?.note && customer.treatmentNotes.note.trim() !== "";
+    }
+    if (tabKey === "sales") {
+      // Fiyat kontrolü
+      if (!customer.sales.price || customer.sales.price.trim() === "") {
+        return false;
+      }
+      
+      // Seyahat kontrolü - en az 1 seyahat olmalı
+      if (!customer.sales.trips || customer.sales.trips.length === 0) {
+        return false;
+      }
+      
+      // Tarihi girilmiş seyahatleri bul
+      const tripsWithDates = customer.sales.trips.filter(trip => 
+        !trip.dateUndetermined && trip.appointmentDate && trip.appointmentDate.trim() !== ""
+      );
+      
+      // Hiç tarih girilmemişse kırmızı
+      if (tripsWithDates.length === 0) {
+        return false;
+      }
+      
+      // Tüm seyahatlerin tarihi girilmişse yeşil (geçmiş/gelecek fark etmez)
+      // Sadece bazı seyahatlerin tarihi girilmişse kontrol et
+      if (tripsWithDates.length === customer.sales.trips.length) {
+        // Tüm seyahatlerin tarihi girilmiş → YEŞİL
+        return true;
+      }
+      
+      // Bazı seyahatlerin tarihi girilmemişse, gelecek tarihli olmalı
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const upcomingTrips = tripsWithDates.filter(trip => {
+        const tripDate = new Date(trip.appointmentDate);
+        return tripDate >= today;
+      });
+      
+      return upcomingTrips.length > 0;
+    }
+    if (tabKey === "files") {
+      if (!customer.files || customer.files.length === 0) return false;
+      
+      // Pasaport, Bilet ve Teklif Formu zorunlu
+      const hasPassport = customer.files.some(f => f.category === "passport");
+      const hasTicket = customer.files.some(f => f.category === "ticket");
+      const hasProposal = customer.files.some(f => f.category === "proposal");
+      
+      return hasPassport && hasTicket && hasProposal;
+    }
+    return true; // Diğer sekmeler zorunlu değil
+  };
+
   // --- KAYDETME ---
   const handleSave = async () => {
+    // Zorunlu alanları kontrol et
+    if (!checkRequiredFields()) {
+      setSnackbar({
+        open: true,
+        message: "Satış durumundaki hastalar için fiyat ve gelecek tarihli seyahat bilgisi zorunludur",
+        severity: "error",
+      });
+      return;
+    }
+    
     setSaving(true);
     try {
       const payload = {
@@ -1222,8 +1544,8 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          bgcolor: customer.reminder.enabled ? "#eff6ff" : "#f9fafb",
-          borderColor: customer.reminder.enabled ? "#bfdbfe" : "#e5e7eb",
+          bgcolor: "background.paper",
+          borderColor: "divider",
         }}
       >
         <Box display="flex" alignItems="center" gap={1}>
@@ -1316,7 +1638,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          sx={{ bgcolor: "#374151", "&:hover": { bgcolor: "#4b5563" } }}
+          sx={{ bgcolor: "grey.700", "&:hover": { bgcolor: "grey.600" } }}
           onClick={() => {
             const now = new Date();
             const newCall = {
@@ -1448,21 +1770,21 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     return (
     <Stack spacing={3}>
       {/* Toplam Özet */}
-      <Paper variant="outlined" sx={{ p: 0, borderRadius: 2, overflow: "hidden", borderColor: "#e2e8f0" }}>
+      <Paper variant="outlined" sx={{ p: 0, borderRadius: 2, overflow: "hidden", borderColor: "divider" }}>
         <Box sx={{ px: 2.5, py: 1.5, bgcolor: "#1e293b" }}>
-          <Typography variant="subtitle2" fontWeight={700} color="#f1f5f9">Toplam Özet</Typography>
+          <Typography variant="subtitle2" fontWeight={700} color="common.white">Toplam Özet</Typography>
         </Box>
         <Grid container>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Box sx={{ px: 2.5, py: 2, borderRight: { md: "1px solid #e2e8f0" } }}>
+            <Box sx={{ px: 2.5, py: 2, borderRight: { md: "1px solid", borderColor: "divider" } }}>
               <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>Toplam Maliyet</Typography>
-              <Typography variant="h6" fontWeight={700} color="#dc2626" sx={{ mt: 0.5 }}>{costSummary}</Typography>
+              <Typography variant="h6" fontWeight={700} color="error.main" sx={{ mt: 0.5 }}>{costSummary}</Typography>
             </Box>
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <Box sx={{ px: 2.5, py: 2 }}>
               <Typography variant="caption" color="text.secondary" sx={{ textTransform: "uppercase", letterSpacing: 0.5 }}>Toplam Satış</Typography>
-              <Typography variant="h6" fontWeight={700} color="#16a34a" sx={{ mt: 0.5 }}>{salesSummary}</Typography>
+              <Typography variant="h6" fontWeight={700} color="success.main" sx={{ mt: 0.5 }}>{salesSummary}</Typography>
             </Box>
           </Grid>
         </Grid>
@@ -1491,23 +1813,23 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         return (
           <Paper key={trip.id} variant="outlined" sx={{
             borderRadius: 2, overflow: "hidden",
-            borderColor: trip.completed ? "#86efac" : "#e2e8f0",
+            borderColor: trip.completed ? "success.light" : "divider",
             opacity: trip.completed ? 0.85 : 1,
           }}>
             {/* Trip Header */}
             <Stack direction="row" alignItems="center" justifyContent="space-between"
-              sx={{ px: 2.5, py: 1.5, bgcolor: trip.completed ? "#f0fdf4" : "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+              sx={{ px: 2.5, py: 1.5, bgcolor: "background.paper", borderBottom: "1px solid", borderColor: "divider" }}>
               <Stack direction="row" alignItems="center" spacing={1.5}>
-                <Box sx={{ width: 6, height: 24, bgcolor: trip.completed ? "#16a34a" : "#3b82f6", borderRadius: 1 }} />
+                <Box sx={{ width: 6, height: 24, bgcolor: trip.completed ? "success.main" : "primary.main", borderRadius: 1 }} />
                 <Typography variant="subtitle1" fontWeight={700}>{trip.name}</Typography>
-                {trip.completed && <Box sx={{ px: 1, py: 0.25, bgcolor: "#dcfce7", borderRadius: 1, fontSize: 11, color: "#15803d", fontWeight: 600 }}>✓ Gerçekleşti</Box>}
+                {trip.completed && <Box sx={{ px: 1, py: 0.25, bgcolor: "success.main", borderRadius: 1, fontSize: 11, color: "success.contrastText", fontWeight: 600 }}>✓ Gerçekleşti</Box>}
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>
                 <Stack direction="row" alignItems="center" spacing={0.5}>
                   <Typography variant="caption" color="text.secondary">Gerçekleşti</Typography>
                   <Switch size="small" checked={trip.completed}
                     onChange={(e) => updatePaymentTrip(tripIndex, (t) => ({ ...t, completed: e.target.checked }))}
-                    sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: '#16a34a' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: '#16a34a' } }}
+                    sx={{ '& .MuiSwitch-switchBase.Mui-checked': { color: 'success.main' }, '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'success.main' } }}
                   />
                 </Stack>
                 <IconButton size="small" color="error"
@@ -1521,13 +1843,13 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
               <Grid container spacing={2.5}>
                 {/* Sol: Maliyet */}
                 <Grid size={{ xs: 12, md: 7 }}>
-                  <Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "#dc2626", mb: 1, display: "block" }}>
+                  <Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "error.main", mb: 1, display: "block" }}>
                     Maliyet
                   </Typography>
                   <Stack spacing={1}>
                     {COST_ROWS.map(({ key, currKey, label }) => (
                       <Stack key={key} direction="row" alignItems="center" spacing={1}>
-                        <Typography variant="body2" sx={{ width: 130, flexShrink: 0, color: "#374151" }}>{label}</Typography>
+                        <Typography variant="body2" sx={{ width: 130, flexShrink: 0, color: "text.primary" }}>{label}</Typography>
                         <TextField size="small" type="number" placeholder="0"
                           sx={{ flex: 1 }} InputLabelProps={{ shrink: true }}
                           value={(trip.costs as any)[key]}
@@ -1543,15 +1865,15 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                     ))}
                   </Stack>
                   {tripCost > 0 && (
-                    <Box sx={{ mt: 1.5, px: 1.5, py: 0.75, bgcolor: "#fee2e2", borderRadius: 1, display: "inline-block" }}>
-                      <Typography variant="caption" fontWeight={700} color="#dc2626">Toplam: {tripCost.toLocaleString("tr-TR")}</Typography>
+                    <Box sx={{ mt: 1.5, px: 1.5, py: 0.75, bgcolor: "error.main", borderRadius: 1, display: "inline-block" }}>
+                      <Typography variant="caption" fontWeight={700} color="error.contrastText">Toplam: {tripCost.toLocaleString("tr-TR")}</Typography>
                     </Box>
                   )}
                 </Grid>
 
                 {/* Sağ: Satış + Not */}
                 <Grid size={{ xs: 12, md: 5 }}>
-                  <Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "#16a34a", mb: 1, display: "block" }}>
+                  <Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "success.main", mb: 1, display: "block" }}>
                     Satış
                   </Typography>
                   <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
@@ -1568,12 +1890,12 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                     </FormControl>
                   </Stack>
                   {tripSales > 0 && (
-                    <Box sx={{ mb: 2, px: 1.5, py: 0.75, bgcolor: "#dcfce7", borderRadius: 1, display: "inline-block" }}>
-                      <Typography variant="caption" fontWeight={700} color="#16a34a">Satış: {tripSales.toLocaleString("tr-TR")} {trip.sales.currency}</Typography>
+                    <Box sx={{ mb: 2, px: 1.5, py: 0.75, bgcolor: "success.main", borderRadius: 1, display: "inline-block" }}>
+                      <Typography variant="caption" fontWeight={700} color="success.contrastText">Satış: {tripSales.toLocaleString("tr-TR")} {trip.sales.currency}</Typography>
                     </Box>
                   )}
 
-                  <Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "#6b7280", mb: 1, display: "block" }}>
+                  <Typography variant="caption" fontWeight={700} sx={{ textTransform: "uppercase", letterSpacing: 0.5, color: "text.secondary", mb: 1, display: "block" }}>
                     Not
                   </Typography>
                   <TextField multiline minRows={4} fullWidth size="small" placeholder="Bu seyahat için notlar..."
@@ -1625,6 +1947,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             size: `${(file.size / 1024).toFixed(2)} KB`,
             uploadedAt: new Date().toLocaleString("tr-TR"),
             url: e.target?.result as string, // Store the base64 data URL
+            category: fileCategory, // Seçili kategori
           });
         };
         reader.readAsDataURL(file);
@@ -1649,6 +1972,18 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
       });
 
       if (response.ok) {
+        // History log ekle
+        newFiles.forEach(file => {
+          addHistoryLog(
+            "file_uploaded",
+            "files",
+            file.category || "other",
+            "",
+            file.name,
+            `${file.category === "passport" ? "📘 Pasaport" : file.category === "ticket" ? "✈️ Bilet" : file.category === "proposal" ? "📋 Teklif Formu" : "📎 Diğer"} kategorisinde dosya yüklendi`
+          );
+        });
+        
         setSnackbar({
           open: true,
           message: `${selectedFiles.length} dosya yüklendi ve kaydedildi`,
@@ -1691,7 +2026,23 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     event.preventDefault();
   };
 
-  const renderFilesTab = () => (
+  const renderFilesTab = () => {
+    const fileCategories = [
+      { value: "passport", label: "📘 Pasaport", required: true },
+      { value: "ticket", label: "✈️ Bilet", required: true },
+      { value: "proposal", label: "📋 Teklif Formu", required: true },
+      { value: "other", label: "📎 Diğer", required: false },
+    ] as const;
+
+    const getFilesByCategory = (category: string) => {
+      if (category === "other") {
+        // Diğer: kategorisi olmayan VEYA "other" olan dosyalar
+        return customer.files.filter(f => !f.category || f.category === "other");
+      }
+      return customer.files.filter(f => f.category === category);
+    };
+
+    return (
     <Box>
       <input
         ref={fileInputRef}
@@ -1701,33 +2052,56 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         style={{ display: "none" }}
       />
       
-      <Stack direction="row" spacing={2} mb={3}>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          sx={{ bgcolor: "#6366F1" }}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {t("customerDetail.files.select")}
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<CloudUploadIcon />}
-          sx={{ bgcolor: "#818CF8" }}
-          onClick={handleFileUpload}
-          disabled={selectedFiles.length === 0}
-        >
-          {t("customerDetail.files.upload")} {selectedFiles.length > 0 && `(${selectedFiles.length})`}
-        </Button>
-        <Button 
-          variant="outlined" 
-          color="error"
-          onClick={handleFileClear}
-          disabled={selectedFiles.length === 0}
-        >
-          {t("customerDetail.files.cancel")}
-        </Button>
-      </Stack>
+      <Paper variant="outlined" sx={{ p: 2.5, mb: 3, borderRadius: 2 }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2 }}>
+          Dosya Yükle
+        </Typography>
+        
+        <Stack spacing={2}>
+          <FormControl size="small" fullWidth>
+            <InputLabel>Dosya Kategorisi</InputLabel>
+            <Select
+              value={fileCategory}
+              label="Dosya Kategorisi"
+              onChange={(e) => setFileCategory(e.target.value as any)}
+            >
+              {fileCategories.map((cat) => (
+                <MenuItem key={cat.value} value={cat.value}>
+                  {cat.label} {cat.required && <Typography component="span" color="error">*</Typography>}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              sx={{ bgcolor: "#6366F1" }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {t("customerDetail.files.select")}
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<CloudUploadIcon />}
+              sx={{ bgcolor: "#818CF8" }}
+              onClick={handleFileUpload}
+              disabled={selectedFiles.length === 0}
+            >
+              {t("customerDetail.files.upload")} {selectedFiles.length > 0 && `(${selectedFiles.length})`}
+            </Button>
+            <Button 
+              variant="outlined" 
+              color="error"
+              onClick={handleFileClear}
+              disabled={selectedFiles.length === 0}
+            >
+              {t("customerDetail.files.cancel")}
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
 
       {selectedFiles.length > 0 && (
         <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
@@ -1750,17 +2124,17 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           p: 6,
           borderStyle: "dashed",
           borderWidth: 2,
-          borderColor: "#cbd5e1",
+          borderColor: "divider",
           borderRadius: 3,
           textAlign: "center",
-          bgcolor: "#f8fafc",
+          bgcolor: "background.paper",
           cursor: "pointer",
         }}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onClick={() => fileInputRef.current?.click()}
       >
-        <CloudUploadIcon sx={{ fontSize: 60, color: "#94a3b8", mb: 2 }} />
+        <CloudUploadIcon sx={{ fontSize: 60, color: "text.secondary", mb: 2 }} />
         <Typography variant="h6" color="text.secondary">
           {t("customerDetail.files.dropTitle")}
         </Typography>
@@ -1769,13 +2143,53 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         </Typography>
       </Paper>
 
-      {customer.files.length > 0 && (
-        <Box mt={3}>
-          <Typography variant="subtitle1" gutterBottom fontWeight={600}>
-            Yüklenen Dosyalar
-          </Typography>
-          <Stack spacing={1}>
-            {customer.files.map((file) => {
+      {/* Kategorilere Göre Dosyalar */}
+      <Stack spacing={3} mt={3}>
+        {fileCategories.map((category) => {
+          const categoryFiles = getFilesByCategory(category.value);
+          const hasFiles = categoryFiles.length > 0;
+          
+          return (
+            <Paper 
+              key={category.value} 
+              variant="outlined" 
+              sx={{ 
+                p: 2.5, 
+                borderRadius: 2,
+                borderColor: category.required && !hasFiles ? "#ef4444" : hasFiles ? "#22c55e" : "divider",
+                borderWidth: category.required ? 2 : 1,
+              }}
+            >
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography variant="subtitle2" fontWeight={600}>
+                    {category.label}
+                  </Typography>
+                  {category.required && (
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        color: hasFiles ? "#22c55e" : "#ef4444",
+                        fontWeight: 700,
+                        fontSize: 12
+                      }}
+                    >
+                      {hasFiles ? "✓" : "*"}
+                    </Typography>
+                  )}
+                </Stack>
+                <Typography variant="caption" color="text.secondary">
+                  {categoryFiles.length} dosya
+                </Typography>
+              </Stack>
+              
+              {categoryFiles.length === 0 ? (
+                <Typography variant="body2" color="text.secondary" sx={{ fontStyle: "italic" }}>
+                  {category.required ? "Zorunlu - Dosya yüklenmemiş" : "Dosya yüklenmemiş"}
+                </Typography>
+              ) : (
+                <Stack spacing={1}>
+                  {categoryFiles.map((file) => {
               const isImage = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(file.name);
               
               return (
@@ -1833,6 +2247,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                         size="small"
                         color="error"
                         onClick={async () => {
+                          const fileToDelete = file;
                           const updatedCustomer = {
                             ...customer,
                             files: customer.files.filter((f) => f.id !== file.id),
@@ -1847,6 +2262,16 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify(updatedCustomer),
                             });
+                            
+                            // History log ekle
+                            addHistoryLog(
+                              "file_deleted",
+                              "files",
+                              fileToDelete.category || "other",
+                              fileToDelete.name,
+                              "",
+                              `${fileToDelete.category === "passport" ? "📘 Pasaport" : fileToDelete.category === "ticket" ? "✈️ Bilet" : fileToDelete.category === "proposal" ? "📋 Teklif Formu" : "📎 Diğer"} kategorisinden dosya silindi`
+                            );
                             
                             setSnackbar({
                               open: true,
@@ -1871,11 +2296,15 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                 </Paper>
               );
             })}
-          </Stack>
-        </Box>
-      )}
+                </Stack>
+              )}
+            </Paper>
+          );
+        })}
+      </Stack>
     </Box>
-  );
+    );
+  };
 
   // 9. MALİYETLER
   const renderCostsTab = () => (
@@ -1883,42 +2312,164 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
   );
 
   // 7. GEÇMİŞ
-  const renderHistoryTab = () => (
-    <Stack spacing={2}>
-      <Paper variant="outlined" sx={{ p: 2 }}>
-        <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-          <AccessTimeIcon fontSize="small" color="action" />
-          <Typography variant="caption" color="text.secondary">
-            24.11.2025 21:00 - Sistem
-          </Typography>
-        </Stack>
-        <Typography fontWeight={600}>{t("customerDetail.history.systemSample")}</Typography>
-        <Grid container spacing={2} mt={1}>
-          <Grid size={{ xs: 6 }}>
-            <Paper sx={{ p: 1, bgcolor: "#fee2e2" }}>
-              <Typography variant="caption" color="error">
-                {t("customerDetail.history.old")}
-              </Typography>
+  const renderHistoryTab = () => {
+    const getActionIcon = (action: string) => {
+      switch (action) {
+        case "created": return "🆕";
+        case "updated": return "✏️";
+        case "status_changed": return "🔄";
+        case "note_added": return "📝";
+        case "file_uploaded": return "📎";
+        case "file_deleted": return "🗑️";
+        case "call_added": return "📞";
+        case "trip_added": return "✈️";
+        case "trip_updated": return "🛫";
+        case "price_locked": return "🔒";
+        case "price_change_requested": return "💰";
+        default: return "📋";
+      }
+    };
+
+    const getActionColor = (action: string) => {
+      switch (action) {
+        case "created": return "#22c55e";
+        case "updated": return "#3b82f6";
+        case "status_changed": return "#f59e0b";
+        case "note_added": return "#8b5cf6";
+        case "file_uploaded": return "#06b6d4";
+        case "file_deleted": return "#ef4444";
+        case "call_added": return "#ec4899";
+        case "trip_added": return "#14b8a6";
+        case "price_locked": return "#f59e0b";
+        default: return "#6b7280";
+      }
+    };
+
+    const getSectionLabel = (section: string) => {
+      const labels: Record<string, string> = {
+        personal: "Kişisel Bilgiler",
+        status: "Durum Bilgileri",
+        sales: "Satış Bilgileri",
+        files: "Dosyalar",
+        calls: "Aramalar",
+        consultationNotes: "Görüşme Notları",
+        treatmentNotes: "Tedavi Notları",
+        payment: "Ödeme Bilgileri",
+        reminder: "Hatırlatıcı",
+      };
+      return labels[section] || section;
+    };
+
+    return (
+      <Stack spacing={2}>
+        {customer.history.length === 0 ? (
+          <Paper variant="outlined" sx={{ p: 4, textAlign: "center" }}>
+            <Typography variant="body2" color="text.secondary">
+              Henüz değişiklik kaydı bulunmuyor
+            </Typography>
+          </Paper>
+        ) : (
+          customer.history.map((log) => (
+            <Paper 
+              key={log.id} 
+              variant="outlined" 
+              sx={{ 
+                p: 2.5, 
+                borderRadius: 2,
+                borderLeft: `4px solid ${getActionColor(log.action)}`,
+                transition: "all 0.2s",
+                '&:hover': {
+                  boxShadow: 2,
+                  transform: "translateX(4px)"
+                }
+              }}
+            >
+              {/* Header */}
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography fontSize={20}>{getActionIcon(log.action)}</Typography>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ color: getActionColor(log.action) }}>
+                    {getSectionLabel(log.section)}
+                  </Typography>
+                  {log.field && (
+                    <Typography variant="caption" sx={{ 
+                      bgcolor: "rgba(0,0,0,0.05)", 
+                      px: 1, 
+                      py: 0.5, 
+                      borderRadius: 1,
+                      fontWeight: 600
+                    }}>
+                      {log.field}
+                    </Typography>
+                  )}
+                </Stack>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <AccessTimeIcon fontSize="small" sx={{ color: "text.secondary", fontSize: 16 }} />
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                    {log.date}
+                  </Typography>
+                </Stack>
+              </Stack>
+
+              {/* User */}
+              <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mb: 1.5 }}>
+                <Avatar sx={{ width: 20, height: 20, fontSize: 10, bgcolor: getActionColor(log.action) }}>
+                  {log.user.charAt(0).toUpperCase()}
+                </Avatar>
+                <Typography variant="caption" color="text.secondary">
+                  {log.user}
+                </Typography>
+              </Stack>
+
+              {/* Details */}
+              {log.details && (
+                <Typography variant="body2" sx={{ mb: 1.5, fontStyle: "italic", color: "text.secondary" }}>
+                  {log.details}
+                </Typography>
+              )}
+
+              {/* Old/New Values */}
+              {(log.oldValue || log.newValue) && (
+                <Grid container spacing={2}>
+                  {log.oldValue && (
+                    <Grid size={{ xs: 12, md: 6 }}>
+                      <Paper sx={{ p: 1.5, bgcolor: "rgba(239, 68, 68, 0.1)", borderRadius: 1 }}>
+                        <Typography variant="caption" fontWeight={600} color="error.main" sx={{ display: "block", mb: 0.5 }}>
+                          Eski Değer
+                        </Typography>
+                        <Typography variant="body2" color="text.primary">
+                          {log.oldValue || "-"}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  )}
+                  {log.newValue && (
+                    <Grid size={{ xs: 12, md: log.oldValue ? 6 : 12 }}>
+                      <Paper sx={{ p: 1.5, bgcolor: "rgba(34, 197, 94, 0.1)", borderRadius: 1 }}>
+                        <Typography variant="caption" fontWeight={600} color="success.main" sx={{ display: "block", mb: 0.5 }}>
+                          Yeni Değer
+                        </Typography>
+                        <Typography variant="body2" color="text.primary">
+                          {log.newValue || "-"}
+                        </Typography>
+                      </Paper>
+                    </Grid>
+                  )}
+                </Grid>
+              )}
             </Paper>
-          </Grid>
-          <Grid size={{ xs: 6 }}>
-            <Paper sx={{ p: 1, bgcolor: "#dcfce7" }}>
-              <Typography variant="caption" color="success">
-                {t("customerDetail.history.new")}
-              </Typography>
-            </Paper>
-          </Grid>
-        </Grid>
-      </Paper>
-    </Stack>
-  );
+          ))
+        )}
+      </Stack>
+    );
+  };
 
   // 1. KİŞİSEL BİLGİLER
   const renderPersonalTab = () => (
     <Stack spacing={3}>
       {/* 1. Satır: Ad Soyad ve Telefon */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           İletişim Bilgileri
         </Typography>
         <Grid container spacing={2}>
@@ -2026,7 +2577,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
       {/* 3. Satır: Kayıt Tarihi ve Saati */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           Kayıt Bilgileri
         </Typography>
         <Grid container spacing={2}>
@@ -2062,7 +2613,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
       {/* 4. Satır: Notlar */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           Notlar
         </Typography>
         <TextField
@@ -2077,10 +2628,10 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
       </Paper>
 
       {/* 5. Satır: Reklam Bilgileri (Facebook) */}
-      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2, bgcolor: "#f8fafc" }}>
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
         <Stack direction="row" spacing={1} mb={2} alignItems="center">
           <FacebookIcon color="primary" />
-          <Typography variant="subtitle2" fontWeight={600} color="#374151">
+          <Typography variant="subtitle2" fontWeight={600} color="text.primary">
             {t("customerDetail.facebook.title")}
           </Typography>
         </Stack>
@@ -2168,7 +2719,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
     <Stack spacing={3}>
       {/* 1. Satır: Danışman ve Kategori */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           Atama Bilgileri
         </Typography>
         <Grid container spacing={2}>
@@ -2232,7 +2783,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
 
       {/* 2. Satır: Hizmet ve Durum */}
       <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
-        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "#374151" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 2, color: "text.primary" }}>
           Hizmet ve Durum Bilgileri
         </Typography>
         <Grid container spacing={2}>
@@ -2310,15 +2861,23 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         <Button
           variant="contained"
           startIcon={<AddIcon />}
-          onClick={() =>
+          onClick={() => {
+            const newNote = { id: Date.now(), date: new Date().toISOString().slice(0, 10), note: "" };
             setCustomer((prev) => ({
               ...prev,
-              consultationNotes: [
-                { id: Date.now(), date: new Date().toISOString().slice(0, 10), note: "" },
-                ...prev.consultationNotes,
-              ],
-            }))
-          }
+              consultationNotes: [newNote, ...prev.consultationNotes],
+            }));
+            
+            // History log ekle
+            addHistoryLog(
+              "note_added",
+              "consultationNotes",
+              "Görüşme Notu",
+              "",
+              new Date().toLocaleDateString("tr-TR"),
+              "Yeni görüşme notu eklendi"
+            );
+          }}
           sx={{ textTransform: "none", bgcolor: "#6366f1", "&:hover": { bgcolor: "#4f46e5" } }}
         >
           Yeni Not Ekle
@@ -2394,7 +2953,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
       </Stack>
       <Paper
         variant="outlined"
-        sx={{ p: 2.5, borderRadius: 2, background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)", borderColor: "#fcd34d" }}
+        sx={{ p: 2.5, borderRadius: 2, borderColor: "#fcd34d" }}
       >
         <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block", fontStyle: "italic" }}>
           Bu bölüm ilerleyen süreçte geliştirilecektir.
@@ -2414,7 +2973,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             }))
           }
           placeholder="Tedavi planı, uygulanan prosedürler, özel notlar..."
-          sx={{ bgcolor: "#fff", borderRadius: 1 }}
+          sx={{ borderRadius: 1 }}
         />
       </Paper>
     </Stack>
@@ -2468,7 +3027,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
       sx={{
         display: "flex",
         height: "100vh",
-        bgcolor: "#f3f4f6",
+        bgcolor: "background.default",
         overflow: "hidden",
       }}
     >
@@ -2567,16 +3126,29 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                 ? "customerDetail.tabs.treatmentNotes"
                 : "customerDetail.tabs.history";
             const label = t(labelKey);
+            const isComplete = isTabComplete(key);
+            const isRequired = ["consultationNotes", "treatmentNotes", "sales", "files"].includes(key);
+            const shouldShowSales = customer.status.status === "Satış" || customer.status.status === "Satış Kapalı" || 
+                                    (typeof customer.status.status === "string" && customer.status.status.startsWith("Satış"));
+            const isRequiredAndVisible = isRequired && (key !== "sales" || shouldShowSales);
+            
             return (
             <ListItemButton
               key={key}
-              onClick={() => setActiveTab(key)}
+              onClick={() => {
+                // Sekme değiştirirken uyarı gösterme, direkt geçiş yap
+                setActiveTab(key);
+              }}
               sx={{
                 pl: 3,
                 py: 1.5,
                 borderLeft:
                   activeTab === key
                     ? "4px solid #28C76F"
+                    : isRequiredAndVisible && !isComplete
+                    ? "4px solid #ef4444"
+                    : isRequiredAndVisible && isComplete
+                    ? "4px solid #22c55e"
                     : "4px solid transparent",
                 bgcolor:
                   activeTab === key
@@ -2584,7 +3156,10 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                     : "transparent",
               }}
             >
-              <ListItemIcon sx={{ color: "#e5e7eb", minWidth: 36 }}>
+              <ListItemIcon sx={{ 
+                color: isRequiredAndVisible && !isComplete ? "#ef4444" : isRequiredAndVisible && isComplete ? "#22c55e" : "#e5e7eb", 
+                minWidth: 36 
+              }}>
                 {key === "personal" ? (
                   <PersonIcon />
                 ) : key === "status" ? (
@@ -2610,8 +3185,22 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
                 )}
               </ListItemIcon>
               <ListItemText
-                primary={label}
-                primaryTypographyProps={{ fontSize: 14 }}
+                primary={
+                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Typography fontSize={14}>{label}</Typography>
+                    {isRequiredAndVisible && (
+                      <Typography 
+                        fontSize={10} 
+                        sx={{ 
+                          color: isComplete ? "#22c55e" : "#ef4444",
+                          fontWeight: 700
+                        }}
+                      >
+                        {isComplete ? "✓" : "*"}
+                      </Typography>
+                    )}
+                  </Stack>
+                }
               />
             </ListItemButton>
           );})}
@@ -2624,7 +3213,7 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             onClick={handleSave}
             disabled={saving}
             sx={{
-              bgcolor: "#22c55e",
+              bgcolor: "success.main",
               py: 1,
               "&:hover": { bgcolor: "#16a34a" },
             }}
@@ -2651,8 +3240,8 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           sx={{
             p: 2,
             px: 3,
-            bgcolor: "white",
-            borderBottom: "1px solid #e5e7eb",
+            bgcolor: "background.paper",
+            borderBottom: "1px solid", borderColor: "divider",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -2660,8 +3249,15 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
         >
           <Button
             startIcon={<ArrowBackIcon />}
-            onClick={() => router.push("/customers")}
-            sx={{ textTransform: "none", color: "#6b7280" }}
+            onClick={() => {
+              if (!checkRequiredFields()) {
+                setPendingNavigation("/customers");
+                setShowExitWarning(true);
+              } else {
+                router.push("/customers");
+              }
+            }}
+            sx={{ textTransform: "none", color: "text.secondary" }}
           >
             {t("customerDetail.header.back")}
           </Button>
@@ -2676,8 +3272,9 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
               mb: 2,
               p: 2,
               borderRadius: 3,
-              bgcolor: "white",
-              border: "1px solid #e5e7eb",
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "divider",
               display: "flex",
               alignItems: "center",
               gap: 2,
@@ -2735,8 +3332,9 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             sx={{
               p: 4,
               borderRadius: 3,
-              bgcolor: "white",
-              border: "1px solid #e5e7eb",
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "divider",
               minHeight: 400,
             }}
           >
@@ -2744,6 +3342,148 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           </Paper>
         </Box>
       </Box>
+
+      {/* Sayfa Ayrılma Uyarısı Dialog */}
+      <Dialog
+        open={showExitWarning}
+        onClose={() => setShowExitWarning(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700, color: "#ef4444" }}>
+          ⚠️ Zorunlu Alanlar Eksik
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            Doldurulması zorunlu alanları tamamlamadan sayfadan ayrılırsanız <strong>bilgileriniz kaybedilecektir</strong>.
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Eksik alanlar:
+          </Typography>
+          <Stack spacing={0.5} sx={{ mt: 1, pl: 2 }}>
+            {!customer.consultationNotes || customer.consultationNotes.length === 0 ? (
+              <Typography variant="body2" color="error">• Görüşme Notları</Typography>
+            ) : null}
+            {!customer.treatmentNotes?.note || customer.treatmentNotes.note.trim() === "" ? (
+              <Typography variant="body2" color="error">• Tedavi Notları</Typography>
+            ) : null}
+            {(customer.status.status === "Satış" || customer.status.status === "Satış Kapalı" || 
+              (typeof customer.status.status === "string" && customer.status.status.startsWith("Satış"))) && 
+              !isTabComplete("sales") ? (
+              <Typography variant="body2" color="error">• Satış (Fiyat + Seyahat)</Typography>
+            ) : null}
+            {!isTabComplete("files") ? (
+              <Typography variant="body2" color="error">• Dosyalar (Pasaport + Bilet + Teklif Formu)</Typography>
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button
+            onClick={() => {
+              setShowExitWarning(false);
+              if (pendingNavigation) {
+                // Eğer URL ise router.push, sekme ise setActiveTab kullan
+                if (pendingNavigation.startsWith('/')) {
+                  router.push(pendingNavigation);
+                } else {
+                  setActiveTab(pendingNavigation);
+                }
+                setPendingNavigation(null);
+              }
+            }}
+            variant="outlined"
+            color="error"
+            sx={{ textTransform: "none" }}
+          >
+            Yine de Ayrıl
+          </Button>
+          <Button
+            onClick={() => {
+              setShowExitWarning(false);
+              setPendingNavigation(null);
+            }}
+            variant="contained"
+            sx={{ 
+              textTransform: "none",
+              background: "linear-gradient(135deg, #22c55e, #16a34a)",
+              '&:hover': { background: "linear-gradient(135deg, #16a34a, #15803d)" }
+            }}
+          >
+            Kaldım, Dolduracağım
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Fiyat Değişiklik Talebi Dialog */}
+      <Dialog 
+        open={priceChangeDialogOpen} 
+        onClose={() => setPriceChangeDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700, borderBottom: "1px solid #E5E7EB" }}>
+          Fiyat Değişiklik Talebi
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Stack spacing={2.5}>
+            <Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Mevcut Fiyat: <strong>{customer.sales.price} {customer.sales.priceCurrency}</strong>
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Fiyat kilitlenmiştir. Değişiklik için talep gönderebilirsiniz.
+              </Typography>
+            </Box>
+            
+            <TextField
+              label="Yeni Fiyat"
+              type="number"
+              fullWidth
+              value={priceChangeRequest.newPrice}
+              onChange={(e) => setPriceChangeRequest({ ...priceChangeRequest, newPrice: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              placeholder={customer.sales.price}
+            />
+            
+            <TextField
+              label="Değişiklik Sebebi"
+              multiline
+              rows={4}
+              fullWidth
+              value={priceChangeRequest.reason}
+              onChange={(e) => setPriceChangeRequest({ ...priceChangeRequest, reason: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              placeholder="Fiyat değişikliği neden gerekli?"
+            />
+            
+            <Alert severity="info" sx={{ fontSize: "0.85rem" }}>
+              Talebiniz <strong>rapor@xirtiz.com</strong> adresine gönderilecektir. Admin onayından sonra fiyat güncellenebilir.
+            </Alert>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5, borderTop: "1px solid #E5E7EB" }}>
+          <Button 
+            onClick={() => {
+              setPriceChangeDialogOpen(false);
+              setPriceChangeRequest({ newPrice: "", reason: "" });
+            }}
+            sx={{ textTransform: "none" }}
+          >
+            İptal
+          </Button>
+          <Button 
+            onClick={handlePriceChangeRequest}
+            variant="contained"
+            sx={{ 
+              textTransform: "none",
+              background: "linear-gradient(135deg, #7C3AED, #9F67FF)",
+              '&:hover': { background: "linear-gradient(135deg, #6D28D9, #8B5CF6)" }
+            }}
+          >
+            Talep Gönder
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}
@@ -2795,8 +3535,8 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
           >
             <IconButton
               sx={{ 
-                bgcolor: 'white',
-                '&:hover': { bgcolor: '#f5f5f5' }
+                bgcolor: "background.paper",
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => {
                 if (imagePreview.url) {
@@ -2814,8 +3554,8 @@ const [hotelOptions, setHotelOptions] = useState<string[]>([]);
             </IconButton>
             <IconButton
               sx={{ 
-                bgcolor: 'white',
-                '&:hover': { bgcolor: '#f5f5f5' }
+                bgcolor: "background.paper",
+                '&:hover': { bgcolor: 'action.hover' }
               }}
               onClick={() => setImagePreview({ open: false, url: '', name: '' })}
               title="Kapat"

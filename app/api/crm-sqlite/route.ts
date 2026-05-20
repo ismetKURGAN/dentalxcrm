@@ -73,14 +73,17 @@ export async function GET(request: NextRequest) {
     }
     
     if (all) {
-      // include parametresi: data=tüm data kolonu, sales=sadece sales alanı
+      // include parametresi: data=tüm data kolonu, sales=sadece sales alanı, sales,files=sales ve files
       // Varsayılan: sadece düz kolonlar (performans: 40ms vs 734ms)
       const includeParam = searchParams.get("include");
       const includeData = includeParam === "data";
-      const includeSales = includeParam === "sales";
+      const includeSales = includeParam === "sales" || includeParam === "sales,files";
+      const includeFiles = includeParam === "sales,files";
       let columns: string;
       if (includeData) {
         columns = "*";
+      } else if (includeParam === "sales,files") {
+        columns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt, json_extract(data, '$.sales') as salesJson, json_extract(data, '$.files') as filesJson";
       } else if (includeSales) {
         columns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt, json_extract(data, '$.sales') as salesJson";
       } else {
@@ -140,6 +143,12 @@ export async function GET(request: NextRequest) {
           try { salesData = JSON.parse(c.salesJson); } catch {}
         }
         
+        // filesJson varsa parse et
+        let filesData: any = undefined;
+        if (includeFiles && c.filesJson) {
+          try { filesData = JSON.parse(c.filesJson); } catch {}
+        }
+        
         return {
           ...base,
           id: c.id,
@@ -155,6 +164,7 @@ export async function GET(request: NextRequest) {
           createdAt: c.createdAt || fullData.createdAt || '',
           updatedAt: c.updatedAt || fullData.updatedAt || '',
           ...(salesData !== undefined ? { sales: salesData } : {}),
+          ...(filesData !== undefined ? { files: filesData } : {}),
         };
       });
       
@@ -172,6 +182,7 @@ export async function GET(request: NextRequest) {
     const advStatusOp = searchParams.get("statusOp") || "in"; // "in" veya "notIn"
     const categoryFilter = searchParams.get("categories")?.trim();
     const categoryOp = searchParams.get("categoryOp") || "in";
+    const categoryParentId = searchParams.get("categoryParentId")?.trim();
     const serviceFilter = searchParams.get("services")?.trim();
     const serviceOp = searchParams.get("serviceOp") || "in";
     const countryFilter = searchParams.get("countries")?.trim();
@@ -218,9 +229,16 @@ export async function GET(request: NextRequest) {
     // Kategori filtresi
     if (categoryFilter) {
       const cats = categoryFilter.split(',').map(s => s.trim());
-      const likeConds = cats.map(() => 'category LIKE ?').join(' OR ');
-      conditions.push(categoryOp === "notIn" ? `NOT (${likeConds})` : `(${likeConds})`);
-      cats.forEach(c => params.push(`%${c}%`));
+      const placeholders = cats.map(() => '?').join(',');
+      conditions.push(categoryOp === "notIn" ? `category NOT IN (${placeholders})` : `category IN (${placeholders})`);
+      params.push(...cats);
+    }
+    
+    // categoryParentId filtresi: categories.json'a göre belirlenen alt kategoriler
+    // Client tarafından zaten expandedCats listesi gönderiliyor, bu yedek mekanizma
+    if (categoryParentId && !categoryFilter) {
+      // data JSON'undan parentCategory veya category ile eşleştir
+      // Bu durumda client expandedCats göndermeli, burası fallback
     }
     
     // Hizmet filtresi
@@ -261,8 +279,15 @@ export async function GET(request: NextRequest) {
     const countStmt = db.prepare(countQuery);
     const { total } = (params.length > 0 ? countStmt.get(...params) : countStmt.get()) as { total: number };
     
-    // Sayfalı veri (data kolonu olmadan - performans)
-    const lightColumns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt";
+    // Sayfalı veri (include parametresine göre kolonlar)
+    const includeParam = searchParams.get("include");
+    const includeSalesFiles = includeParam === "sales,files";
+    
+    let lightColumns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt";
+    if (includeSalesFiles) {
+      lightColumns += ", json_extract(data, '$.sales') as salesJson, json_extract(data, '$.files') as filesJson";
+    }
+    
     const dataQuery = `SELECT ${lightColumns} FROM customers${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`;
     const stmt = db.prepare(dataQuery);
     const customers = stmt.all(...params, limit, offset);
@@ -282,6 +307,18 @@ export async function GET(request: NextRequest) {
         } catch {}
       }
       
+      // salesJson ve filesJson parse et (null kontrolü önemli - json_extract null döndürürse)
+      let salesData: any = undefined;
+      let filesData: any = undefined;
+      if (includeSalesFiles) {
+        if (c.salesJson !== null && c.salesJson !== undefined) {
+          try { salesData = JSON.parse(c.salesJson); } catch {}
+        }
+        if (c.filesJson !== null && c.filesJson !== undefined) {
+          try { filesData = JSON.parse(c.filesJson); } catch {}
+        }
+      }
+      
       return {
         id: c.id,
         email: c.email || '',
@@ -294,6 +331,8 @@ export async function GET(request: NextRequest) {
         country: c.country || '',
         createdAt: c.createdAt || '',
         updatedAt: c.updatedAt || '',
+        ...(salesData !== undefined ? { sales: salesData } : {}),
+        ...(filesData !== undefined ? { files: filesData } : {}),
       };
     });
     
@@ -320,10 +359,84 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Yeni müşteri ekle
+// POST: Filtreli müşteri listesi (kategori listesi çok uzunsa) VEYA yeni müşteri ekle
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    
+    // Eğer body'de "categories" array'i varsa bu bir filtre isteğidir
+    if (Array.isArray(body.categories)) {
+      const db = new Database(dbPath, { readonly: true });
+      const searchParams = request.nextUrl.searchParams;
+      const page = parseInt(searchParams.get("page") || "1");
+      const limit = parseInt(searchParams.get("limit") || "100");
+      const offset = (page - 1) * limit;
+      
+      const cats = body.categories as string[];
+      const categoryOp = body.categoryOp || "in";
+      const conditions: string[] = [];
+      const params: any[] = [];
+      
+      // Kategori filtresi
+      const placeholders = cats.map(() => '?').join(',');
+      conditions.push(categoryOp === "notIn" ? `category NOT IN (${placeholders})` : `category IN (${placeholders})`);
+      params.push(...cats);
+      
+      // Diğer URL parametrelerini de işle
+      const advisorFilter = searchParams.get("advisor")?.trim();
+      if (advisorFilter) {
+        conditions.push(`(advisor = ? OR (json_valid(status) AND json_extract(status, '$.consultant') = ?))`);
+        params.push(advisorFilter, advisorFilter);
+      }
+      const advStatusFilter = searchParams.get("statuses")?.trim();
+      const advStatusOp = searchParams.get("statusOp") || "in";
+      if (advStatusFilter) {
+        const statuses = advStatusFilter.split(',').map((s: string) => s.trim());
+        const ph = statuses.map(() => '?').join(',');
+        const statusCond = `((json_valid(status) AND json_extract(status, '$.status') IN (${ph})) OR status IN (${ph}))`;
+        conditions.push(advStatusOp === "notIn" ? `NOT ${statusCond}` : statusCond);
+        params.push(...statuses, ...statuses);
+      }
+      const advAdvisorFilter = searchParams.get("advisors")?.trim();
+      const advAdvisorOp = searchParams.get("advisorOp") || "in";
+      if (advAdvisorFilter) {
+        const advisors = advAdvisorFilter.split(',').map((s: string) => s.trim());
+        const ph = advisors.map(() => '?').join(',');
+        const advCond = `(advisor IN (${ph}) OR (json_valid(status) AND json_extract(status, '$.consultant') IN (${ph})))`;
+        conditions.push(advAdvisorOp === "notIn" ? `NOT ${advCond}` : advCond);
+        params.push(...advisors, ...advisors);
+      }
+      const searchQuery = searchParams.get("search")?.trim();
+      if (searchQuery) {
+        const likeTerm = `%${searchQuery}%`;
+        conditions.push(`(name LIKE ? OR phone LIKE ? OR email LIKE ? OR advisor LIKE ? OR category LIKE ?)`);
+        params.push(likeTerm, likeTerm, likeTerm, likeTerm, likeTerm);
+      }
+      
+      const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+      const { total } = db.prepare(`SELECT COUNT(*) as total FROM customers${whereClause}`).get(...params) as { total: number };
+      const customers = db.prepare(`SELECT id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt FROM customers${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`).all(...params, limit, offset);
+      
+      const parsed = customers.map((c: any) => {
+        let statusStr = c.status || '';
+        let advisorStr = c.advisor || '';
+        let serviceStr = c.service || '';
+        if (c.status && c.status.startsWith('{')) {
+          try {
+            const obj = JSON.parse(c.status);
+            statusStr = obj.status || '';
+            if (!advisorStr) advisorStr = obj.consultant || '';
+            if (!serviceStr) serviceStr = obj.services || '';
+          } catch {}
+        }
+        return { id: c.id, email: c.email || '', name: c.name || '', phone: c.phone || '', advisor: advisorStr, category: c.category || '', service: serviceStr, status: statusStr, country: c.country || '', createdAt: c.createdAt || '', updatedAt: c.updatedAt || '' };
+      });
+      
+      db.close();
+      return withCors(NextResponse.json({ data: parsed, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } }), request);
+    }
+    
+    // Aksi halde yeni müşteri ekleme
     const db = new Database(dbPath);
     
     const id = body.id || Date.now();
