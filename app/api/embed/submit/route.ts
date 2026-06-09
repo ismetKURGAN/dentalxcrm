@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { findDuplicate, upsertCustomer } from "../../lib/sqlite-customers";
+import { upsertCustomer } from "../../lib/sqlite-customers";
 
 const CAMPAIGNS_PATH = path.join(process.cwd(), "campaigns.json");
 const AUTOMATION_CATEGORIES_PATH = path.join(process.cwd(), "data", "categories.json");
@@ -61,24 +61,6 @@ export async function POST(request: Request) {
           { status: 400 }
         )
       );
-    }
-
-    // Mükerrer kontrolü (SQLite)
-    const incomingPhone = (phone || "").replace(/\D/g, "");
-    const incomingEmail = (email || "").trim().toLowerCase();
-
-    if (incomingPhone.length >= 6 || incomingEmail) {
-      const duplicate = findDuplicate(incomingEmail, phone);
-
-      if (duplicate) {
-        console.log("[Embed] Mükerrer müşteri:", name, phone);
-        return withCors(
-          NextResponse.json(
-            { error: "duplicate", message: "Bu bilgilerle kayıt zaten mevcut" },
-            { status: 409 }
-          )
-        );
-      }
     }
 
     // Kategori eşleşmesi
@@ -141,12 +123,6 @@ export async function POST(request: Request) {
         );
       } else {
         const errorData = await crmResponse.json();
-        // Mükerrer ise yine başarılı say (kullanıcıya teşekkür göster)
-        if (errorData.error === "duplicate") {
-          return withCors(
-            NextResponse.json({ success: true, duplicate: true }, { status: 200 })
-          );
-        }
         throw new Error(errorData.error || "CRM hatası");
       }
     } catch (crmError) {

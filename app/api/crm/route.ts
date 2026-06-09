@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import type { LabelConfig } from "../settings/labels/route";
-import { getAllCustomersFull, getCustomerById, upsertCustomer, deleteCustomer, findDuplicate } from "../lib/sqlite-customers";
+import { getAllCustomersFull, getCustomerById, upsertCustomer, deleteCustomer, findDuplicate, countDuplicatesByPhone } from "../lib/sqlite-customers";
 import { detectCountryFromPhone } from "../lib/phone-country";
 import { sendSatisMail, sendVisitMail } from "../lib/notify-mail";
 
@@ -743,6 +743,16 @@ export async function POST(request: Request) {
     const incomingEmail = (body.email || body.personal?.email || "").trim().toLowerCase();
     const incomingPhone = (body.phone || body.personal?.phone || "").replace(/\D/g, "");
     
+    // Mükerrer kontrolü — duplicate varsa eski kayıt güncellenir, yeni kayıt oluşturulmaz
+    let duplicateId: string | null = null;
+    if (incomingEmail || incomingPhone) {
+      const duplicate = findDuplicate(incomingEmail, body.phone || body.personal?.phone || "");
+      if (duplicate) {
+        duplicateId = duplicate.id;
+        console.log("[CRM] Mükerrer lead, eski kayıt güncellenecek:", duplicateId);
+      }
+    }
+    
     // Zapier'den gelen leadFormId üzerinden kampanya/kategori eşlemesi
     const flatLeadFormId = (body as any)["personal.facebook.leadFormId"];
     const incomingLeadFormId = body?.personal?.facebook?.leadFormId ?? flatLeadFormId;
@@ -750,45 +760,6 @@ export async function POST(request: Request) {
     // Zapier/lead mi yoksa manuel ekleme mi kontrol et
     const isFromZapier = body.source === "zapier" || body.source === "facebook" || !!incomingLeadFormId;
     
-    if (incomingEmail || incomingPhone) {
-      const duplicate = findDuplicate(incomingEmail, body.phone || body.personal?.phone || "");
-
-      if (duplicate) {
-        const duplicateInfo = {
-          existingId: duplicate.id,
-          existingName: duplicate.name,
-          existingEmail: duplicate.email,
-          existingPhone: duplicate.phone,
-          incomingName: body.name || body.personal?.name,
-          incomingEmail: incomingEmail,
-          incomingPhone: body.phone || body.personal?.phone,
-        };
-        
-        console.log("[CRM] Mükerrer müşteri tespit edildi:", JSON.stringify(duplicateInfo, null, 2));
-        
-        if (isFromZapier) {
-          console.log("[CRM] Zapier lead mükerrer - kayıt atlandı");
-          return withCors(
-            NextResponse.json({ 
-              error: "duplicate", 
-              message: "Bu müşteri zaten mevcut",
-              duplicate: duplicateInfo 
-            }, { status: 409 }),
-            request
-          );
-        } else {
-          return withCors(
-            NextResponse.json({ 
-              error: "duplicate", 
-              message: "Bu e-posta veya telefon numarası ile kayıtlı müşteri zaten mevcut",
-              duplicate: duplicateInfo 
-            }, { status: 409 }),
-            request
-          );
-        }
-      }
-    }
-
     const matchedCampaign = findCampaignByLeadFormId(incomingLeadFormId);
 
     // Kategoriye göre aktif etiket bul (varsa)
@@ -825,10 +796,25 @@ export async function POST(request: Request) {
       ? detectCountryFromPhone(incomingPhoneRaw)
       : null;
 
+    // Aynı telefon numarasıyla kaç kez eklendiğini kontrol et
+    const duplicateCount = countDuplicatesByPhone(incomingPhoneRaw);
+    let finalPhone = incomingPhoneRaw;
+    let duplicateWarning = "";
+    
+    if (duplicateCount > 0) {
+      // Telefon numarasına (2), (3) vb. ekle
+      finalPhone = `${incomingPhoneRaw} (${duplicateCount + 1})`;
+      duplicateWarning = `⚠️ Bu telefon numarasıyla ${duplicateCount} hasta zaten mevcut. Yeni hasta eklendi ancak telefon numarasına (${duplicateCount + 1}) eklendi.`;
+      console.log(`[CRM] Duplicate phone warning: ${duplicateWarning}`);
+    }
+
+    const nowISO = new Date().toISOString();
     const newCustomer = {
       ...body,
       advisor,
       country: body.country || detectedCountry || body.personal?.country || "",
+      phone: finalPhone,
+      duplicateWarning: duplicateWarning || undefined,
       // Kampanya eşleşmesi varsa kategori ve üst kategori bilgilerini yaz
       category: incomingCategory,
       parentCategory: topParentName || body.parentCategory,
@@ -838,9 +824,10 @@ export async function POST(request: Request) {
       categoryLevel4: categoryHierarchy?.level4 || '',
       categoryLevel5: categoryHierarchy?.level5 || categoryName,
       categoryFullPath: categoryHierarchy?.fullPath || categoryName,
-      id: Date.now(), // Benzersiz ID
-      // Eğer body'de createdAt varsa onu kullan (manuel ekleme), yoksa şimdiki zamanı kullan
-      createdAt: body.createdAt || new Date().toISOString(),
+      id: duplicateId || Date.now(), // Duplicate varsa eski ID, yoksa yeni ID
+      // Eğer duplicate varsa eski createdAt korunur, yoksa yeni oluştur
+      createdAt: duplicateId ? undefined : (body.createdAt || nowISO),
+      updatedAt: nowISO, // Her zaman güncelle — en üste çıksın
       // Manuel eklenen müşterilere otomatik karşılama mesajı gönderme
       noAutoWelcome: !isFromZapier,
       // Status objesini doğru formatta oluştur
@@ -865,9 +852,9 @@ export async function POST(request: Request) {
     if (body.name && !newCustomer.personal.name) {
       newCustomer.personal.name = body.name;
     }
-    // Phone varsa personal.phone'a da yaz
-    if (body.phone && !newCustomer.personal.phone) {
-      newCustomer.personal.phone = body.phone;
+    // Phone varsa personal.phone'a da yaz (duplicate işaretli haliyle)
+    if (finalPhone && !newCustomer.personal.phone) {
+      newCustomer.personal.phone = finalPhone;
     }
     // WhatsApp numarasını notlar kısmına ekle
     if (whatsappNumber) {
@@ -905,7 +892,12 @@ export async function POST(request: Request) {
       console.error("Danışman bildirim WhatsApp hatası:", e);
     }
 
-    return withCors(NextResponse.json(newCustomer), request);
+    // Response'a uyarı ekle
+    const response = duplicateWarning 
+      ? { ...newCustomer, warning: duplicateWarning }
+      : newCustomer;
+    
+    return withCors(NextResponse.json(response), request);
   } catch (error) {
     return withCors(
       NextResponse.json({ error: "Kayıt başarısız" }, { status: 500 }),

@@ -195,6 +195,29 @@ export function deleteCustomer(id: string | number): boolean {
   return result.changes > 0;
 }
 
+// Aynı telefon numarasıyla kaç kez eklendiğini say
+export function countDuplicatesByPhone(phone: string): number {
+  const db = new Database(SQLITE_DB_PATH, { readonly: true });
+  
+  const cleanPhone = (phone || '').replace(/\D/g, '');
+  const phoneLast9 = cleanPhone.length >= 6 ? cleanPhone.slice(-9) : '';
+  
+  if (!phoneLast9) {
+    db.close();
+    return 0;
+  }
+  
+  // Son 9 rakam karşılaştırması
+  const rows = db.prepare("SELECT phone FROM customers WHERE phone != '' AND length(phone) >= 6").all() as any[];
+  const duplicates = rows.filter((r: any) => {
+    const existingClean = (r.phone || '').replace(/\D/g, '');
+    return existingClean.length >= 6 && existingClean.slice(-9) === phoneLast9;
+  });
+  
+  db.close();
+  return duplicates.length;
+}
+
 // Mükerrer kontrolü (email veya telefon)
 export function findDuplicate(email: string, phone: string): any | null {
   const db = new Database(SQLITE_DB_PATH, { readonly: true });

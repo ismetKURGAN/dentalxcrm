@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1779451783725,
+    "customerId": 1779451376351,
+    "customerName": "test-deneme",
+    "requesterName": "Sadık",
+    "requesterEmail": "sadik@xirtiz.com",
+    "currentPrice": "4545",
+    "currentCurrency": "GBP",
+    "newPrice": "4546",
+    "newCurrency": "GBP",
+    "reason": "deneme",
+    "status": "rejected",
+    "createdAt": "2026-05-22T12:09:43.725Z",
+    "resolvedAt": "2026-05-22T12:13:37.123Z",
+    "resolvedBy": "Super Admin"
+  },
+  {
+    "id": 1779521307278,
+    "customerId": 1777911439918,
+    "customerName": "Jarosław Kotliński",
+    "requesterName": "Buse Nur",
+    "requesterEmail": "busenur@xirtiz.com",
+    "currentPrice": "11.200",
+    "currentCurrency": "EUR",
+    "newPrice": "11200",
+    "newCurrency": "EUR",
+    "reason": "deneme",
+    "status": "approved",
+    "createdAt": "2026-05-23T07:28:27.279Z",
+    "resolvedAt": "2026-05-23T07:28:58.370Z",
+    "resolvedBy": "Kemal Tahir"
+  },
+  {
+    "id": 1780480746389,
+    "customerId": 1779179263684,
+    "customerName": "Stephen Barry Hughes",
+    "requesterName": "Sadık",
+    "requesterEmail": "sadik@xirtiz.com",
+    "currentPrice": "4",
+    "currentCurrency": "GBP",
+    "newPrice": "430",
+    "newCurrency": "GBP",
+    "reason": "yanlış fiyat ",
+    "status": "approved",
+    "createdAt": "2026-06-03T09:59:06.389Z",
+    "resolvedAt": "2026-06-03T11:20:16.847Z",
+    "resolvedBy": "Buse Nur"
+  }
+]

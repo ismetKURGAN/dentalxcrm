@@ -118,7 +118,6 @@ export default function CostsPage() {
   const isDark = mode === "dark";
 
   const [costs, setCosts] = useState<any[]>([]);
-  const [allPatientCosts, setAllPatientCosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState(0);
 
@@ -215,15 +214,6 @@ export default function CostsPage() {
           return da.localeCompare(db);
         }));
       }
-      // Ayrıca Hasta Bazlı tabında toplam karı doğru hesaplayabilmek için
-      // TÜM hasta maliyetlerini (tarih filtresi olmadan) çekelim
-      try {
-        const resAll = await fetch("/api/costs?type=patient", { cache: "no-store" });
-        if (resAll.ok) {
-          const rawAll = await resAll.json();
-          setAllPatientCosts(rawAll.filter((c: any) => c.description !== "__CARD_HEADER__"));
-        }
-      } catch {}
     } finally {
       setLoading(false);
     }
@@ -338,24 +328,15 @@ export default function CostsPage() {
 
   // --- Grouped data ---
   // Hasta Bazlı: filtre aralığında hareket eden hastaları listele,
-  // ama her hastanın TÜM kayıtlarından toplam net karı hesapla (tarih filtresinden bağımsız).
+  // ve sadece seçili tarih aralığındaki kayıtlardan toplam net karı hesapla.
   const byPatient = useMemo(() => {
-    const hasDateFilter = !!(filterDateFrom || filterDateTo);
     const filteredPatientCosts = costs.filter(c => c.type === "patient");
-    // Filtre aralığında kaydı olan hastaların anahtarlarını topla
-    const activeKeys = new Set<string>(
-      filteredPatientCosts.map(c => c.relatedId || c.relatedName || "Belirtilmemiş")
-    );
-    // Toplam kar hesabı için kaynak veri: tarih filtresi varsa tüm kayıtlar, yoksa filtrelenmiş
-    const aggregationSource = hasDateFilter && allPatientCosts.length > 0
-      ? allPatientCosts
-      : filteredPatientCosts;
+    // Toplam kar hesabı için kaynak veri: sadece filtrelenmiş kayıtlar
+    const aggregationSource = filteredPatientCosts;
 
     const map: Record<string, { id: string; name: string; items: any[]; expense: Record<string, number>; income: Record<string, number>; netEUR: number; latestDate: string }> = {};
     aggregationSource.forEach(c => {
       const key = c.relatedId || c.relatedName || "Belirtilmemiş";
-      // Filtre varsa: sadece aktif hastaları göster
-      if (hasDateFilter && !activeKeys.has(key)) return;
       if (!map[key]) map[key] = { id: c.relatedId, name: c.relatedName || key, items: [], expense: {}, income: {}, netEUR: 0, latestDate: "" };
       map[key].items.push(c);
       const bucket = c.direction === "expense" ? map[key].expense : map[key].income;
@@ -367,7 +348,7 @@ export default function CostsPage() {
     if (patientSortBy === "name") return arr.sort((a, b) => a.name.localeCompare(b.name, "tr"));
     if (patientSortBy === "date") return arr.sort((a, b) => b.latestDate.localeCompare(a.latestDate));
     return arr.sort((a, b) => b.netEUR - a.netEUR);
-  }, [costs, allPatientCosts, toEUR, patientSortBy, filterDateFrom, filterDateTo]);
+  }, [costs, toEUR, patientSortBy, filterDateFrom, filterDateTo]);
 
   const filteredByPatient = useMemo(() => {
     if (!patientNameFilter.trim()) return byPatient;

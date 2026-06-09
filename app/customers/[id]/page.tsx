@@ -333,6 +333,12 @@ export default function CustomerDetailPage() {
   const [customer, setCustomer] = useState<CustomerState>(INITIAL_STATE);
   const [userRole, setUserRole] = useState<string>("");
   const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userName, setUserName] = useState<string>("");
+  const originalPriceRef = useRef<{ price: string; currency: string } | null>(null);
+  
+  // Fiyat kilidini bypass eden kullanıcılar
+  const PRICE_LOCK_BYPASS_USERS = ["Kemal Tahir", "Emre", "Buse", "Busenur", "Buse Nur"];
+  const canBypassPriceLock = userRoles.includes("SuperAdmin") || PRICE_LOCK_BYPASS_USERS.includes(userName);
   
   // Dinamik listeler
   const [advisorOptions, setAdvisorOptions] = useState<string[]>([]);
@@ -359,7 +365,8 @@ export default function CustomerDetailPage() {
   
   // History log ekleme fonksiyonu
   const addHistoryLog = (action: string, section: string, field: string, oldValue: string, newValue: string, details?: string) => {
-    const userEmail = typeof window !== 'undefined' ? localStorage.getItem("userEmail") : "Sistem";
+    const raw = typeof window !== 'undefined' ? localStorage.getItem("mooncrm_current_user") : null;
+    const currentUser = raw ? JSON.parse(raw) : null;
     const newLog = {
       id: Date.now(),
       action,
@@ -368,7 +375,7 @@ export default function CustomerDetailPage() {
       oldValue,
       newValue,
       date: new Date().toLocaleString("tr-TR"),
-      user: userEmail || "Sistem",
+      user: currentUser?.name || currentUser?.email || "Sistem",
       details
     };
     
@@ -384,7 +391,9 @@ export default function CustomerDetailPage() {
       if (!(params as any)?.id) return;
       try {
         // Tüm API çağrılarını paralel yap (performans için)
-        const currentUserEmail = typeof window !== 'undefined' ? localStorage.getItem("userEmail") : null;
+        const currentUserRaw = typeof window !== 'undefined' ? localStorage.getItem("mooncrm_current_user") : null;
+        const currentUserFromStorage = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+        const currentUserEmail = currentUserFromStorage?.email || null;
         
         const [usersRes, categoriesRes, statusesRes, doctorsRes, segmentsRes, hotelsRes, customerRes] = await Promise.all([
           fetch("/api/users"),
@@ -408,6 +417,7 @@ export default function CustomerDetailPage() {
           const currentUser = users.find((u: any) => u.email === currentUserEmail);
           if (currentUser && Array.isArray(currentUser.roles)) {
             setUserRoles(currentUser.roles);
+            setUserName(currentUser.name || "");
             if (currentUser.roles.includes("Admin")) {
               setUserRole("Admin");
             } else if (currentUser.roles.includes("Fiyatlandırma")) {
@@ -502,6 +512,10 @@ export default function CustomerDetailPage() {
               files: found.files || [],
               history: found.history || [],
             });
+            originalPriceRef.current = {
+              price: found.sales?.price || "",
+              currency: found.sales?.priceCurrency || "GBP",
+            };
           }
         }
       } catch (err) {
@@ -626,6 +640,27 @@ export default function CustomerDetailPage() {
     }
 
     try {
+      const currentUserRaw = typeof window !== 'undefined' ? localStorage.getItem("mooncrm_current_user") : null;
+      const currentUserFromStorage = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+
+      // 1) CRM bildirim sistemine kaydet
+      await fetch("/api/price-change-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customerId: customer.id,
+          customerName: customer.personal.name,
+          requesterName: currentUserFromStorage?.name || "Bilinmiyor",
+          requesterEmail: currentUserFromStorage?.email || "Bilinmiyor",
+          currentPrice: customer.sales.price,
+          currentCurrency: customer.sales.priceCurrency,
+          newPrice: priceChangeRequest.newPrice,
+          newCurrency: customer.sales.priceCurrency,
+          reason: priceChangeRequest.reason,
+        }),
+      });
+
+      // 2) Mail bildirimi gönder (hata olsa da devam et)
       const emailBody = {
         to: "rapor@xirtiz.com",
         subject: `Fiyat Değişiklik Talebi - ${customer.personal.name}`,
@@ -636,26 +671,21 @@ export default function CustomerDetailPage() {
           <p><strong>Mevcut Fiyat:</strong> ${customer.sales.price} ${customer.sales.priceCurrency}</p>
           <p><strong>Talep Edilen Fiyat:</strong> ${priceChangeRequest.newPrice} ${customer.sales.priceCurrency}</p>
           <p><strong>Sebep:</strong> ${priceChangeRequest.reason}</p>
-          <p><strong>Talep Eden:</strong> ${typeof window !== 'undefined' ? localStorage.getItem("userEmail") : "Bilinmiyor"}</p>
+          <p><strong>Talep Eden:</strong> ${currentUserFromStorage?.name || "Bilinmiyor"} (${currentUserFromStorage?.email || ""})</p>
           <p><strong>Tarih:</strong> ${new Date().toLocaleString("tr-TR")}</p>
         `,
       };
-
-      const res = await fetch("/api/settings/email", {
+      fetch("/api/settings/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(emailBody),
-      });
+      }).catch(() => {});
 
-      if (res.ok) {
-        setSnackbar({ open: true, message: "Fiyat değişiklik talebi gönderildi", severity: "success" });
-        setPriceChangeDialogOpen(false);
-        setPriceChangeRequest({ newPrice: "", reason: "" });
-      } else {
-        throw new Error("Email gönderilemedi");
-      }
-    } catch (error) {
-      setSnackbar({ open: true, message: "Talep gönderilemedi", severity: "error" });
+      setSnackbar({ open: true, message: "Fiyat değişiklik talebi gönderildi, onay bekleniyor", severity: "success" });
+      setPriceChangeDialogOpen(false);
+      setPriceChangeRequest({ newPrice: "", reason: "" });
+    } catch (error: any) {
+      setSnackbar({ open: true, message: `Talep gönderilemedi: ${error.message}`, severity: "error" });
     }
   };
 
@@ -763,7 +793,7 @@ export default function CustomerDetailPage() {
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                     value={customer.sales.price}
-                    disabled={customer.sales.priceLocked}
+                    disabled={customer.sales.priceLocked && !canBypassPriceLock}
                     onChange={(e) => {
                       const newPrice = e.target.value;
                       setCustomer((prev) => ({ 
@@ -771,7 +801,6 @@ export default function CustomerDetailPage() {
                         sales: { 
                           ...prev.sales, 
                           price: newPrice,
-                          // Fiyat kilitleme işlemi kaldırıldı - manuel kilitleme yapılacak
                           priceLocked: prev.sales.priceLocked,
                           priceLockedAt: prev.sales.priceLockedAt
                         } 
@@ -814,7 +843,7 @@ export default function CustomerDetailPage() {
                       value={customer.sales.priceCurrency}
                       label="Para Birimi"
                       notched
-                      disabled={customer.sales.priceLocked}
+                      disabled={customer.sales.priceLocked && !canBypassPriceLock}
                       onChange={(e) =>
                         setCustomer((prev) => ({ ...prev, sales: { ...prev.sales, priceCurrency: e.target.value } }))
                       }
@@ -822,7 +851,7 @@ export default function CustomerDetailPage() {
                       {SALE_CURRENCIES.map((c) => <MenuItem key={c.value} value={c.value}>{c.label}</MenuItem>)}
                     </Select>
                   </FormControl>
-                  {customer.sales.priceLocked && (
+                  {customer.sales.priceLocked && !canBypassPriceLock && (
                     <Button
                       size="small"
                       variant="outlined"
@@ -1360,31 +1389,18 @@ export default function CustomerDetailPage() {
       if (!customer.sales.trips || customer.sales.trips.length === 0) {
         errors.push("sales");
       } else {
-        // Tarihi girilmiş seyahatleri bul
-        const tripsWithDates = customer.sales.trips.filter(trip => 
-          !trip.dateUndetermined && trip.appointmentDate && trip.appointmentDate.trim() !== ""
+        // "Tarihi Belli" seyahatler tarih girişi zorunlu
+        const determinedTrips = customer.sales.trips.filter(t => !t.dateUndetermined);
+        const undeterminedTrips = customer.sales.trips.filter(t => t.dateUndetermined);
+
+        // Tarihi belli seçilmiş ama tarih girilmemiş seyahat varsa hata
+        const determinedWithoutDate = determinedTrips.filter(
+          t => !t.appointmentDate || t.appointmentDate.trim() === ""
         );
-        
-        // Hiç tarih girilmemişse hata
-        if (tripsWithDates.length === 0) {
+        if (determinedWithoutDate.length > 0) {
           errors.push("sales");
-        } else if (tripsWithDates.length === customer.sales.trips.length) {
-          // Tüm seyahatlerin tarihi girilmişse OK (geçmiş/gelecek fark etmez)
-        } else {
-          // Bazı seyahatlerin tarihi girilmemişse: Gelecek tarihli olmalı
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          const upcomingTrips = tripsWithDates.filter(trip => {
-            const tripDate = new Date(trip.appointmentDate);
-            return tripDate >= today;
-          });
-          
-          // Gelecek tarihli seyahat yoksa hata
-          if (upcomingTrips.length === 0) {
-            errors.push("sales");
-          }
         }
+        // Tarih girilmişse geçmiş/gelecek fark etmez, kayıt yapılabilir
       }
     }
     
@@ -1469,8 +1485,31 @@ export default function CustomerDetailPage() {
     
     setSaving(true);
     try {
+      // Fiyat değişikliği varsa history'e ekle
+      const orig = originalPriceRef.current;
+      let updatedHistory = customer.history;
+      if (orig && customer.sales.price && orig.price !== customer.sales.price) {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem("mooncrm_current_user") : null;
+        const currentUser = raw ? JSON.parse(raw) : null;
+        const priceLog = {
+          id: Date.now(),
+          action: "price_changed",
+          section: "sales",
+          field: "Satış Fiyatı",
+          oldValue: `${orig.price} ${orig.currency}`,
+          newValue: `${customer.sales.price} ${customer.sales.priceCurrency}`,
+          date: new Date().toLocaleString("tr-TR"),
+          user: currentUser?.name || currentUser?.email || "Sistem",
+          details: "Fiyat manuel olarak değiştirildi",
+        };
+        updatedHistory = [priceLog, ...customer.history];
+        setCustomer(prev => ({ ...prev, history: updatedHistory }));
+        originalPriceRef.current = { price: customer.sales.price, currency: customer.sales.priceCurrency };
+      }
+
       const payload = {
         ...customer,
+        history: updatedHistory,
         // Ana liste için düz alanlar
         name: customer.personal.name,
         phone: customer.personal.phone,
@@ -2326,6 +2365,7 @@ export default function CustomerDetailPage() {
         case "trip_updated": return "🛫";
         case "price_locked": return "🔒";
         case "price_change_requested": return "💰";
+        case "price_changed": return "💲";
         default: return "📋";
       }
     };
@@ -2341,6 +2381,7 @@ export default function CustomerDetailPage() {
         case "call_added": return "#ec4899";
         case "trip_added": return "#14b8a6";
         case "price_locked": return "#f59e0b";
+        case "price_changed": return "#16a34a";
         default: return "#6b7280";
       }
     };

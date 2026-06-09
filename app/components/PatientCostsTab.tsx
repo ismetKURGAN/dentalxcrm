@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { alpha } from "@mui/material/styles";
 import {
   Box, Paper, Typography, Button, IconButton, Chip, TextField, MenuItem,
   Dialog, DialogTitle, DialogContent, DialogActions, Stack, Tooltip,
@@ -266,20 +267,20 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
           <TableCell sx={{ fontSize: "0.75rem" }}>{c.date || "—"}</TableCell>
           <TableCell>
             <Chip label={`${cat.icon} ${cat.label}`} size="small"
-              sx={{ fontSize: "0.68rem", height: 18, bgcolor: "#F3F4F6" }} />
+              sx={{ fontSize: "0.68rem", height: 18, bgcolor: "action.hover" }} />
           </TableCell>
           <TableCell>
             <Chip label={c.direction === "expense" ? "Gider" : "Gelir"} size="small"
               sx={{ fontSize: "0.68rem", height: 18, fontWeight: 600,
-                bgcolor: c.direction === "expense" ? "rgba(239,68,68,0.1)" : "rgba(34,197,94,0.1)",
-                color: c.direction === "expense" ? "#ef4444" : "#22c55e" }} />
+                bgcolor: c.direction === "expense" ? "error.main" : "success.main",
+                color: "common.white" }} />
           </TableCell>
           <TableCell sx={{ fontSize: "0.75rem", maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {c.description || "—"}
           </TableCell>
           <TableCell align="right">
             <Typography fontWeight={700} fontSize="0.8rem"
-              sx={{ color: c.direction === "expense" ? "#ef4444" : "#22c55e" }}>
+              sx={{ color: c.direction === "expense" ? "error.main" : "success.main" }}>
               {c.direction === "expense" ? "−" : "+"}{fmt(c.amount, c.currency)}
             </Typography>
             {c.currency !== "EUR" && (
@@ -304,7 +305,7 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
 
   const costTableHead = (
     <TableHead>
-      <TableRow sx={{ bgcolor: "#F9FAFB" }}>
+      <TableRow sx={{ bgcolor: "background.default" }}>
         <TableCell sx={{ fontWeight: 600, fontSize: "0.72rem" }}>Tarih</TableCell>
         <TableCell sx={{ fontWeight: 600, fontSize: "0.72rem" }}>Kategori</TableCell>
         <TableCell sx={{ fontWeight: 600, fontSize: "0.72rem" }}>Tür</TableCell>
@@ -320,9 +321,9 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
       {/* ÖZET */}
       <Stack direction="row" spacing={2} mb={2} flexWrap="wrap">
         {[
-          { label: "Toplam Gider (EUR)", value: totalExpense, color: "#ef4444", icon: <TrendingDownIcon sx={{ color: "#ef4444", fontSize: 18 }} />, bg: "rgba(239,68,68,0.08)" },
-          { label: "Toplam Gelir (EUR)", value: totalIncome, color: "#22c55e", icon: <TrendingUpIcon sx={{ color: "#22c55e", fontSize: 18 }} />, bg: "rgba(34,197,94,0.08)" },
-          { label: "Net (EUR)", value: net, color: net >= 0 ? "#6366f1" : "#ef4444", icon: <AccountBalanceWalletIcon sx={{ color: net >= 0 ? "#6366f1" : "#ef4444", fontSize: 18 }} />, bg: "rgba(99,102,241,0.08)" },
+          { label: "Toplam Gider (EUR)", value: totalExpense, color: "error.main", icon: <TrendingDownIcon sx={{ color: "error.main", fontSize: 18 }} />, bg: "rgba(239,68,68,0.08)" },
+          { label: "Toplam Gelir (EUR)", value: totalIncome, color: "success.main", icon: <TrendingUpIcon sx={{ color: "success.main", fontSize: 18 }} />, bg: "rgba(34,197,94,0.08)" },
+          { label: "Net (EUR)", value: net, color: net >= 0 ? "primary.main" : "error.main", icon: <AccountBalanceWalletIcon sx={{ color: net >= 0 ? "primary.main" : "error.main", fontSize: 18 }} />, bg: "rgba(99,102,241,0.08)" },
         ].map((card, i) => (
           <Paper key={i} variant="outlined" sx={{ p: 1.5, borderRadius: 2, display: "flex", alignItems: "center", gap: 1, minWidth: 160 }}>
             <Box sx={{ p: 0.75, borderRadius: 1, bgcolor: card.bg }}>{card.icon}</Box>
@@ -337,12 +338,12 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
       {/* BUTONLAR */}
       <Stack direction="row" spacing={1} mb={2}>
         <Button variant="outlined" size="small" startIcon={<CreditCardIcon />} onClick={openAddCard}
-          sx={{ textTransform: "none", fontWeight: 600, borderColor: "#7C3AED", color: "#7C3AED",
-            "&:hover": { borderColor: "#7C3AED", bgcolor: "rgba(124,58,237,0.06)" } }}>
+          sx={{ textTransform: "none", fontWeight: 600, borderColor: "primary.main", color: "primary.main",
+            "&:hover": { borderColor: "primary.main", bgcolor: "primary.main", opacity: 0.06 } }}>
           Kart Ekle
         </Button>
         <Button variant="contained" size="small" startIcon={<AddIcon />} onClick={() => openAdd()}
-          sx={{ textTransform: "none", background: "linear-gradient(135deg, #7C3AED, #9F67FF)" }}>
+          sx={{ textTransform: "none", bgcolor: "primary.main" }}>
           Genel Maliyet Ekle
         </Button>
       </Stack>
@@ -359,33 +360,34 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
           <Paper key={card.id} variant="outlined" sx={{ mb: 2, borderRadius: 2, overflow: "hidden" }}>
             <Box sx={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
-              px: 2, py: 1.5, bgcolor: "rgba(124,58,237,0.06)",
-              borderBottom: isExpanded ? "1px solid rgba(124,58,237,0.12)" : "none",
+              px: 2, py: 1.5, bgcolor: (theme) => alpha(theme.palette.primary.main, 0.06),
+              borderBottom: isExpanded ? "1px solid" : "none",
+              borderColor: (theme) => alpha(theme.palette.primary.main, 0.12),
             }}>
               <Stack direction="row" alignItems="center" spacing={1}>
-                <CreditCardIcon sx={{ fontSize: 16, color: "#7C3AED" }} />
-                <Typography fontWeight={700} fontSize="0.9rem" sx={{ color: "#7C3AED" }}>{card.name}</Typography>
+                <CreditCardIcon sx={{ fontSize: 16, color: "primary.main" }} />
+                <Typography fontWeight={700} fontSize="0.9rem" sx={{ color: "primary.main" }}>{card.name}</Typography>
                 <Chip size="small" label={`${cardCosts.length} kayıt`}
-                  sx={{ fontSize: "0.65rem", height: 18, bgcolor: "rgba(124,58,237,0.12)", color: "#7C3AED" }} />
+                  sx={{ fontSize: "0.65rem", height: 18, bgcolor: "primary.main", color: "primary.contrastText" }} />
               </Stack>
               <Stack direction="row" alignItems="center" spacing={0.5}>
                 {cardCosts.length > 0 && (
                   <>
                     <Chip size="small" label={`Gider: € ${totals.exp.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`}
-                      sx={{ fontSize: "0.65rem", height: 18, bgcolor: "rgba(239,68,68,0.1)", color: "#ef4444", fontWeight: 600 }} />
+                      sx={{ fontSize: "0.65rem", height: 18, bgcolor: "error.main", color: "error.contrastText", fontWeight: 600 }} />
                     {totals.inc > 0 && (
                       <Chip size="small" label={`Gelir: € ${totals.inc.toLocaleString("tr-TR", { maximumFractionDigits: 0 })}`}
-                        sx={{ fontSize: "0.65rem", height: 18, bgcolor: "rgba(34,197,94,0.1)", color: "#22c55e", fontWeight: 600 }} />
+                        sx={{ fontSize: "0.65rem", height: 18, bgcolor: "success.main", color: "success.contrastText", fontWeight: 600 }} />
                     )}
                   </>
                 )}
                 <Tooltip title="Bu karta maliyet ekle">
-                  <IconButton size="small" onClick={() => openAdd(card.name)} sx={{ color: "#7C3AED" }}>
+                  <IconButton size="small" onClick={() => openAdd(card.name)} sx={{ color: "primary.main" }}>
                     <AddIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Kartı sil">
-                  <IconButton size="small" onClick={() => setDeleteConfirm({ type: "card", id: card.id })} sx={{ color: "#ef4444" }}>
+                  <IconButton size="small" onClick={() => setDeleteConfirm({ type: "card", id: card.id })} sx={{ color: "error.main" }}>
                     <DeleteIcon sx={{ fontSize: 16 }} />
                   </IconButton>
                 </Tooltip>
@@ -400,7 +402,7 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
                 <Box sx={{ p: 3, textAlign: "center" }}>
                   <Typography variant="body2" color="text.secondary" mb={1}>Bu karta henüz maliyet eklenmedi.</Typography>
                   <Button size="small" startIcon={<AddIcon />} onClick={() => openAdd(card.name)}
-                    sx={{ textTransform: "none", color: "#7C3AED" }}>
+                    sx={{ textTransform: "none", color: "primary.main" }}>
                     Maliyet Ekle
                   </Button>
                 </Box>
@@ -420,7 +422,7 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
       {/* GENEL MALİYETLER */}
       {(groupedCosts[""] || []).length > 0 && (
         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mb: 2 }}>
-          <Box sx={{ px: 2, py: 1.5, bgcolor: "#F9FAFB", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+          <Box sx={{ px: 2, py: 1.5, bgcolor: "background.default", borderBottom: "1px solid", borderColor: "divider" }}>
             <Typography fontWeight={700} fontSize="0.85rem" color="text.secondary">
               📋 Genel Maliyetler ({(groupedCosts[""] || []).length} kayıt)
             </Typography>
@@ -461,7 +463,7 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={() => setCardDialogOpen(false)} sx={{ textTransform: "none" }}>İptal</Button>
           <Button variant="contained" onClick={handleSaveCard} disabled={!newCardName.trim() || cardSaving}
-            sx={{ textTransform: "none", background: "linear-gradient(135deg, #7C3AED, #9F67FF)" }}>
+            sx={{ textTransform: "none", bgcolor: "primary.main" }}>
             {cardSaving ? "Oluşturuluyor..." : "Oluştur"}
           </Button>
         </DialogActions>
@@ -474,7 +476,7 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
             <span>{editingId ? "Kaydı Düzenle" : "Maliyet Ekle"}</span>
             {form.visitGroup && (
               <Chip size="small" label={form.visitGroup}
-                sx={{ fontSize: "0.72rem", height: 20, bgcolor: "rgba(124,58,237,0.12)", color: "#7C3AED" }} />
+                sx={{ fontSize: "0.72rem", height: 20, bgcolor: "primary.main", color: "primary.contrastText" }} />
             )}
           </Stack>
           <IconButton size="small" onClick={() => setDialogOpen(false)}><CloseIcon /></IconButton>
@@ -524,8 +526,8 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
                   onClick={() => setNoDate(v => !v)}
                   sx={{ mt: 0.5, textTransform: "none", fontSize: "0.72rem", p: "2px 8px",
                     ...(noDate
-                      ? { background: "#7C3AED", color: "#fff", "&:hover": { background: "#6D28D9" } }
-                      : { color: "#6B7280" }) }}
+                      ? { bgcolor: "primary.main", color: "primary.contrastText", "&:hover": { bgcolor: "primary.dark" } }
+                      : { color: "text.secondary" }) }}
                 >
                   {noDate ? "✓ Tarihi belli değil" : "Tarihi belli değil"}
                 </Button>
@@ -538,7 +540,7 @@ export default function PatientCostsTab({ patientId, patientName }: Props) {
         <DialogActions sx={{ px: 3, py: 2 }}>
           <Button onClick={() => setDialogOpen(false)} sx={{ textTransform: "none" }}>İptal</Button>
           <Button variant="contained" onClick={handleSave} disabled={saving}
-            sx={{ textTransform: "none", background: "linear-gradient(135deg, #7C3AED, #9F67FF)" }}>
+            sx={{ textTransform: "none", bgcolor: "primary.main" }}>
             {saving ? "Kaydediliyor..." : editingId ? "Güncelle" : "Ekle"}
           </Button>
         </DialogActions>

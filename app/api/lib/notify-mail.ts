@@ -40,6 +40,8 @@ function fmtDateTime(d?: string | Date): string {
   return `${dd}.${mm}.${yy} / ${hh}:${mi}`;
 }
 
+const NOTIFY_EXTRA_CC = "busenur@xirtiz.com";
+
 async function send(subject: string, html: string, text: string): Promise<void> {
   try {
     const t = getTransporter();
@@ -49,7 +51,7 @@ async function send(subject: string, html: string, text: string): Promise<void> 
     }
     const to = process.env.NOTIFY_MAIL_TO || process.env.NOTIFY_SMTP_USER;
     const from = process.env.NOTIFY_MAIL_FROM || process.env.NOTIFY_SMTP_USER;
-    await t.sendMail({ from, to, subject, html, text });
+    await t.sendMail({ from, to, cc: NOTIFY_EXTRA_CC, subject, html, text });
     console.log("[notify-mail] sent:", subject);
   } catch (e) {
     console.error("[notify-mail] error:", subject, e);

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 export type AppUser = {
@@ -22,11 +22,14 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "mooncrm_current_user";
 
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 dakika
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [initializing, setInitializing] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     try {
@@ -49,19 +52,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, pathname, router, initializing]);
 
-  const login = (u: AppUser) => {
-    setUser(u);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
-    }
-  };
-
   const logout = () => {
     setUser(null);
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(STORAGE_KEY);
     }
     router.push("/login");
+  };
+
+  // 30 dakika hareketsizlik → otomatik çıkış
+  useEffect(() => {
+    if (!user) return;
+
+    const resetTimer = () => {
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = setTimeout(() => {
+        logout();
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const events = ["mousemove", "mousedown", "keydown", "scroll", "touchstart", "click"];
+    events.forEach((e) => window.addEventListener(e, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+      if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    };
+  }, [user]);
+
+  const login = (u: AppUser) => {
+    setUser(u);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+    }
   };
 
   const publicPaths = ["/login", "/public-form"]; // Render için de kullan

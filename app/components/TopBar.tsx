@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import {
   Box,
   IconButton,
@@ -16,11 +16,21 @@ import {
   Divider,
   Avatar,
   useTheme,
+  Badge,
+  Popover,
+  List,
+  ListItem,
+  Chip,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useAuth } from "./AuthProvider";
 import { useI18n } from "./I18nProvider";
@@ -111,6 +121,8 @@ function CustomDay(props: CustomDayProps) {
   );
 }
 
+const PRICE_APPROVERS = ["Kemal Tahir", "Emre", "Buse", "Busenur", "Buse Nur"];
+
 export default function TopBar() {
   const { user, logout } = useAuth();
   const { language, setLanguage } = useI18n();
@@ -123,6 +135,49 @@ export default function TopBar() {
   const [type, setType] = useState<CalendarEventType>("appointment");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Fiyat değişiklik talepleri
+  const [priceRequests, setPriceRequests] = useState<any[]>([]);
+  const [notifAnchorEl, setNotifAnchorEl] = useState<HTMLElement | null>(null);
+  const [resolvingId, setResolvingId] = useState<number | null>(null);
+  const notifOpen = Boolean(notifAnchorEl);
+
+  const canApprove =
+    user?.roles?.includes("SuperAdmin") ||
+    PRICE_APPROVERS.includes(user?.name || "");
+
+  const fetchPriceRequests = async () => {
+    if (!canApprove) return;
+    try {
+      const res = await fetch("/api/price-change-requests?status=pending", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setPriceRequests(Array.isArray(data) ? data : []);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (!canApprove) return;
+    fetchPriceRequests();
+    const interval = setInterval(fetchPriceRequests, 30000);
+    return () => clearInterval(interval);
+  }, [canApprove]);
+
+  const handleResolve = async (id: number, action: "approve" | "reject") => {
+    setResolvingId(id);
+    try {
+      const res = await fetch("/api/price-change-requests", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action, resolvedBy: user?.name }),
+      });
+      if (res.ok) {
+        setPriceRequests((prev) => prev.filter((r) => r.id !== id));
+      }
+    } catch {}
+    setResolvingId(null);
+  };
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
@@ -342,16 +397,90 @@ export default function TopBar() {
         </Tooltip>
 
         <Tooltip title="Bildirimler">
-          <IconButton 
+          <IconButton
             size="small"
+            onClick={(e) => setNotifAnchorEl(e.currentTarget)}
             sx={{
               color: mode === "dark" ? "rgba(255,255,255,0.9)" : "inherit",
               "&:hover": { bgcolor: mode === "dark" ? "rgba(124, 58, 237, 0.1)" : "action.hover" },
             }}
           >
-            <NotificationsIcon />
+            <Badge badgeContent={priceRequests.length} color="error" invisible={priceRequests.length === 0}>
+              <NotificationsIcon />
+            </Badge>
           </IconButton>
         </Tooltip>
+
+        <Popover
+          open={notifOpen}
+          anchorEl={notifAnchorEl}
+          onClose={() => setNotifAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          PaperProps={{ sx: { width: 420, maxHeight: 520, borderRadius: 2, boxShadow: 6 } }}
+        >
+          <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider" }}>
+            <Typography fontWeight={700} fontSize="0.95rem">Fiyat Değişiklik Talepleri</Typography>
+          </Box>
+          {!canApprove ? (
+            <Box sx={{ p: 3, textAlign: "center" }}>
+              <Typography color="text.secondary" fontSize="0.85rem">Bu bölüme erişim yetkiniz yok.</Typography>
+            </Box>
+          ) : priceRequests.length === 0 ? (
+            <Box sx={{ p: 3, textAlign: "center" }}>
+              <Typography color="text.secondary" fontSize="0.85rem">Bekleyen talep yok.</Typography>
+            </Box>
+          ) : (
+            <List disablePadding sx={{ maxHeight: 420, overflowY: "auto" }}>
+              {priceRequests.map((req, i) => (
+                <ListItem
+                  key={req.id}
+                  divider={i < priceRequests.length - 1}
+                  sx={{ flexDirection: "column", alignItems: "flex-start", gap: 1, py: 1.5, px: 2 }}
+                >
+                  <Stack direction="row" justifyContent="space-between" width="100%" alignItems="center">
+                    <Typography fontWeight={600} fontSize="0.85rem">{req.customerName}</Typography>
+                    <Chip label="Bekliyor" size="small" sx={{ bgcolor: "#fef3c7", color: "#92400e", fontWeight: 600, fontSize: "0.7rem" }} />
+                  </Stack>
+                  <Typography fontSize="0.78rem" color="text.secondary">
+                    {req.requesterName} → <strong>{req.currentPrice} {req.currentCurrency}</strong> yerine <strong style={{ color: "#16a34a" }}>{req.newPrice} {req.newCurrency}</strong>
+                  </Typography>
+                  <Typography fontSize="0.75rem" color="text.secondary">Sebep: {req.reason}</Typography>
+                  <Typography fontSize="0.7rem" color="text.secondary">{new Date(req.createdAt).toLocaleString("tr-TR")}</Typography>
+                  <Stack direction="row" spacing={1} width="100%">
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      startIcon={resolvingId === req.id ? <CircularProgress size={12} /> : <CheckCircleIcon />}
+                      disabled={resolvingId === req.id}
+                      onClick={() => handleResolve(req.id, "approve")}
+                      sx={{ flex: 1, textTransform: "none", fontSize: "0.75rem" }}
+                    >
+                      Onayla
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      startIcon={resolvingId === req.id ? <CircularProgress size={12} /> : <CancelIcon />}
+                      disabled={resolvingId === req.id}
+                      onClick={() => handleResolve(req.id, "reject")}
+                      sx={{ flex: 1, textTransform: "none", fontSize: "0.75rem" }}
+                    >
+                      Reddet
+                    </Button>
+                    <Tooltip title="Hastayı Aç">
+                      <IconButton size="small" onClick={() => window.open(`/customers/${req.customerId}`, "_blank")}>
+                        <OpenInNewIcon fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </Popover>
 
         <Divider orientation="vertical" flexItem sx={{ borderColor: mode === "dark" ? "rgba(124, 58, 237, 0.2)" : "divider" }} />
 
