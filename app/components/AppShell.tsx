@@ -28,7 +28,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
       <Sidebar />
       <Box
         component="main"
-        sx={{ flexGrow: 1, p: 3, backgroundColor: mode === "dark" ? "#1E1B3E" : "#f4f6f8", minHeight: "100vh" }}
+        sx={{
+          flexGrow: 1,
+          minWidth: 0,
+          maxWidth: "100%",
+          overflowX: "hidden",
+          p: 3,
+          backgroundColor: mode === "dark" ? "#1E1B3E" : "#f4f6f8",
+          minHeight: "100vh",
+        }}
       >
         <TopBar />
         {children}

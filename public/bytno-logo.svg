@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.25)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+    </linearGradient>
+  </defs>
+  <!-- Square background -->
+  <rect width="120" height="120" rx="12" fill="url(#bgGrad)"/>
+  <!-- Shine overlay -->
+  <rect width="120" height="120" rx="12" fill="url(#shine)"/>
+  <!-- Letter B -->
+  <path d="M38 30h22c7.5 0 13.5 2.5 17 6.5 2.5 3 4 6.8 4 11 0 5.5-2.2 9.8-6.5 12.8 6 3 9.5 8.2 9.5 15.2 0 5-1.8 9.2-5 12.5C75.2 92 69.5 94 62 94H38V30zm16 12v16h6.5c3.5 0 6.2-0.8 8-2.5 1.8-1.8 2.8-4 2.8-6.8 0-2.5-0.8-4.5-2.5-6.2-1.8-1.5-4.5-2.5-8-2.5H54zm0 28v14h8.5c3.8 0 6.8-1 8.8-2.8 2-2 3-4.5 3-7.2 0-2.5-1-4.8-3-6.5-2-1.5-5-2.5-8.8-2.5H54z" fill="white"/>
+</svg>

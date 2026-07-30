@@ -28,7 +28,9 @@ import {
   CardContent,
   Chip,
   useMediaQuery,
-  useTheme
+  useTheme,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 
 import {
@@ -48,6 +50,9 @@ import CategoryIcon from "@mui/icons-material/Category";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import CloseIcon from "@mui/icons-material/Close";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import ViewKanbanIcon from "@mui/icons-material/ViewKanban";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import KanbanBoard from "./KanbanBoard";
 import { useI18n, translateValue } from "../components/I18nProvider";
 import { useAuth } from "../components/AuthProvider";
 import { ThemeModeContext } from "../components/ThemeRegistry";
@@ -259,6 +264,19 @@ export default function CustomersPage() {
   
   const [activeParentCategory, setActiveParentCategory] = useState("");
   const [showIncompleteOnly, setShowIncompleteOnly] = useState(false);
+
+  // Görünüm modu: Kanban (varsayılan) veya Liste
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("crm_customers_view_mode");
+      if (saved === "list" || saved === "kanban") setViewMode(saved);
+    } catch {}
+  }, []);
+  const handleViewModeChange = (mode: "kanban" | "list") => {
+    setViewMode(mode);
+    try { localStorage.setItem("crm_customers_view_mode", mode); } catch {}
+  };
 
   // Arama state'i
   const [searchQuery, setSearchQuery] = useState(savedState.searchQuery);
@@ -612,6 +630,53 @@ export default function CustomersPage() {
       // Hata olursa geri al
       await fetchCustomers();
       console.error("Bağlantı hatası", error);
+    }
+  };
+
+  // --- Durum (liste) adını değiştir: Ayarlar'daki tanımı günceller ve o duruma sahip
+  // tüm müşterilerin status alanını da yeni isimle senkronize eder ---
+  const handleRenameStatus = async (oldName: string, newName: string) => {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === oldName) return;
+    const statusObj = statusObjects.find((s) => s.tr === oldName);
+    if (!statusObj) {
+      setSnackbar({ open: true, message: "Bu durum düzenlenemez", severity: "error" });
+      return;
+    }
+    if (statuses.includes(trimmed)) {
+      setSnackbar({ open: true, message: "Bu isimde bir durum zaten var", severity: "error" });
+      return;
+    }
+    try {
+      const res = await fetch("/api/statuses", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: statusObj.id, tr: trimmed, en: statusObj.en }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({} as any));
+        setSnackbar({ open: true, message: data.error || "Durum güncellenemedi", severity: "error" });
+        return;
+      }
+
+      // Bu durumdaki müşterileri de yeni isimle güncelle
+      const affected = rows.filter((r) => r.status === oldName);
+      setRows((prev) => prev.map((r) => (r.status === oldName ? { ...r, status: trimmed } : r)));
+      await Promise.all(
+        affected.map((r) =>
+          fetch("/api/crm", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: r.id, status: { status: trimmed } }),
+          }).catch(() => null)
+        )
+      );
+
+      await fetchStatuses();
+      setSnackbar({ open: true, message: "Durum adı güncellendi", severity: "success" });
+    } catch (e) {
+      console.error("Durum yeniden adlandırılırken hata:", e);
+      setSnackbar({ open: true, message: "Durum güncellenirken hata oluştu", severity: "error" });
     }
   };
 
@@ -1142,6 +1207,49 @@ export default function CustomersPage() {
       }}
     >
       
+      {/* GÖRÜNÜM SEÇİCİ */}
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1.5}>
+        <Typography variant="h5" fontWeight={700} sx={{ color: mode === "dark" ? "#FFFFFF" : "#111827" }}>
+          Müşteriler
+        </Typography>
+        <ToggleButtonGroup
+          value={viewMode}
+          exclusive
+          onChange={(_, val) => { if (val) handleViewModeChange(val); }}
+          size="small"
+          sx={{
+            bgcolor: mode === "dark" ? "#241F45" : "#F3F4F6",
+            borderRadius: 2,
+            p: 0.5,
+            "& .MuiToggleButton-root": {
+              border: "none",
+              borderRadius: 1.5,
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.8rem",
+              color: mode === "dark" ? "rgba(255,255,255,0.6)" : "#6B7280",
+              px: 2,
+              gap: 0.75,
+              "&.Mui-selected": {
+                bgcolor: mode === "dark" ? "#7C3AED" : "#FFFFFF",
+                color: mode === "dark" ? "#FFFFFF" : "#111827",
+                boxShadow: mode === "dark" ? "none" : "0 1px 3px rgba(0,0,0,0.12)",
+              },
+              "&.Mui-selected:hover": {
+                bgcolor: mode === "dark" ? "#7C3AED" : "#FFFFFF",
+              },
+            },
+          }}
+        >
+          <ToggleButton value="kanban">
+            <ViewKanbanIcon fontSize="small" /> Kanban
+          </ToggleButton>
+          <ToggleButton value="list">
+            <ViewListIcon fontSize="small" /> Liste
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
+
       {/* ÜST BUTONLAR */}
       <Paper
         sx={{
@@ -1336,8 +1444,21 @@ export default function CustomersPage() {
         </Paper>
       )}
 
+      {/* KANBAN GÖRÜNÜMÜ */}
+      {viewMode === "kanban" && (
+        <KanbanBoard
+          rows={filteredRows}
+          statuses={statuses}
+          mode={mode === "dark" ? "dark" : "light"}
+          loading={loading}
+          onCardClick={(id) => router.push(`/customers/${id}`)}
+          onStatusChange={(id, newStatus) => handleInlineUpdate(id, "status", newStatus)}
+          onRenameStatus={handleRenameStatus}
+        />
+      )}
+
       {/* TABLO - Masaüstü */}
-      {!isMobile && (
+      {viewMode === "list" && !isMobile && (
         <Paper
           sx={{
             width: '100%',
@@ -1443,7 +1564,7 @@ export default function CustomersPage() {
       )}
 
       {/* KART GÖRÜNÜMÜ - Mobil */}
-      {isMobile && (
+      {viewMode === "list" && isMobile && (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {loading ? (
             <Paper sx={{ p: 3, textAlign: 'center' }}>

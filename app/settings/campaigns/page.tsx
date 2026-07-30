@@ -32,18 +32,18 @@ import { useI18n } from "../../components/I18nProvider";
 
 const PARENT_OPTIONS = [
   "Website",
-  "Landing Page",
-  "Şirket Hattı",
-  "Meta",
-  "TikTok",
+  "Web Formu",
+  "Santral Hattı",
+  "Sosyal Medya",
+  "Video Reklam",
   "Referans",
-  "Acente",
-  "Kurum İçi",
-  "WhatClinic",
-  "Ek Satış",
-  "Influencer",
-  "Konsültasyon",
-  "Snapchat",
+  "Partner Acente",
+  "Klinik Yönlendirme",
+  "Sağlık Portalı",
+  "Ek Hizmet",
+  "Marka Elçisi",
+  "Uzaktan Görüşme",
+  "Snap Reklam",
 ];
 
 interface Campaign {

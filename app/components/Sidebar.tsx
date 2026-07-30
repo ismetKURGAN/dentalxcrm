@@ -205,13 +205,23 @@ export default function Sidebar() {
     >
       {/* Logo */}
       <Box sx={{ p: 2, display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 1.5 }}>
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center" }}>
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
           <Box
             component="img"
-            src="/xirtiz-logo.png"
-            alt="Xirtiz CRM Logo"
-            sx={{ height: 36, objectFit: "contain", filter: mode === "dark" ? "brightness(1.2)" : "none" }}
+            src="/bytno-logo.svg"
+            alt="Bytno Logo"
+            sx={{ height: 36, width: 36, objectFit: "contain", borderRadius: 1.5, filter: mode === "dark" ? "brightness(1.2)" : "none" }}
           />
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: "1.05rem",
+              letterSpacing: 0.2,
+              color: mode === "dark" ? "#FFFFFF" : "#1E1B3E",
+            }}
+          >
+            Bytno
+          </Typography>
         </Link>
       </Box>
 

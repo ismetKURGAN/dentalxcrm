@@ -43,19 +43,19 @@ function formatPercent(n: number): string {
 }
 
 const TOP_PARENT_CATEGORIES = [
-  "Landing Page",
-  "Şirket Hattı",
-  "Meta",
-  "TikTok",
-  "Acente",
-  "Kurum İçi",
-  "WhatClinic",
-  "Ek Satış",
-  "Influencer",
-  "Konsültasyon",
-  "Snapchat",
-  "Boş",
-  "Eski Data",
+  "Web Formu",
+  "Santral Hattı",
+  "Sosyal Medya",
+  "Video Reklam",
+  "Partner Acente",
+  "Klinik Yönlendirme",
+  "Sağlık Portalı",
+  "Ek Hizmet",
+  "Marka Elçisi",
+  "Uzaktan Görüşme",
+  "Snap Reklam",
+  "Tanımsız",
+  "Arşiv Data",
 ];
 
 type Category = {
@@ -217,8 +217,8 @@ export default function StatsPage() {
       if (match) return match;
     }
     
-    // 3) Hiç kategori yoksa "Boş"
-    if (!raw && !catName) return "Boş";
+    // 3) Hiç kategori yoksa "Tanımsız"
+    if (!raw && !catName) return "Tanımsız";
     
     return "Diğer";
   };

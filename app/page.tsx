@@ -217,7 +217,7 @@ export default function Dashboard() {
       {/* Üst Başlık */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: mode === "dark" ? "#F9FAFB" : "#11142D" }}>
-          Dental X CRM
+          Bytno CRM
         </Typography>
       </Box>
 

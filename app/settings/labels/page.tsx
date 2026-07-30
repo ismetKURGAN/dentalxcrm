@@ -84,17 +84,17 @@ export default function LabelsSettingsPage() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Meta"]));
 
   const TOP_PARENTS = [
-    "Landing Page",
-    "Şirket Hattı",
-    "Meta",
-    "TikTok",
-    "Acente",
-    "Kurum İçi",
-    "WhatClinic",
-    "Ek Satış",
-    "Influencer",
-    "Konsültasyon",
-    "Snapchat",
+    "Web Formu",
+    "Santral Hattı",
+    "Sosyal Medya",
+    "Video Reklam",
+    "Partner Acente",
+    "Klinik Yönlendirme",
+    "Sağlık Portalı",
+    "Ek Hizmet",
+    "Marka Elçisi",
+    "Uzaktan Görüşme",
+    "Snap Reklam",
   ];
 
   const [dialogOpen, setDialogOpen] = useState(false);

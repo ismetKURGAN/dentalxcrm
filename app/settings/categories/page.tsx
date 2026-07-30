@@ -54,17 +54,17 @@ import { ThemeModeContext } from "../../components/ThemeRegistry";
 
 // Sabit üst kategoriler (Level 1)
 const TOP_PARENTS = [
-  "Landing Page",
-  "Şirket Hattı",
-  "Meta",
-  "TikTok",
-  "Acente",
-  "Kurum İçi",
-  "WhatClinic",
-  "Ek Satış",
-  "Influencer",
-  "Konsültasyon",
-  "Snapchat",
+  "Web Formu",
+  "Santral Hattı",
+  "Sosyal Medya",
+  "Video Reklam",
+  "Partner Acente",
+  "Klinik Yönlendirme",
+  "Sağlık Portalı",
+  "Ek Hizmet",
+  "Marka Elçisi",
+  "Uzaktan Görüşme",
+  "Snap Reklam",
 ];
 
 interface Category {
@@ -921,7 +921,7 @@ export default function CategoriesSettingsPage() {
                 </Select>
               </FormControl>
               <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block", fontSize: "0.75rem" }}>
-                Kategorinin ait olduğu ana grubu seçin (ör. Meta, Konsültasyon).
+                Kategorinin ait olduğu ana grubu seçin (ör. Sosyal Medya, Uzaktan Görüşme).
               </Typography>
             </Box>
 
