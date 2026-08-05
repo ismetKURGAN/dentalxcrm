@@ -58,6 +58,7 @@ import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import HealingIcon from "@mui/icons-material/Healing";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import LockIcon from "@mui/icons-material/Lock";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import { useI18n } from "../../components/I18nProvider";
 import PatientCostsTab from "../../components/PatientCostsTab";
 
@@ -250,6 +251,15 @@ type CustomerState = {
   soldBy?: string;
   consultationNotes: { id: number; date: string; note: string }[];
   treatmentNotes: { note: string };
+  coordinatorNotes: {
+    stayDuration: string;
+    stayLocation: string;
+    recoveryDate: string;
+    coordinator: string;
+    healthConditions: string;
+    characterTraits: string;
+    complications: string;
+  };
 };
 
 // Başlangıç Şablonu
@@ -311,6 +321,15 @@ const INITIAL_STATE: CustomerState = {
   },
   consultationNotes: [],
   treatmentNotes: { note: "" },
+  coordinatorNotes: {
+    stayDuration: "",
+    stayLocation: "",
+    recoveryDate: "",
+    coordinator: "",
+    healthConditions: "",
+    characterTraits: "",
+    complications: "",
+  },
   calls: [],
   files: [],
   history: [],
@@ -508,6 +527,15 @@ export default function CustomerDetailPage() {
               sales: found.sales || INITIAL_STATE.sales,
               consultationNotes: found.consultationNotes || [],
               treatmentNotes: found.treatmentNotes || { note: "" },
+              coordinatorNotes: {
+                stayDuration: found.coordinatorNotes?.stayDuration || "",
+                stayLocation: found.coordinatorNotes?.stayLocation || "",
+                recoveryDate: found.coordinatorNotes?.recoveryDate || "",
+                coordinator: found.coordinatorNotes?.coordinator || "",
+                healthConditions: found.coordinatorNotes?.healthConditions || "",
+                characterTraits: found.coordinatorNotes?.characterTraits || "",
+                complications: found.coordinatorNotes?.complications || "",
+              },
               calls: found.calls || [],
               files: found.files || [],
               history: found.history || [],
@@ -2395,6 +2423,7 @@ export default function CustomerDetailPage() {
         calls: "Aramalar",
         consultationNotes: "Görüşme Notları",
         treatmentNotes: "Tedavi Notları",
+        coordinatorNotes: "Koordinatör Notları",
         payment: "Ödeme Bilgileri",
         reminder: "Hatırlatıcı",
       };
@@ -3020,6 +3049,156 @@ export default function CustomerDetailPage() {
     </Stack>
   );
 
+  // 12. KOORDİNATÖR NOTLARI
+  const renderCoordinatorNotesTab = () => (
+    <Stack spacing={3}>
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Box sx={{ width: 6, height: 28, bgcolor: "#6366f1", borderRadius: 1 }} />
+        <Typography variant="h6" fontWeight={600}>Koordinatör Notları</Typography>
+      </Stack>
+
+      <Paper variant="outlined" sx={{ p: 2.5, borderRadius: 2 }}>
+        <Grid container spacing={2.5}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label="Kalış Süresi"
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={customer.coordinatorNotes.stayDuration}
+              onChange={(e) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, stayDuration: e.target.value },
+                }))
+              }
+              placeholder="Örn: 3 gün, 1 hafta..."
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label="Yatılan Merkez"
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={customer.coordinatorNotes.stayLocation}
+              onChange={(e) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, stayLocation: e.target.value },
+                }))
+              }
+              placeholder="Örn: Sheraton, Hotel Bloc..."
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              type="date"
+              label="İyileşme Tarihi"
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+              value={customer.coordinatorNotes.recoveryDate}
+              onChange={(e) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, recoveryDate: e.target.value },
+                }))
+              }
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Autocomplete
+              size="small"
+              options={CRM_USERS}
+              freeSolo
+              value={customer.coordinatorNotes.coordinator}
+              onChange={(_e, newValue) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, coordinator: newValue || "" },
+                }))
+              }
+              onInputChange={(_e, newValue) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, coordinator: newValue || "" },
+                }))
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Koordinatör" placeholder="Seçiniz" InputLabelProps={{ shrink: true }} />
+              )}
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              multiline
+              minRows={3}
+              maxRows={10}
+              label="Hastalıklar"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={customer.coordinatorNotes.healthConditions}
+              onChange={(e) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, healthConditions: e.target.value },
+                }))
+              }
+              placeholder="Hastanın bilinen hastalıkları, kronik durumlar, alerjiler..."
+            />
+          </Grid>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              multiline
+              minRows={3}
+              maxRows={10}
+              label="Karakter Özellikleri"
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              value={customer.coordinatorNotes.characterTraits}
+              onChange={(e) =>
+                setCustomer((prev) => ({
+                  ...prev,
+                  coordinatorNotes: { ...prev.coordinatorNotes, characterTraits: e.target.value },
+                }))
+              }
+              placeholder="Hastanın karakteri, iletişim tarzı, dikkat edilmesi gereken hususlar..."
+            />
+          </Grid>
+        </Grid>
+      </Paper>
+
+      <Paper
+        variant="outlined"
+        sx={{ p: 2.5, borderRadius: 2, borderColor: "#fca5a5", bgcolor: "rgba(239, 68, 68, 0.03)" }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+          <Box sx={{ width: 6, height: 22, bgcolor: "#ef4444", borderRadius: 1 }} />
+          <Typography variant="subtitle2" fontWeight={700} color="error.main">
+            Komplikasyonlar
+          </Typography>
+        </Stack>
+        <TextField
+          multiline
+          minRows={5}
+          maxRows={20}
+          label="Komplikasyon Notları"
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+          value={customer.coordinatorNotes.complications}
+          onChange={(e) =>
+            setCustomer((prev) => ({
+              ...prev,
+              coordinatorNotes: { ...prev.coordinatorNotes, complications: e.target.value },
+            }))
+          }
+          placeholder="Komplikasyon detayları, takip süreci, alınan önlemler..."
+        />
+      </Paper>
+    </Stack>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case "personal":
@@ -3044,6 +3223,8 @@ export default function CustomerDetailPage() {
         return renderConsultationNotesTab();
       case "treatmentNotes":
         return renderTreatmentNotesTab();
+      case "coordinatorNotes":
+        return renderCoordinatorNotesTab();
       default:
         return null;
     }
@@ -3136,6 +3317,7 @@ export default function CustomerDetailPage() {
             "status",
             "consultationNotes",
             "treatmentNotes",
+            "coordinatorNotes",
             ...((customer.status.status === "Satış" || customer.status.status === "Satış Kapalı" || (typeof customer.status.status === "string" && customer.status.status.startsWith("Satış"))) ? ["sales"] : []),
             "reminder",
             "calls",
@@ -3165,6 +3347,8 @@ export default function CustomerDetailPage() {
                 ? "customerDetail.tabs.consultationNotes"
                 : key === "treatmentNotes"
                 ? "customerDetail.tabs.treatmentNotes"
+                : key === "coordinatorNotes"
+                ? "customerDetail.tabs.coordinatorNotes"
                 : "customerDetail.tabs.history";
             const label = t(labelKey);
             const isComplete = isTabComplete(key);
@@ -3209,6 +3393,8 @@ export default function CustomerDetailPage() {
                   <ChatBubbleOutlineIcon />
                 ) : key === "treatmentNotes" ? (
                   <HealingIcon />
+                ) : key === "coordinatorNotes" ? (
+                  <AssignmentIndIcon />
                 ) : key === "sales" ? (
                   <ShoppingCartIcon />
                 ) : key === "reminder" ? (
@@ -3361,6 +3547,8 @@ export default function CustomerDetailPage() {
                   ? "Hasta Görüşme Notları"
                   : activeTab === "treatmentNotes"
                   ? "Tedavi Notları"
+                  : activeTab === "coordinatorNotes"
+                  ? "Koordinatör Notları"
                   : t("customerDetail.tabs.history")}
               </Typography>
               <Typography variant="caption" color="text.secondary">
