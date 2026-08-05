@@ -249,7 +249,7 @@ type CustomerState = {
   }[];
   soldBy?: string;
   consultationNotes: { id: number; date: string; note: string }[];
-  treatmentNotes: { note: string };
+  treatmentNotes: { note: string; complications: string };
 };
 
 // Başlangıç Şablonu
@@ -310,7 +310,7 @@ const INITIAL_STATE: CustomerState = {
     trips: [],
   },
   consultationNotes: [],
-  treatmentNotes: { note: "" },
+  treatmentNotes: { note: "", complications: "" },
   calls: [],
   files: [],
   history: [],
@@ -507,7 +507,10 @@ export default function CustomerDetailPage() {
               payment: found.payment?.trips ? found.payment : INITIAL_STATE.payment,
               sales: found.sales || INITIAL_STATE.sales,
               consultationNotes: found.consultationNotes || [],
-              treatmentNotes: found.treatmentNotes || { note: "" },
+              treatmentNotes: {
+                note: found.treatmentNotes?.note || "",
+                complications: found.treatmentNotes?.complications || "",
+              },
               calls: found.calls || [],
               files: found.files || [],
               history: found.history || [],
@@ -1404,7 +1407,7 @@ export default function CustomerDetailPage() {
       }
     }
     
-    // NOT: Görüşme Notları, Tedavi Notları ve Dosyalar artık zorunlu DEĞİL
+    // NOT: Görüşme Notları, Koordinatör Notları ve Dosyalar artık zorunlu DEĞİL
     // Kırmızı uyarılar isTabComplete fonksiyonunda gösterilmeye devam ediyor
     
     setValidationErrors(errors);
@@ -2394,7 +2397,7 @@ export default function CustomerDetailPage() {
         files: "Dosyalar",
         calls: "Aramalar",
         consultationNotes: "Görüşme Notları",
-        treatmentNotes: "Tedavi Notları",
+        treatmentNotes: "Koordinatör Notları",
         payment: "Ödeme Bilgileri",
         reminder: "Hatırlatıcı",
       };
@@ -2985,35 +2988,70 @@ export default function CustomerDetailPage() {
     </Stack>
   );
 
-  // 11. TEDAVİ NOTLARI
+  // 11. KOORDİNATÖR NOTLARI (+ Komplikasyonlar)
   const renderTreatmentNotesTab = () => (
     <Stack spacing={3}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <Box sx={{ width: 6, height: 28, bgcolor: "#f59e0b", borderRadius: 1 }} />
-        <Typography variant="h6" fontWeight={600}>Tedavi Notları</Typography>
+        <Typography variant="h6" fontWeight={600}>
+          {t("customerDetail.tabs.treatmentNotes")}
+        </Typography>
       </Stack>
+
       <Paper
         variant="outlined"
         sx={{ p: 2.5, borderRadius: 2, borderColor: "#fcd34d" }}
       >
-        <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: "block", fontStyle: "italic" }}>
-          Bu bölüm ilerleyen süreçte geliştirilecektir.
+        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
+          {t("customerDetail.treatmentNotes.generalTitle")}
         </Typography>
         <TextField
           multiline
-          minRows={10}
+          minRows={8}
           maxRows={30}
-          label="Tedavi Notları"
+          label={t("customerDetail.treatmentNotes.generalLabel")}
           fullWidth
           InputLabelProps={{ shrink: true }}
           value={customer.treatmentNotes.note}
           onChange={(e) =>
             setCustomer((prev) => ({
               ...prev,
-              treatmentNotes: { note: e.target.value },
+              treatmentNotes: { ...prev.treatmentNotes, note: e.target.value },
             }))
           }
-          placeholder="Tedavi planı, uygulanan prosedürler, özel notlar..."
+          placeholder={t("customerDetail.treatmentNotes.generalPlaceholder")}
+          sx={{ borderRadius: 1 }}
+        />
+      </Paper>
+
+      <Paper
+        variant="outlined"
+        sx={{ p: 2.5, borderRadius: 2, borderColor: "#fca5a5", bgcolor: "rgba(239, 68, 68, 0.03)" }}
+      >
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
+          <Box sx={{ width: 6, height: 22, bgcolor: "#ef4444", borderRadius: 1 }} />
+          <Typography variant="subtitle2" fontWeight={700} color="error.main">
+            {t("customerDetail.treatmentNotes.complicationsTitle")}
+          </Typography>
+        </Stack>
+        <TextField
+          multiline
+          minRows={6}
+          maxRows={24}
+          label={t("customerDetail.treatmentNotes.complicationsLabel")}
+          fullWidth
+          InputLabelProps={{ shrink: true }}
+          value={customer.treatmentNotes.complications || ""}
+          onChange={(e) =>
+            setCustomer((prev) => ({
+              ...prev,
+              treatmentNotes: {
+                ...prev.treatmentNotes,
+                complications: e.target.value,
+              },
+            }))
+          }
+          placeholder={t("customerDetail.treatmentNotes.complicationsPlaceholder")}
           sx={{ borderRadius: 1 }}
         />
       </Paper>
@@ -3360,7 +3398,7 @@ export default function CustomerDetailPage() {
                   : activeTab === "consultationNotes"
                   ? "Hasta Görüşme Notları"
                   : activeTab === "treatmentNotes"
-                  ? "Tedavi Notları"
+                  ? t("customerDetail.tabs.treatmentNotes")
                   : t("customerDetail.tabs.history")}
               </Typography>
               <Typography variant="caption" color="text.secondary">
@@ -3406,7 +3444,7 @@ export default function CustomerDetailPage() {
               <Typography variant="body2" color="error">• Görüşme Notları</Typography>
             ) : null}
             {!customer.treatmentNotes?.note || customer.treatmentNotes.note.trim() === "" ? (
-              <Typography variant="body2" color="error">• Tedavi Notları</Typography>
+              <Typography variant="body2" color="error">• {t("customerDetail.tabs.treatmentNotes")}</Typography>
             ) : null}
             {(customer.status.status === "Satış" || customer.status.status === "Satış Kapalı" || 
               (typeof customer.status.status === "string" && customer.status.status.startsWith("Satış"))) && 
