@@ -73,21 +73,26 @@ export async function GET(request: NextRequest) {
     }
     
     if (all) {
-      // include parametresi: data=tüm data kolonu, sales=sadece sales alanı, sales,files=sales ve files
-      // Varsayılan: sadece düz kolonlar (performans: 40ms vs 734ms)
-      const includeParam = searchParams.get("include");
+      // include: data | sales | files | reminder (virgülle birleştirilebilir)
+      // Varsayılan: sadece düz kolonlar (performans)
+      const includeParam = searchParams.get("include") || "";
+      const includeParts = includeParam.split(",").map((s) => s.trim()).filter(Boolean);
       const includeData = includeParam === "data";
-      const includeSales = includeParam === "sales" || includeParam === "sales,files";
-      const includeFiles = includeParam === "sales,files";
+      const includeSales = includeParts.includes("sales");
+      const includeFiles = includeParts.includes("files");
+      const includeReminder = includeParts.includes("reminder");
+
       let columns: string;
       if (includeData) {
         columns = "*";
-      } else if (includeParam === "sales,files") {
-        columns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt, json_extract(data, '$.sales') as salesJson, json_extract(data, '$.files') as filesJson";
-      } else if (includeSales) {
-        columns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt, json_extract(data, '$.sales') as salesJson";
       } else {
-        columns = "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt, json_extract(data, '$.parentCategory') as parentCategory";
+        const extras: string[] = [];
+        if (includeSales) extras.push("json_extract(data, '$.sales') as salesJson");
+        if (includeFiles) extras.push("json_extract(data, '$.files') as filesJson");
+        if (includeReminder) extras.push("json_extract(data, '$.reminder') as reminderJson");
+        columns =
+          "id, email, name, phone, advisor, category, service, status, country, createdAt, updatedAt, json_extract(data, '$.parentCategory') as parentCategory" +
+          (extras.length ? ", " + extras.join(", ") : "");
       }
       
       let query = `SELECT ${columns} FROM customers`;
@@ -148,6 +153,12 @@ export async function GET(request: NextRequest) {
         if (includeFiles && c.filesJson) {
           try { filesData = JSON.parse(c.filesJson); } catch {}
         }
+
+        // reminderJson varsa parse et
+        let reminderData: any = undefined;
+        if (includeReminder && c.reminderJson) {
+          try { reminderData = JSON.parse(c.reminderJson); } catch {}
+        }
         
         return {
           ...base,
@@ -165,6 +176,7 @@ export async function GET(request: NextRequest) {
           updatedAt: c.updatedAt || fullData.updatedAt || '',
           ...(salesData !== undefined ? { sales: salesData } : {}),
           ...(filesData !== undefined ? { files: filesData } : {}),
+          ...(reminderData !== undefined ? { reminder: reminderData } : {}),
         };
       });
       
